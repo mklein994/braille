@@ -42,6 +42,19 @@ macro_rules! t {
             assert!(stderr.is_empty());
         }
     };
+
+    ($name:ident, $min:expr, $max:expr, $width:expr, $gen:expr) => {
+        #[test]
+        fn $name() {
+            let input: ::std::vec::Vec<_> = $gen;
+            let (stdout, stderr) = get_output(
+                &input,
+                [$min.to_string(), $max.to_string(), $width.to_string()],
+            );
+            insta::assert_snapshot!(stdout);
+            assert!(stderr.is_empty());
+        }
+    };
 }
 
 t!(width_5, -4, 3, 4);
@@ -56,3 +69,13 @@ t!(width_4_n2_5, -2, 5, 4);
 t!(width_4_n1_6, -1, 6, 4);
 t!(width_4_0_7, 0, 7, 4);
 t!(width_4_1_8, 1, 8, 4);
+
+t!(
+    sine_wave,
+    -1,
+    1,
+    40,
+    (0..100)
+        .map(|x| Some(f64::sin(f64::try_from(x).unwrap() / 10.)))
+        .collect()
+);
