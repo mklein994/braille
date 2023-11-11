@@ -45,7 +45,7 @@ fn main() -> anyhow::Result<()> {
 
     let min = 1;
     let max = opt.width * 2;
-    let slope = (f64::from(opt.width * 2) - 1.) / (opt.maximum - opt.minimum);
+    let slope = (f64::from(max) - f64::from(min)) / (opt.maximum - opt.minimum);
     let scale = |value: f64| {
         debug_assert!(
             value >= opt.minimum && value <= opt.maximum,
@@ -106,7 +106,7 @@ fn main() -> anyhow::Result<()> {
 
         if has_more_lines || buffer.iter().any(Option::is_some) {
             let transposed = transpose_row(&buffer);
-            let braille_char = to_braille_char(&transposed);
+            let braille_char = to_braille_char_row(&transposed);
             println!("{braille_char}");
         }
 
@@ -116,10 +116,11 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn to_braille_char(transposed: &[[[bool; 2]; 4]]) -> String {
+fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
     let mut line: Vec<char> = vec![];
     for character in transposed {
         // Turn this:
+        //
         // ```plain
         // [
         //   [0, 3],
@@ -147,7 +148,7 @@ fn to_braille_char(transposed: &[[[bool; 2]; 4]]) -> String {
         ];
 
         let mut block = 0x2800_u32;
-        // let mut block = 0;
+
         for set_position in bits
             .iter()
             .enumerate()
