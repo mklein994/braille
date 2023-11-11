@@ -97,12 +97,11 @@ pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
 
         let mut block = 0x2800_u32;
 
-        for set_position in bits
-            .iter()
-            .enumerate()
-            .filter_map(|(i, x)| if *x { Some(i) } else { None })
-        {
-            block += (2_u32).pow(u32::try_from(set_position).unwrap());
+        for (index, bit) in bits.iter().enumerate() {
+            if *bit {
+                let position = u32::try_from(index).unwrap();
+                block += (2_u32).pow(position);
+            }
         }
 
         line.push(char::from_u32(block).unwrap());
