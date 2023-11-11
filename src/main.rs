@@ -20,7 +20,17 @@ impl Opt {
         let mut args = std::env::args().skip(1);
         let minimum = args.next().expect("height missing").parse()?;
         let maximum = args.next().expect("max missing").parse()?;
-        let width = args.next().expect("width missing").parse()?;
+        let width = args
+            .next()
+            .map(|x| x.parse())
+            .transpose()?
+            .unwrap_or_else(|| {
+                if let Some((width, _)) = terminal_size::terminal_size() {
+                    u32::from(width.0)
+                } else {
+                    80
+                }
+            });
 
         Ok(Self {
             minimum,
