@@ -108,3 +108,16 @@ t!(
         })
         .collect()
 );
+
+t!(
+    entire_screen_line_is_null_at_end_n4_11_4,
+    -4,
+    11,
+    4,
+    ((-4)..=11)
+        .map(|x| match x {
+            4..=11 => None,
+            _ => Some(f64::try_from(x).unwrap()),
+        })
+        .collect()
+);
