@@ -88,19 +88,15 @@ pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
 }
 
 #[must_use]
-pub fn transpose_row(input_row: &[Option<Vec<[bool; 2]>>; 4]) -> Vec<[[bool; 2]; 4]> {
-    let longest = input_row
-        .iter()
-        .filter_map(|x| x.as_ref().map(Vec::len))
-        .max()
-        .unwrap();
+pub fn transpose_row(input_row: &[Vec<[bool; 2]>; 4]) -> Vec<[[bool; 2]; 4]> {
+    let longest = input_row.iter().map(Vec::len).max().unwrap();
 
     let mut output_row: Vec<[[bool; 2]; 4]> = vec![];
     for column in 0..longest {
         let mut braille_character = [[false, false]; 4];
 
         for (row_index, row) in input_row.iter().enumerate() {
-            if let Some(row_column) = row.as_ref().and_then(|r| r.get(column)) {
+            if let Some(row_column) = row.get(column) {
                 braille_character[row_index] = *row_column;
             }
         }
@@ -121,10 +117,10 @@ mod tests {
     fn test_transpose_row() {
         #[rustfmt::skip]
         let input = [
-            Some(vec![[ true,  true], [ true, true], [true, false]]),
-            Some(vec![[false,  true], [ true, true], [true, false]]),
-            Some(vec![[false, false], [ true, true], [true, false]]),
-            Some(vec![[false, false], [false, true], [true, false]]),
+            vec![[ true,  true], [ true, true], [true, false]],
+            vec![[false,  true], [ true, true], [true, false]],
+            vec![[false, false], [ true, true], [true, false]],
+            vec![[false, false], [false, true], [true, false]],
         ];
 
         #[rustfmt::skip]
@@ -161,10 +157,10 @@ mod tests {
     fn test_transpose_row_2() {
         #[rustfmt::skip]
         let input = [
-            Some(vec![[false, false], [false, false], [true, false]               ]),
-            Some(vec![[false, false], [false, false], [true,  true]               ]),
-            Some(vec![[false, false], [false, false], [true,  true], [true, false]]),
-            Some(vec![[false, false], [false, false], [true,  true], [true,  true]]),
+            vec![[false, false], [false, false], [true, false]               ],
+            vec![[false, false], [false, false], [true,  true]               ],
+            vec![[false, false], [false, false], [true,  true], [true, false]],
+            vec![[false, false], [false, false], [true,  true], [true,  true]],
         ];
 
         #[rustfmt::skip]

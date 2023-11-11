@@ -25,7 +25,7 @@ fn main() -> anyhow::Result<()> {
     };
 
     let mut lines = braille::get_lines();
-    let mut buffer = [None, None, None, None];
+    let mut buffer = [vec![], vec![], vec![], vec![]];
     let mut has_more_lines = true;
     while has_more_lines {
         for buffer_line in &mut buffer {
@@ -34,42 +34,40 @@ fn main() -> anyhow::Result<()> {
                 has_more_lines = false;
             }
 
-            *buffer_line = line
-                .transpose()?
-                .unwrap_or_default()
-                .map(scale)
-                .map(|value| {
-                    let mut iter = vec![false; usize::try_from(value.min(zero)).unwrap() - 1];
-                    iter.resize(
-                        iter.len() + usize::try_from(value.abs_diff(zero) + 1).unwrap(),
-                        true,
-                    );
-                    let chunks = iter.chunks_exact(2);
-                    let remainder: [bool; 2] = if chunks.remainder().is_empty() {
-                        [false, false]
-                    } else {
-                        let mut rem = [false; 2];
-                        for (i, r) in chunks.remainder().iter().enumerate() {
-                            rem[i] = *r;
-                        }
-                        rem
-                    };
-                    let mut row: Vec<[bool; 2]> = chunks
-                        .into_iter()
-                        .map(|chunk| [chunk[0], chunk[1]])
-                        .collect::<Vec<[bool; 2]>>();
-                    row.push(remainder);
-                    row
-                });
+            if let Some(new_line) = line.transpose()?.flatten().map(scale).map(|value| {
+                let mut iter = vec![false; usize::try_from(value.min(zero)).unwrap() - 1];
+                iter.resize(
+                    iter.len() + usize::try_from(value.abs_diff(zero) + 1).unwrap(),
+                    true,
+                );
+                let chunks = iter.chunks_exact(2);
+                let remainder: [bool; 2] = if chunks.remainder().is_empty() {
+                    [false, false]
+                } else {
+                    let mut rem = [false; 2];
+                    for (i, r) in chunks.remainder().iter().enumerate() {
+                        rem[i] = *r;
+                    }
+                    rem
+                };
+                let mut row: Vec<[bool; 2]> = chunks
+                    .into_iter()
+                    .map(|chunk| [chunk[0], chunk[1]])
+                    .collect::<Vec<[bool; 2]>>();
+                row.push(remainder);
+                row
+            }) {
+                *buffer_line = new_line;
+            }
         }
 
-        if has_more_lines || buffer.iter().any(Option::is_some) {
+        if has_more_lines || buffer.iter().any(|x| !x.is_empty()) {
             let transposed = braille::transpose_row(&buffer);
             let braille_char = braille::to_braille_char_row(&transposed);
             println!("{braille_char}");
         }
 
-        buffer.fill(None);
+        buffer.fill(vec![]);
     }
 
     Ok(())
