@@ -79,3 +79,19 @@ t!(
         .map(|x| Some(f64::sin(f64::try_from(x).unwrap() / 10.)))
         .collect()
 );
+
+t!(
+    contains_nulls,
+    -3,
+    4,
+    4,
+    ((-3)..=4)
+        .map(|x| {
+            if x == 2 {
+                None
+            } else {
+                Some(f64::try_from(x).unwrap())
+            }
+        })
+        .collect()
+);
