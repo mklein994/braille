@@ -179,7 +179,9 @@ fn transpose_row(input_row: &[Option<Vec<[bool; 2]>>; 4]) -> Vec<[[bool; 2]; 4]>
             }
         }
 
-        output_row.push(braille_character);
+        if !(column == longest - 1 && braille_character.iter().flatten().all(|x| x == &false)) {
+            output_row.push(braille_character);
+        }
     }
 
     output_row
