@@ -65,7 +65,7 @@ pub fn into_bit_pairs(value: u32, zero: u32) -> Vec<[bool; 2]> {
 
 #[must_use]
 pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
-    let mut line: Vec<char> = vec![];
+    let mut line = String::new();
     for character in transposed {
         // Turn this:
         //
@@ -107,7 +107,7 @@ pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
 
         line.push(char::from_u32(block).unwrap());
     }
-    line.into_iter().collect()
+    line
 }
 
 #[must_use]
