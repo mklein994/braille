@@ -25,7 +25,6 @@ fn main() -> anyhow::Result<()> {
     };
 
     let mut lines = braille::get_lines();
-    // let mut buffer = Vec::with_capacity(4);
     let mut buffer = [None, None, None, None];
     let mut has_more_lines = true;
     while has_more_lines {
