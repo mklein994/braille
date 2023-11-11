@@ -25,8 +25,8 @@ impl Opt {
             .map(|x| x.parse())
             .transpose()?
             .unwrap_or_else(|| {
-                if let Some((width, _)) = terminal_size::terminal_size() {
-                    u32::from(width.0)
+                if let Some((terminal_size::Width(width), _)) = terminal_size::terminal_size() {
+                    u32::from(width)
                 } else {
                     80
                 }
