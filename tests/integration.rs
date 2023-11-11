@@ -95,3 +95,16 @@ t!(
         })
         .collect()
 );
+
+t!(
+    entire_screen_line_is_null,
+    -6,
+    20,
+    5,
+    ((-6)..=20)
+        .map(|x| match x {
+            5..=9 => None,
+            _ => Some(f64::try_from(x).unwrap()),
+        })
+        .collect()
+);

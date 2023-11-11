@@ -1,0 +1,12 @@
+---
+source: tests/integration.rs
+expression: stdout
+---
+⢻⡇
+⠈⡇
+⠀⠿
+
+⠀⣿⣿⣇
+⠀⣿⣿⣿⡄
+⠀⠿⠿⠿⠷
+
