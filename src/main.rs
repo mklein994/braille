@@ -34,29 +34,12 @@ fn main() -> anyhow::Result<()> {
                 has_more_lines = false;
             }
 
-            if let Some(new_line) = line.transpose()?.flatten().map(scale).map(|value| {
-                let mut iter = vec![false; usize::try_from(value.min(zero)).unwrap() - 1];
-                iter.resize(
-                    iter.len() + usize::try_from(value.abs_diff(zero) + 1).unwrap(),
-                    true,
-                );
-                let chunks = iter.chunks_exact(2);
-                let remainder: [bool; 2] = if chunks.remainder().is_empty() {
-                    [false, false]
-                } else {
-                    let mut rem = [false; 2];
-                    for (i, r) in chunks.remainder().iter().enumerate() {
-                        rem[i] = *r;
-                    }
-                    rem
-                };
-                let mut row: Vec<[bool; 2]> = chunks
-                    .into_iter()
-                    .map(|chunk| [chunk[0], chunk[1]])
-                    .collect::<Vec<[bool; 2]>>();
-                row.push(remainder);
-                row
-            }) {
+            if let Some(new_line) = line
+                .transpose()?
+                .flatten()
+                .map(scale)
+                .map(|value| braille::into_bit_pairs(value, zero))
+            {
                 *buffer_line = new_line;
             }
         }

@@ -41,6 +41,29 @@ impl Opt {
 }
 
 #[must_use]
+pub fn into_bit_pairs(value: u32, zero: u32) -> Vec<[bool; 2]> {
+    let mut iter = vec![false; usize::try_from(value.min(zero)).unwrap() - 1];
+    iter.resize(
+        iter.len() + usize::try_from(value.abs_diff(zero) + 1).unwrap(),
+        true,
+    );
+    let chunks = iter.chunks_exact(2);
+    let remainder = {
+        let mut rem = [false; 2];
+        for (i, r) in chunks.remainder().iter().enumerate() {
+            rem[i] = *r;
+        }
+        rem
+    };
+    let mut row: Vec<[bool; 2]> = chunks
+        .into_iter()
+        .map(|chunk| [chunk[0], chunk[1]])
+        .collect();
+    row.push(remainder);
+    row
+}
+
+#[must_use]
 pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
     let mut line: Vec<char> = vec![];
     for character in transposed {
