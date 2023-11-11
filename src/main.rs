@@ -7,7 +7,7 @@ fn main() -> anyhow::Result<()> {
     let max = opt.width * 2;
     let slope = (f64::from(max) - f64::from(min)) / (opt.maximum - opt.minimum);
     let scale = |value: f64| {
-        debug_assert!(
+        assert!(
             value >= opt.minimum && value <= opt.maximum,
             "value out of bounds: {value} [{}, {}]",
             opt.minimum,
