@@ -80,47 +80,53 @@ pub fn into_bit_pairs(value: u32, zero: u32) -> Vec<[bool; 2]> {
 }
 
 #[must_use]
+pub fn to_braille_char(bit_pairs: [[bool; 2]; 4]) -> char {
+    // Turn this:
+    //
+    // ```plain
+    // [
+    //   [0, 3],
+    //   [1, 4],
+    //   [2, 5],
+    //   [6, 7],
+    // ]
+    // ```
+    //
+    // into this:
+    //
+    // ```plain
+    // [0, 1, 2, 3, 4, 5, 6, 7]
+    // ```
+    let bits = [
+        bit_pairs[0][0],
+        bit_pairs[1][0],
+        bit_pairs[2][0],
+        bit_pairs[0][1],
+        bit_pairs[1][1],
+        bit_pairs[2][1],
+        bit_pairs[3][0],
+        bit_pairs[3][1],
+    ];
+
+    let mut block = 0x2800_u32; // empty braille character
+
+    for (index, bit) in bits.iter().enumerate() {
+        if *bit {
+            let position = u32::try_from(index).unwrap();
+            block += (2_u32).pow(position);
+        }
+    }
+
+    char::from_u32(block).expect("braille character not valid")
+}
+
+#[must_use]
 pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
     let mut line = String::new();
-    for character in transposed {
-        // Turn this:
-        //
-        // ```plain
-        // [
-        //   [0, 3],
-        //   [1, 4],
-        //   [2, 5],
-        //   [6, 7],
-        // ]
-        // ```
-        //
-        // into this:
-        //
-        // ```plain
-        // [0, 1, 2, 3, 4, 5, 6, 7]
-        // ```
-        //
-        let bits = [
-            character[0][0],
-            character[1][0],
-            character[2][0],
-            character[0][1],
-            character[1][1],
-            character[2][1],
-            character[3][0],
-            character[3][1],
-        ];
+    for bit_pairs in transposed {
+        let braille_char = to_braille_char(*bit_pairs);
 
-        let mut block = 0x2800_u32;
-
-        for (index, bit) in bits.iter().enumerate() {
-            if *bit {
-                let position = u32::try_from(index).unwrap();
-                block += (2_u32).pow(position);
-            }
-        }
-
-        line.push(char::from_u32(block).unwrap());
+        line.push(braille_char);
     }
     line
 }
