@@ -48,6 +48,8 @@ impl Opt {
                 }
             });
 
+        assert!(minimum < maximum);
+
         Ok(Self {
             minimum,
             maximum,
