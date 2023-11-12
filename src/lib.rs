@@ -12,7 +12,7 @@ pub fn get_lines() -> impl Iterator<Item = Result<Option<f64>, impl std::error::
 pub struct Opt {
     pub minimum: f64,
     pub maximum: f64,
-    pub width: u32,
+    pub width: u16,
 }
 
 fn parse_first_arg(arg: &Option<String>) -> anyhow::Result<f64> {
@@ -42,7 +42,7 @@ impl Opt {
             .transpose()?
             .unwrap_or_else(|| {
                 if let Some((terminal_size::Width(width), _)) = terminal_size::terminal_size() {
-                    u32::from(width)
+                    width
                 } else {
                     80
                 }
@@ -59,7 +59,7 @@ impl Opt {
 }
 
 #[must_use]
-pub fn into_bit_pairs(value: u32, zero: u32) -> Vec<[bool; 2]> {
+pub fn into_bit_pairs(value: u16, zero: u16) -> Vec<[bool; 2]> {
     let mut iter = vec![false; usize::try_from(value.min(zero)).unwrap() - 1];
     iter.resize(
         iter.len() + usize::try_from(value.abs_diff(zero) + 1).unwrap(),

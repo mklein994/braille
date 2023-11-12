@@ -13,7 +13,7 @@ fn main() -> anyhow::Result<()> {
             opt.minimum,
             opt.maximum
         );
-        min + (slope * (value - opt.minimum)).round() as u32
+        min + (slope * (value - opt.minimum)).round() as u16
     };
 
     let zero = if opt.minimum > 0. {
