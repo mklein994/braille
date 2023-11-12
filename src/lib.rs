@@ -15,11 +15,27 @@ pub struct Opt {
     pub width: u32,
 }
 
+fn parse_first_arg(arg: &Option<String>) -> anyhow::Result<f64> {
+    match arg.as_deref() {
+        Some("-h" | "--help") | None => {
+            anyhow::bail!("Usage: <STDIN> | braille <minimum> <maximum> [<width>]")
+        }
+        Some(min) => min
+            .parse()
+            .map_err(|err: std::num::ParseFloatError| anyhow::anyhow!(err)),
+    }
+}
+
 impl Opt {
     pub fn from_args() -> anyhow::Result<Self> {
         let mut args = std::env::args().skip(1);
-        let minimum = args.next().expect("height missing").parse()?;
-        let maximum = args.next().expect("max missing").parse()?;
+
+        let minimum = parse_first_arg(&args.next())?;
+        let maximum = args
+            .next()
+            .map(|x| x.parse())
+            .transpose()?
+            .ok_or_else(|| anyhow::anyhow!("missing maximum argument"))?;
         let width = args
             .next()
             .map(|x| x.parse())
