@@ -123,7 +123,7 @@ pub fn transpose_row(input_row: &[Vec<[bool; 2]>; 4]) -> Vec<[[bool; 2]; 4]> {
             }
         }
 
-        if !(column == longest - 1 && braille_character.iter().flatten().all(|x| x == &false)) {
+        if column < longest - 1 || braille_character.into_iter().flatten().any(|x| x) {
             output_row.push(braille_character);
         }
     }
