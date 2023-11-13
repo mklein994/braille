@@ -1,4 +1,4 @@
-pub fn get_lines() -> impl Iterator<Item = Result<Option<f64>, impl std::error::Error>> {
+pub fn get_lines() -> impl Iterator<Item = Result<Option<f64>, std::num::ParseFloatError>> {
     std::io::stdin().lines().map_while(Result::ok).map(|x| {
         if x.is_empty() {
             Ok(None)
@@ -8,6 +8,62 @@ pub fn get_lines() -> impl Iterator<Item = Result<Option<f64>, impl std::error::
     })
 }
 
+pub fn print_braille_lines(
+    opt: &Opt,
+    mut input_lines: impl Iterator<Item = Result<Option<f64>, std::num::ParseFloatError>>,
+) -> anyhow::Result<()> {
+    let min = 1;
+    let max = opt.width * 2;
+    let slope = f64::from(max - min) / (opt.maximum - opt.minimum);
+    let scale = |value: f64| {
+        assert!(
+            value >= opt.minimum && value <= opt.maximum,
+            "value out of bounds: {value} [{}, {}]",
+            opt.minimum,
+            opt.maximum
+        );
+        min + (slope * (value - opt.minimum)).round() as u16
+    };
+
+    let zero = if opt.minimum > 0. {
+        min
+    } else if opt.maximum < 0. {
+        max
+    } else {
+        scale(0.)
+    };
+
+    let mut buffer = [vec![], vec![], vec![], vec![]];
+    let mut has_more_lines = true;
+    while has_more_lines {
+        for buffer_line in &mut buffer {
+            let input_line = input_lines.next();
+            if input_line.is_none() {
+                has_more_lines = false;
+            }
+
+            if let Some(new_line) = input_line
+                .transpose()?
+                .flatten()
+                .map(scale)
+                .map(|value| into_bit_pairs(value, zero))
+            {
+                *buffer_line = new_line;
+            }
+        }
+
+        if has_more_lines || buffer.iter().any(|x| !x.is_empty()) {
+            let transposed = transpose_row(&buffer);
+            let braille_char = to_braille_char_row(&transposed);
+            println!("{braille_char}");
+        }
+
+        buffer.fill(vec![]);
+    }
+
+    Ok(())
+}
+
 #[derive(Debug)]
 pub struct Opt {
     pub minimum: f64,
@@ -15,38 +71,26 @@ pub struct Opt {
     pub width: u16,
 }
 
-fn parse_first_arg(arg: &Option<String>) -> anyhow::Result<f64> {
-    match arg.as_deref() {
-        Some("-h" | "--help") | None => {
-            anyhow::bail!("Usage: <STDIN> | braille <minimum> <maximum> [<width>]")
-        }
-        Some(min) => min
-            .parse()
-            .map_err(|err: std::num::ParseFloatError| anyhow::anyhow!(err)),
-    }
-}
-
 impl Opt {
-    pub fn from_args() -> anyhow::Result<Self> {
-        let mut args = std::env::args().skip(1);
+    pub fn from_args(args: Vec<String>) -> anyhow::Result<Self> {
+        let mut args = args.into_iter();
 
-        let minimum = parse_first_arg(&args.next())?;
+        let minimum = args.next().and_then(|x| x.parse().ok()).ok_or_else(|| {
+            anyhow::anyhow!("Usage: <STDIN> | braille <minimum> <maximum> [<width>]")
+        })?;
         let maximum = args
             .next()
-            .map(|x| x.parse())
+            .map(|x| x.parse::<f64>())
             .transpose()?
             .ok_or_else(|| anyhow::anyhow!("missing maximum argument"))?;
         let width = args
             .next()
             .map(|x| x.parse())
             .transpose()?
-            .unwrap_or_else(|| {
-                if let Some((terminal_size::Width(width), _)) = terminal_size::terminal_size() {
-                    width
-                } else {
-                    80
-                }
-            });
+            .or_else(|| {
+                terminal_size::terminal_size().map(|(terminal_size::Width(width), _)| width)
+            })
+            .unwrap_or(80);
 
         assert!(minimum < maximum);
 
