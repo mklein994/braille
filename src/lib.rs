@@ -35,8 +35,8 @@ pub fn print_braille_lines(
     opt: &Opt,
     mut input_lines: impl Iterator<Item = Result<Option<f64>, std::num::ParseFloatError>>,
 ) -> anyhow::Result<()> {
-    let min = 1;
-    let max = opt.width * 2;
+    let min = 1; // reserve an empty line for null values
+    let max = opt.width * 2; // braille characters are 2 dots wide
     let slope = f64::from(max - min) / (opt.maximum - opt.minimum);
     let scale = |value: f64| {
         assert!(
@@ -48,6 +48,7 @@ pub fn print_braille_lines(
         min + (slope * (value - opt.minimum)).round() as u16
     };
 
+    // Clamp where 0 would fit to be inside the output range
     let zero = if opt.minimum > 0. {
         min
     } else if opt.maximum < 0. {
@@ -56,6 +57,7 @@ pub fn print_braille_lines(
         scale(0.)
     };
 
+    // Each braille character is 4 dots tall
     let mut buffer = [vec![], vec![], vec![], vec![]];
     let mut has_more_lines = true;
     while has_more_lines {
