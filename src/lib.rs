@@ -1,3 +1,26 @@
+//! Turn a series of numbers into a braille graph.
+//!
+//! # Example
+//!
+//! ## Sine graph
+//!
+//! ```console
+//! $ awk 'BEGIN { for (i = 0; i < 20; i++) { print sin(i / 3); } }' | braille -1 1 4
+//! ⠀⠀⠀⠀⠀⣷⣶⣤⣀
+//! ⠀⠀⠀⠀⠀⣿⣿⣿⡿⠟
+//! ⠀⠀⢀⣀⣤⡟⠉⠁
+//! ⣴⣿⣿⣿⣿⡇
+//! ⠀⠉⠛⠻⠿⡇
+//! ```
+//!
+//! ## Simple number sequence
+//!
+//! ```console
+//! $ seq -4 3 | braille -4 3 7
+//! ⠉⠛⠿⣿
+//! ⠀⠀⠀⢸⣶⣤⣀
+//! ```
+
 pub fn get_lines() -> impl Iterator<Item = Result<Option<f64>, std::num::ParseFloatError>> {
     std::io::stdin().lines().map_while(Result::ok).map(|x| {
         if x.is_empty() {
