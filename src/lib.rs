@@ -227,7 +227,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_transpose_row() {
+    fn test_transpose_row_line_1() {
         #[rustfmt::skip]
         let input = [
             vec![[ true,  true], [ true, true], [true, false]],
@@ -267,7 +267,7 @@ mod tests {
     }
 
     #[test]
-    fn test_transpose_row_2() {
+    fn test_transpose_row_line_2() {
         #[rustfmt::skip]
         let input = [
             vec![[false, false], [false, false], [true, false]               ],
