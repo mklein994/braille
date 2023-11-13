@@ -129,11 +129,8 @@ impl Opt {
 
 #[must_use]
 pub fn into_bit_pairs(value: u16, zero: u16) -> Vec<[bool; 2]> {
-    let mut iter = vec![false; usize::try_from(value.min(zero)).unwrap() - 1];
-    iter.resize(
-        iter.len() + usize::try_from(value.abs_diff(zero) + 1).unwrap(),
-        true,
-    );
+    let mut iter = vec![false; usize::from(value.min(zero)) - 1];
+    iter.resize(iter.len() + usize::from(value.abs_diff(zero) + 1), true);
     let chunks = iter.chunks_exact(2);
     let remainder = {
         let mut rem = [false; 2];
