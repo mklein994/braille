@@ -2,6 +2,8 @@ use anyhow::Context;
 
 #[derive(Debug)]
 pub struct Opt {
+    pub kind: GraphKind,
+
     /// The input's minimum value
     pub minimum: f64,
     /// The input's maximum value
@@ -31,6 +33,13 @@ OPTIONS:
 
 fn print_version() {
     println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+}
+
+#[derive(Debug, Default)]
+pub enum GraphKind {
+    Block,
+    #[default]
+    Braille,
 }
 
 impl Opt {
@@ -100,6 +109,7 @@ impl Opt {
         anyhow::ensure!(minimum < maximum);
 
         Ok(Self {
+            kind: GraphKind::default(),
             minimum,
             maximum,
             width,
