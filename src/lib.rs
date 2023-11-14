@@ -75,7 +75,7 @@ pub fn print_braille_lines(
                 .transpose()?
                 .flatten()
                 .map(scale)
-                .map(|value| into_bit_pairs(value, zero))
+                .map(|value| into_dot_pairs(value, zero))
             {
                 *buffer_line = new_line;
             }
@@ -129,7 +129,7 @@ pub fn print_braille_lines(
 /// //   ┌──── -2 (dot 2)
 /// //  -* **
 /// //      └─  0 (dot 4)
-/// assert_eq!(vec![[false, true], [true, true]], braille::into_bit_pairs(2, 4));
+/// assert_eq!(vec![[false, true], [true, true]], braille::into_dot_pairs(2, 4));
 /// ```
 ///
 /// In the second example row, the input value is 3, which translates to dot 7. The value is above
@@ -141,7 +141,7 @@ pub fn print_braille_lines(
 /// //     └─────── 0 (dot 4)
 /// assert_eq!(
 ///     vec![[false, false], [false, true], [true, true], [true, false]],
-///     braille::into_bit_pairs(7, 4)
+///     braille::into_dot_pairs(7, 4)
 /// );
 /// ```
 ///
@@ -158,7 +158,7 @@ pub fn print_braille_lines(
 ///         └─┴┴──── stem
 /// ```
 #[must_use]
-pub fn into_bit_pairs(value: u16, zero: u16) -> Vec<[bool; 2]> {
+pub fn into_dot_pairs(value: u16, zero: u16) -> Vec<[bool; 2]> {
     let prefix_length = usize::from(value.min(zero) - 1);
     let mut iter = vec![false; prefix_length];
 
@@ -178,7 +178,7 @@ pub fn into_bit_pairs(value: u16, zero: u16) -> Vec<[bool; 2]> {
 }
 
 #[must_use]
-pub fn to_braille_char(bit_pairs: [[bool; 2]; 4]) -> char {
+pub fn to_braille_char(dot_pairs: [[bool; 2]; 4]) -> char {
     // Turn this:
     //
     // ```plain
@@ -196,14 +196,14 @@ pub fn to_braille_char(bit_pairs: [[bool; 2]; 4]) -> char {
     // [0, 1, 2, 3, 4, 5, 6, 7]
     // ```
     let bits = [
-        bit_pairs[0][0],
-        bit_pairs[1][0],
-        bit_pairs[2][0],
-        bit_pairs[0][1],
-        bit_pairs[1][1],
-        bit_pairs[2][1],
-        bit_pairs[3][0],
-        bit_pairs[3][1],
+        dot_pairs[0][0],
+        dot_pairs[1][0],
+        dot_pairs[2][0],
+        dot_pairs[0][1],
+        dot_pairs[1][1],
+        dot_pairs[2][1],
+        dot_pairs[3][0],
+        dot_pairs[3][1],
     ];
 
     let mut block = 0x2800_u32; // empty braille character
@@ -221,8 +221,8 @@ pub fn to_braille_char(bit_pairs: [[bool; 2]; 4]) -> char {
 #[must_use]
 pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
     let mut line = String::new();
-    for bit_pairs in transposed {
-        let braille_char = to_braille_char(*bit_pairs);
+    for dot_pairs in transposed {
+        let braille_char = to_braille_char(*dot_pairs);
 
         line.push(braille_char);
     }
@@ -256,10 +256,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_into_bit_pairs() {
+    fn test_into_dot_pairs() {
         assert_eq!(
             vec![[false, false], [false, false], [true, false]],
-            into_bit_pairs(5, 5)
+            into_dot_pairs(5, 5)
         );
     }
 
