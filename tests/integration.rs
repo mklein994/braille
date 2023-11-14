@@ -76,7 +76,7 @@ t!(
     1,
     40,
     (0..100)
-        .map(|x| Some(f64::sin(f64::try_from(x).unwrap() / 10.)))
+        .map(|x| Some(f64::sin(f64::from(x) / 10.)))
         .collect()
 );
 
@@ -90,7 +90,7 @@ t!(
             if x == 2 {
                 None
             } else {
-                Some(f64::try_from(x).unwrap())
+                Some(f64::from(x))
             }
         })
         .collect()
@@ -104,7 +104,7 @@ t!(
     ((-6)..=20)
         .map(|x| match x {
             5..=9 => None,
-            _ => Some(f64::try_from(x).unwrap()),
+            _ => Some(f64::from(x)),
         })
         .collect()
 );
@@ -117,7 +117,7 @@ t!(
     ((-4)..=11)
         .map(|x| match x {
             4..=11 => None,
-            _ => Some(f64::try_from(x).unwrap()),
+            _ => Some(f64::from(x)),
         })
         .collect()
 );
