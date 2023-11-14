@@ -37,7 +37,7 @@ impl ColumnGraphable for Braille {
         mut input_lines: I,
     ) -> anyhow::Result<()> {
         let min = 1; // reserve an empty line for null values
-        let max = opt.width * 2; // braille characters are 2 dots wide
+        let max = opt.width() * 2; // braille characters are 2 dots wide
         let slope = f64::from(max - min) / (opt.maximum - opt.minimum);
         let scale = |value: f64| {
             assert!(

@@ -1,10 +1,10 @@
 use braille::Opt;
+use clap::Parser;
 
 fn main() -> anyhow::Result<()> {
-    let args = std::env::args().skip(1).collect();
-    let opt = Opt::from_args(args)?;
-
+    let opt = Opt::parse();
     let lines = braille::get_lines();
+
     braille::print_lines(&opt, lines)?;
 
     Ok(())

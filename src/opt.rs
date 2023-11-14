@@ -1,41 +1,25 @@
-use anyhow::Context;
+use clap::{Parser, ValueEnum};
 
-#[derive(Debug)]
+#[derive(Debug, Parser)]
 pub struct Opt {
+    /// The kind of graph to print
+    #[arg(short, long, value_enum, default_value_t)]
     pub kind: GraphKind,
 
     /// The input's minimum value
+    #[arg(allow_negative_numbers = true)]
     pub minimum: f64,
+
     /// The input's maximum value
+    #[arg(allow_negative_numbers = true)]
     pub maximum: f64,
-    /// How wide (in characters) the graph can be; defaults to the terminal width
-    pub width: u16,
+
+    /// How wide the graph can be (defaults to terminal width)
+    #[arg(default_value_t, hide_default_value = true)]
+    width: Width,
 }
 
-fn print_help() {
-    print_version();
-    println!();
-    println!(
-        "\
-USAGE:
-    command | braille MINIMUM MAXIMUM [WIDTH]
-
-ARGS:
-    <MINIMUM>    The input's minimum value.
-    <MAXIMUM>    The input's maximum value.
-    <WIDTH>      The width of the graph. Defaults to the terminal width.
-
-OPTIONS:
-    -h, --help       Print this help text
-    -V, --version    Print version information"
-    );
-}
-
-fn print_version() {
-    println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-}
-
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy, ValueEnum)]
 pub enum GraphKind {
     Block,
     #[default]
@@ -43,76 +27,50 @@ pub enum GraphKind {
 }
 
 impl Opt {
-    /// Build options out of a list of arguments passed on the command line
-    pub fn from_args(args: Vec<String>) -> anyhow::Result<Self> {
-        if args.is_empty() {
-            print_help();
-            std::process::exit(0);
-        }
-
-        for arg in &args {
-            match arg.as_str() {
-                "-h" | "--help" => {
-                    print_help();
-                    std::process::exit(0);
-                }
-                "-V" | "--version" => {
-                    print_version();
-                    std::process::exit(0);
-                }
-                _ => {}
-            }
-        }
-
-        Self::try_from_args(args)
+    #[must_use]
+    pub const fn width(&self) -> u16 {
+        self.width.0
     }
+}
 
-    fn try_from_args(args: Vec<String>) -> anyhow::Result<Self> {
-        anyhow::ensure!(
-            args.len() == 2 || args.len() == 3,
-            "Invalid number of arguments"
-        );
+#[derive(Debug, Clone, Copy)]
+struct Width(u16);
 
-        let mut args = args.into_iter();
+impl Default for Width {
+    fn default() -> Self {
+        match terminal_size::terminal_size() {
+            Some((terminal_size::Width(width), _)) => Self(width),
+            None => Self(80),
+        }
+    }
+}
 
-        let minimum = args
-            .next()
-            .unwrap()
-            .parse()
-            .context("Invalid minimum value")?;
-        let maximum = args
-            .next()
-            .unwrap()
-            .parse()
-            .context("Invalid maximum value")?;
-        let width = args
-            .next()
-            .map(|x| {
-                match x
-                    .parse()
-                    .map_err(|err: std::num::ParseIntError| anyhow::anyhow!(err))
-                {
-                    Ok(value) => {
-                        anyhow::ensure!(value > 0, "Value must be at least 1. Given: {value}");
-                        Ok(value)
-                    }
-                    Err(err) => Err(err),
-                }
-            })
-            .transpose()
-            .context("Invalid width value")?
-            .or_else(|| {
-                terminal_size::terminal_size().map(|(terminal_size::Width(width), _)| width)
-            })
-            .unwrap_or(80);
+impl std::fmt::Display for Width {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
-        anyhow::ensure!(minimum < maximum);
+impl clap::builder::ValueParserFactory for Width {
+    type Parser = WidthValueParser;
+    fn value_parser() -> Self::Parser {
+        WidthValueParser
+    }
+}
 
-        Ok(Self {
-            kind: GraphKind::default(),
-            minimum,
-            maximum,
-            width,
-        })
+#[derive(Clone, Debug)]
+struct WidthValueParser;
+impl clap::builder::TypedValueParser for WidthValueParser {
+    type Value = Width;
+
+    fn parse_ref(
+        &self,
+        cmd: &clap::Command,
+        arg: Option<&clap::Arg>,
+        value: &std::ffi::OsStr,
+    ) -> Result<Self::Value, clap::Error> {
+        let inner = clap::value_parser!(u16);
+        let val = inner.parse_ref(cmd, arg, value)?;
+        Ok(Width(val))
     }
 }

@@ -24,7 +24,7 @@ impl ColumnGraphable for ColBlock {
         input_lines: I,
     ) -> anyhow::Result<()> {
         let min = 1.; // reserve an empty line for null values
-        let max = f64::from(opt.width * 8); // braille characters are 2 dots wide
+        let max = f64::from(opt.width() * 8); // braille characters are 2 dots wide
         let slope = (max - min) / (opt.maximum - opt.minimum);
         let scale = |value: f64| {
             assert!(
