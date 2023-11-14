@@ -93,23 +93,87 @@ pub fn print_braille_lines(
     Ok(())
 }
 
+/// Turn a value into its representation of braille dots for that row
+///
+/// # Example:
+///
+/// Let's say the width is 4 characters wide, and the input is all integers in the range `[-3, 4]`
+/// incrementing by one. The braille pattern would look like this:
+///
+/// ```plain
+/// ⠙⢿
+/// ⠀⢸⣷⣄
+/// ```
+///
+/// Depending on your font, this may appear with gaps between lines or characters. In my
+/// experience, [Cascadia Code](https://github.com/microsoft/cascadia-code) looks really good.
+///
+/// Breaking this down, let's look at these lines in particular:
+///
+/// | Value | ASCII braille | Notes            |
+/// |------:|:--------------|------------------|
+/// |    -3 | `** **`       |                  |
+/// |    -2 | `-* **`       | 1st example row  |
+/// |    -1 | `-- **`       |                  |
+/// |     0 | `-- -*`       |                  |
+/// |       |               | _next character_ |
+/// |     1 | `-- -* *- --` |                  |
+/// |     2 | `-- -* ** --` |                  |
+/// |     3 | `-- -* ** *-` | 2nd example row  |
+/// |     4 | `-- -* ** **` |                  |
+///
+/// In the first example row, the value -2 translates to dot 4. This means dots 2 through 4 are
+/// filled, and any before that are blank. Since the value is below zero, it looks like this:
+///
+/// ```
+/// //   ┌──── -2 (dot 2)
+/// //  -* **
+/// //      └─  0 (dot 4)
+/// assert_eq!(vec![[false, true], [true, true]], braille::into_bit_pairs(2, 4));
+/// ```
+///
+/// In the second example row, the input value is 3, which translates to dot 7. The value is above
+/// zero, and looks like this:
+///
+/// ```
+/// //          ┌── 3 (dot 7)
+/// // -- -* ** *-
+/// //     └─────── 0 (dot 4)
+/// assert_eq!(
+///     vec![[false, false], [false, true], [true, true], [true, false]],
+///     braille::into_bit_pairs(7, 4)
+/// );
+/// ```
+///
+/// Looking at each example line more closely, we can see it broken down into parts:
+///
+/// ```plain
+///     ┌───── prefix
+/// 1.  -* **
+///      └─┴┴─ stem
+///
+///     ┌┬─┬──────── prefix
+///     ││ │     ┌┬─ tip
+/// 2.  -- -* ** *-
+///         └─┴┴──── stem
+/// ```
 #[must_use]
 pub fn into_bit_pairs(value: u16, zero: u16) -> Vec<[bool; 2]> {
-    let mut iter = vec![false; usize::from(value.min(zero)) - 1];
-    iter.resize(iter.len() + usize::from(value.abs_diff(zero) + 1), true);
+    let prefix_length = usize::from(value.min(zero) - 1);
+    let mut iter = vec![false; prefix_length];
+
+    let stem_length = usize::from(value.abs_diff(zero) + 1);
+    iter.resize(iter.len() + stem_length, true);
+
     let chunks = iter.chunks_exact(2);
-    let remainder = {
-        let mut rem = [false; 2];
-        for (i, r) in chunks.remainder().iter().enumerate() {
-            rem[i] = *r;
-        }
-        rem
-    };
+    let tip = chunks.remainder().to_vec();
     let mut row: Vec<[bool; 2]> = chunks
         .into_iter()
         .map(|chunk| [chunk[0], chunk[1]])
         .collect();
-    row.push(remainder);
+    if !tip.is_empty() {
+        row.push([tip[0], tip.get(1).copied().unwrap_or_default()]);
+    }
     row
 }
 
@@ -190,6 +254,14 @@ pub fn transpose_row(input_row: &[Vec<[bool; 2]>; 4]) -> Vec<[[bool; 2]; 4]> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_into_bit_pairs() {
+        assert_eq!(
+            vec![[false, false], [false, false], [true, false]],
+            into_bit_pairs(5, 5)
+        );
+    }
 
     #[test]
     fn test_transpose_row_line_1() {
