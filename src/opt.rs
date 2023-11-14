@@ -78,7 +78,18 @@ impl Opt {
             .context("Invalid maximum value")?;
         let width = args
             .next()
-            .map(|x| x.parse())
+            .map(|x| {
+                match x
+                    .parse()
+                    .map_err(|err: std::num::ParseIntError| anyhow::anyhow!(err))
+                {
+                    Ok(value) => {
+                        anyhow::ensure!(value > 0, "Value must be at least 1. Given: {value}");
+                        Ok(value)
+                    }
+                    Err(err) => Err(err),
+                }
+            })
             .transpose()
             .context("Invalid width value")?
             .or_else(|| {
