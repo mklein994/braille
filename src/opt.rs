@@ -2,12 +2,16 @@ use anyhow::Context;
 
 #[derive(Debug)]
 pub struct Opt {
+    /// The input's minimum value
     pub minimum: f64,
+    /// The input's maximum value
     pub maximum: f64,
+    /// How wide (in characters) the graph can be; defaults to the terminal width
     pub width: u16,
 }
 
 impl Opt {
+    /// Build options out of a list of arguments passed on the command line
     pub fn from_args(args: Vec<String>) -> anyhow::Result<Self> {
         Self::try_from_args(args).context("Usage: <STDIN> | braille <minimum> <maximum> [<width>]")
     }
@@ -24,17 +28,17 @@ impl Opt {
             .next()
             .unwrap()
             .parse()
-            .context("invalid minimum value")?;
+            .context("Invalid minimum value")?;
         let maximum = args
             .next()
             .unwrap()
             .parse()
-            .context("invalid maximum value")?;
+            .context("Invalid maximum value")?;
         let width = args
             .next()
             .map(|x| x.parse())
             .transpose()
-            .context("invalid width value")?
+            .context("Invalid width value")?
             .or_else(|| {
                 terminal_size::terminal_size().map(|(terminal_size::Width(width), _)| width)
             })

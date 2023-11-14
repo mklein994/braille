@@ -25,6 +25,7 @@ mod opt;
 
 pub use opt::Opt;
 
+/// Parse standard input as a list of numbers (blank lines are treated as missing values)
 pub fn get_lines() -> impl Iterator<Item = Result<Option<f64>, std::num::ParseFloatError>> {
     std::io::stdin().lines().map_while(Result::ok).map(|x| {
         if x.is_empty() {
@@ -35,6 +36,7 @@ pub fn get_lines() -> impl Iterator<Item = Result<Option<f64>, std::num::ParseFl
     })
 }
 
+/// Turn a stream of numbers into a graph made of braille characters
 pub fn print_braille_lines(
     opt: &Opt,
     mut input_lines: impl Iterator<Item = Result<Option<f64>, std::num::ParseFloatError>>,
@@ -235,6 +237,7 @@ pub fn to_braille_char(dot_pairs: [[bool; 2]; 4]) -> char {
     char::from_u32(block).expect("braille character not valid")
 }
 
+/// Render a list of braille dot blocks as a string
 #[must_use]
 pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
     let mut line = String::new();
@@ -246,6 +249,7 @@ pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
     line
 }
 
+/// Turn a list of braille dot pairs into a list of braille dot blocks
 #[must_use]
 pub fn transpose_row(input_row: &[Vec<[bool; 2]>; 4]) -> Vec<[[bool; 2]; 4]> {
     let longest = input_row.iter().map(Vec::len).max().unwrap();
