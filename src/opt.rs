@@ -10,10 +10,52 @@ pub struct Opt {
     pub width: u16,
 }
 
+fn print_help() {
+    print_version();
+    println!();
+    println!(
+        "\
+USAGE:
+    command | braille MINIMUM MAXIMUM [WIDTH]
+
+ARGS:
+    <MINIMUM>    The input's minimum value.
+    <MAXIMUM>    The input's maximum value.
+    <WIDTH>      The width of the graph. Defaults to the terminal width.
+
+OPTIONS:
+    -h, --help       Print this help text
+    -V, --version    Print version information"
+    );
+}
+
+fn print_version() {
+    println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+}
+
 impl Opt {
     /// Build options out of a list of arguments passed on the command line
     pub fn from_args(args: Vec<String>) -> anyhow::Result<Self> {
-        Self::try_from_args(args).context("Usage: <STDIN> | braille <minimum> <maximum> [<width>]")
+        if args.is_empty() {
+            print_help();
+            std::process::exit(0);
+        }
+
+        for arg in &args {
+            match arg.as_str() {
+                "-h" | "--help" => {
+                    print_help();
+                    std::process::exit(0);
+                }
+                "-V" | "--version" => {
+                    print_version();
+                    std::process::exit(0);
+                }
+                _ => {}
+            }
+        }
+
+        Self::try_from_args(args)
     }
 
     fn try_from_args(args: Vec<String>) -> anyhow::Result<Self> {
