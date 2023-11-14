@@ -177,6 +177,23 @@ pub fn into_dot_pairs(value: u16, zero: u16) -> Vec<[bool; 2]> {
     row
 }
 
+/// Turns an array of dot pairs into a braille character.
+///
+/// # Example
+///
+/// ```
+/// assert_eq!(
+///     braille::to_braille_char([
+///         [true, true],
+///         [false, true],
+///         [true, false],
+///         [true, true],
+///     ]),
+///     '⣝'
+/// );
+/// ```
+///
+/// See also: <https://en.wikipedia.org/wiki/Braille_Patterns>
 #[must_use]
 pub fn to_braille_char(dot_pairs: [[bool; 2]; 4]) -> char {
     // Turn this:
