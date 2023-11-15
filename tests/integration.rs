@@ -55,6 +55,44 @@ macro_rules! t {
             assert!(stderr.is_empty());
         }
     };
+
+    (block $name:ident, $min:expr, $max:expr, $width:expr) => {
+        #[test]
+        fn $name() {
+            let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
+            let (stdout, stderr) = get_output(
+                &input,
+                [
+                    "--kind".to_string(),
+                    "block".to_string(),
+                    $min.to_string(),
+                    $max.to_string(),
+                    $width.to_string(),
+                ],
+            );
+            insta::assert_snapshot!(stdout);
+            assert!(stderr.is_empty());
+        }
+    };
+
+    (block $name:ident, $min:expr, $max:expr, $width:expr, $gen:expr) => {
+        #[test]
+        fn $name() {
+            let input: ::std::vec::Vec<_> = $gen;
+            let (stdout, stderr) = get_output(
+                &input,
+                [
+                    "--kind".to_string(),
+                    "block".to_string(),
+                    $min.to_string(),
+                    $max.to_string(),
+                    $width.to_string(),
+                ],
+            );
+            insta::assert_snapshot!(stdout);
+            assert!(stderr.is_empty());
+        }
+    };
 }
 
 t!(width_5, -4, 3, 4);
@@ -121,3 +159,5 @@ t!(
         })
         .collect()
 );
+
+t!(block colblock_characters_1_8_1, 1, 8, 1);
