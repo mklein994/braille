@@ -1,7 +1,7 @@
 pub mod graph;
 mod opt;
 
-pub use graph::{Braille, ColumnGraphable, Column};
+pub use graph::{Braille, Column, ColumnGraphable};
 pub use opt::{GraphKind, Opt};
 
 /// Parse standard input as a list of numbers (blank lines are treated as missing values)
