@@ -1,5 +1,5 @@
 use super::ColumnGraphable;
-use crate::Opt;
+use crate::{LineResult, Opt};
 
 #[derive(Debug, Default)]
 pub struct Columns;
@@ -18,10 +18,7 @@ impl ColumnGraphable for Columns {
     /// ▏
     ///   (space)
     /// ```
-    fn print_lines(
-        opt: &Opt,
-        input_lines: impl Iterator<Item = Result<Option<Self::Item>, std::num::ParseFloatError>>,
-    ) -> anyhow::Result<()> {
+    fn print_lines(opt: &Opt, input_lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
         let minimum = opt.minimum.unwrap();
         let maximum = opt.maximum.unwrap();
 
