@@ -6,11 +6,10 @@ pub use braille::Braille;
 pub use columns::Columns;
 
 pub trait ColumnGraphable {
-    type Item;
-    type Error: std::error::Error;
+    type Item: std::str::FromStr;
 
-    fn print_lines<I: Iterator<Item = anyhow::Result<Self::Item, Self::Error>>>(
+    fn print_lines(
         opt: &Opt,
-        input_lines: I,
+        lines: impl Iterator<Item = Result<Option<Self::Item>, <Self::Item as std::str::FromStr>::Err>>,
     ) -> anyhow::Result<()>;
 }

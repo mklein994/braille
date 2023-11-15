@@ -5,8 +5,7 @@ use crate::Opt;
 pub struct Columns;
 
 impl ColumnGraphable for Columns {
-    type Item = Option<f64>;
-    type Error = std::num::ParseFloatError;
+    type Item = f64;
 
     /// ```plain
     /// █
@@ -19,9 +18,9 @@ impl ColumnGraphable for Columns {
     /// ▏
     ///   (space)
     /// ```
-    fn print_lines<I: Iterator<Item = Result<Self::Item, Self::Error>>>(
+    fn print_lines(
         opt: &Opt,
-        input_lines: I,
+        input_lines: impl Iterator<Item = Result<Option<Self::Item>, std::num::ParseFloatError>>,
     ) -> anyhow::Result<()> {
         let min = 1.; // reserve an empty line for null values
         let max = f64::from(opt.width() * 8); // braille characters are 2 dots wide

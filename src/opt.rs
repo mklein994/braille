@@ -6,6 +6,10 @@ pub struct Opt {
     #[arg(short, long, value_enum, default_value_t)]
     pub kind: GraphKind,
 
+    /// Path to file to read from (defaults to standard input)
+    #[arg(short, long)]
+    pub file: Option<std::path::PathBuf>,
+
     /// The input's minimum value
     #[arg(allow_negative_numbers = true)]
     pub minimum: f64,

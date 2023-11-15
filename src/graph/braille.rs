@@ -28,13 +28,12 @@ use crate::Opt;
 pub struct Braille;
 
 impl ColumnGraphable for Braille {
-    type Item = Option<f64>;
-    type Error = std::num::ParseFloatError;
+    type Item = f64;
 
     /// Turn a stream of numbers into a graph made of braille characters
-    fn print_lines<I: Iterator<Item = Result<Self::Item, Self::Error>>>(
+    fn print_lines(
         opt: &Opt,
-        mut input_lines: I,
+        mut input_lines: impl Iterator<Item = Result<Option<Self::Item>, std::num::ParseFloatError>>,
     ) -> anyhow::Result<()> {
         let min = 1; // reserve an empty line for null values
         let max = opt.width() * 2; // braille characters are 2 dots wide
