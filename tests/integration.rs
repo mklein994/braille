@@ -161,3 +161,14 @@ t!(
 );
 
 t!(block colblock_characters_1_8_1, 1, 8, 1);
+
+t!(
+    block
+    colblock_sine_wave,
+    -1,
+    1,
+    40,
+    (0..100)
+        .map(|x| Some(f64::sin(f64::from(x) / 10.)))
+        .collect()
+);

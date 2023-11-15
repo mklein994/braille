@@ -60,8 +60,8 @@ impl ColBlock {
     fn print_line(value: Option<f64>) -> String {
         if let Some(value) = value {
             let stem = (value / 8.).trunc() as usize;
-            let tip = Self::BLOCKS[value.rem_euclid(8.) as usize];
-            let full_block = *Self::BLOCKS.last().unwrap();
+            let tip = Self::BLOCKS[(value % 8.) as usize];
+            let full_block = Self::BLOCKS.last().unwrap();
             let mut line = full_block.repeat(stem);
             line.push_str(tip);
             line
@@ -69,4 +69,29 @@ impl ColBlock {
             String::new()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! t {
+        ($name:ident, $expected:literal, $value:expr) => {
+            #[test]
+            fn $name() {
+                assert_eq!($expected, ColBlock::print_line($value));
+            }
+        };
+    }
+
+    t!(colblock_print_line_none, "", None);
+    t!(colblock_print_line_0, "", Some(0.));
+    t!(colblock_print_line_1, "▏", Some(1.));
+    t!(colblock_print_line_2, "▎", Some(2.));
+    t!(colblock_print_line_3, "▍", Some(3.));
+    t!(colblock_print_line_4, "▌", Some(4.));
+    t!(colblock_print_line_5, "▋", Some(5.));
+    t!(colblock_print_line_6, "▊", Some(6.));
+    t!(colblock_print_line_7, "▉", Some(7.));
+    t!(colblock_print_line_8, "█", Some(8.));
 }
