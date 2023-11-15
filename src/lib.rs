@@ -1,7 +1,7 @@
 pub mod graph;
 mod opt;
 
-pub use graph::{Braille, Column, ColumnGraphable};
+pub use graph::{Braille, ColumnGraphable, Columns};
 pub use opt::{GraphKind, Opt};
 
 /// Parse standard input as a list of numbers (blank lines are treated as missing values)
@@ -20,7 +20,7 @@ pub fn print_lines(
     input_lines: impl Iterator<Item = Result<Option<f64>, std::num::ParseFloatError>>,
 ) -> anyhow::Result<()> {
     match opt.kind {
-        GraphKind::Column => Column::print_lines(opt, input_lines),
+        GraphKind::Columns => Columns::print_lines(opt, input_lines),
         GraphKind::Braille => Braille::print_lines(opt, input_lines),
     }
 }

@@ -1,9 +1,9 @@
 mod braille;
-mod column;
+mod columns;
 
 use crate::Opt;
 pub use braille::Braille;
-pub use column::Column;
+pub use columns::Columns;
 
 pub trait ColumnGraphable {
     type Item;

@@ -21,7 +21,7 @@ pub struct Opt {
 
 #[derive(Debug, Default, Clone, Copy, ValueEnum)]
 pub enum GraphKind {
-    Column,
+    Columns,
     #[default]
     Braille,
 }
@@ -72,5 +72,16 @@ impl clap::builder::TypedValueParser for WidthValueParser {
         let inner = clap::value_parser!(u16).range(1..);
         let val = inner.parse_ref(cmd, arg, value)?;
         Ok(Width(val))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::CommandFactory;
+
+    #[test]
+    fn opt_sanity_check() {
+        Opt::command().debug_assert();
     }
 }

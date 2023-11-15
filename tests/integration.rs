@@ -56,7 +56,7 @@ macro_rules! t {
         }
     };
 
-    (column $name:ident, $min:expr, $max:expr, $width:expr) => {
+    (columns $name:ident, $min:expr, $max:expr, $width:expr) => {
         #[test]
         fn $name() {
             let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
@@ -64,7 +64,7 @@ macro_rules! t {
                 &input,
                 [
                     "--kind".to_string(),
-                    "column".to_string(),
+                    "columns".to_string(),
                     $min.to_string(),
                     $max.to_string(),
                     $width.to_string(),
@@ -75,7 +75,7 @@ macro_rules! t {
         }
     };
 
-    (column $name:ident, $min:expr, $max:expr, $width:expr, $gen:expr) => {
+    (columns $name:ident, $min:expr, $max:expr, $width:expr, $gen:expr) => {
         #[test]
         fn $name() {
             let input: ::std::vec::Vec<_> = $gen;
@@ -83,7 +83,7 @@ macro_rules! t {
                 &input,
                 [
                     "--kind".to_string(),
-                    "column".to_string(),
+                    "columns".to_string(),
                     $min.to_string(),
                     $max.to_string(),
                     $width.to_string(),
@@ -160,11 +160,11 @@ t!(
         .collect()
 );
 
-t!(column column_characters_1_8_1, 1, 8, 1);
+t!(columns column_characters_1_8_1, 1, 8, 1);
 
 t!(
-    column
-    column_sine_wave,
+    columns
+    columns_sine_wave,
     -1,
     1,
     40,
