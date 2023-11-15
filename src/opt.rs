@@ -21,7 +21,7 @@ pub struct Opt {
 
 #[derive(Debug, Default, Clone, Copy, ValueEnum)]
 pub enum GraphKind {
-    Block,
+    Column,
     #[default]
     Braille,
 }

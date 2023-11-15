@@ -2,9 +2,9 @@ use super::ColumnGraphable;
 use crate::Opt;
 
 #[derive(Debug, Default)]
-pub struct ColBlock;
+pub struct Column;
 
-impl ColumnGraphable for ColBlock {
+impl ColumnGraphable for Column {
     type Item = Option<f64>;
     type Error = std::num::ParseFloatError;
 
@@ -44,7 +44,7 @@ impl ColumnGraphable for ColBlock {
     }
 }
 
-impl ColBlock {
+impl Column {
     const BLOCKS: [&'static str; 9] = [
         "",         // ' '
         "\u{258f}", // ▏
@@ -79,19 +79,19 @@ mod tests {
         ($name:ident, $expected:literal, $value:expr) => {
             #[test]
             fn $name() {
-                assert_eq!($expected, ColBlock::print_line($value));
+                assert_eq!($expected, Column::print_line($value));
             }
         };
     }
 
-    t!(colblock_print_line_none, "", None);
-    t!(colblock_print_line_0, "", Some(0.));
-    t!(colblock_print_line_1, "▏", Some(1.));
-    t!(colblock_print_line_2, "▎", Some(2.));
-    t!(colblock_print_line_3, "▍", Some(3.));
-    t!(colblock_print_line_4, "▌", Some(4.));
-    t!(colblock_print_line_5, "▋", Some(5.));
-    t!(colblock_print_line_6, "▊", Some(6.));
-    t!(colblock_print_line_7, "▉", Some(7.));
-    t!(colblock_print_line_8, "█", Some(8.));
+    t!(column_print_line_none, "", None);
+    t!(column_print_line_0, "", Some(0.));
+    t!(column_print_line_1, "▏", Some(1.));
+    t!(column_print_line_2, "▎", Some(2.));
+    t!(column_print_line_3, "▍", Some(3.));
+    t!(column_print_line_4, "▌", Some(4.));
+    t!(column_print_line_5, "▋", Some(5.));
+    t!(column_print_line_6, "▊", Some(6.));
+    t!(column_print_line_7, "▉", Some(7.));
+    t!(column_print_line_8, "█", Some(8.));
 }
