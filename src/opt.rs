@@ -7,6 +7,14 @@ pub struct Opt {
     #[arg(short, long, value_enum, default_value_t)]
     pub kind: GraphKind,
 
+    /// Shortcut for --kind columns
+    #[arg(short = 'C', conflicts_with = "kind")]
+    pub columns: bool,
+
+    /// Shortcut for --kind braille
+    #[arg(short = 'B', conflicts_with = "kind")]
+    pub braille: bool,
+
     /// Path to file to read from (defaults to standard input)
     #[arg(short, long)]
     pub file: Option<std::path::PathBuf>,
@@ -35,6 +43,13 @@ impl Opt {
         if let (Some(min), None) = (opt.minimum, opt.maximum) {
             opt.width = Width(min as u16);
         };
+
+        if opt.columns {
+            opt.kind = GraphKind::Columns;
+        } else if opt.braille {
+            opt.kind = GraphKind::Braille;
+        }
+
         opt
     }
 }
