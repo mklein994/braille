@@ -22,17 +22,18 @@ impl ColumnGraphable for Columns {
         opt: &Opt,
         input_lines: impl Iterator<Item = Result<Option<Self::Item>, std::num::ParseFloatError>>,
     ) -> anyhow::Result<()> {
+        let minimum = opt.minimum.unwrap();
+        let maximum = opt.maximum.unwrap();
+
         let min = 1.; // reserve an empty line for null values
         let max = f64::from(opt.width() * 8); // braille characters are 2 dots wide
-        let slope = (max - min) / (opt.maximum - opt.minimum);
+        let slope = (max - min) / (maximum - minimum);
         let scale = |value: f64| {
             assert!(
-                value >= opt.minimum && value <= opt.maximum,
-                "value out of bounds: {value} [{}, {}]",
-                opt.minimum,
-                opt.maximum
+                value >= minimum && value <= maximum,
+                "value out of bounds: {value} [{minimum}, {maximum}]"
             );
-            min + slope * (value - opt.minimum)
+            min + slope * (value - minimum)
         };
 
         for line in input_lines {

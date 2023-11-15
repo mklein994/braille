@@ -35,23 +35,24 @@ impl ColumnGraphable for Braille {
         opt: &Opt,
         mut input_lines: impl Iterator<Item = Result<Option<Self::Item>, std::num::ParseFloatError>>,
     ) -> anyhow::Result<()> {
+        let minimum = opt.minimum.unwrap();
+        let maximum = opt.maximum.unwrap();
+
         let min = 1; // reserve an empty line for null values
         let max = opt.width() * 2; // braille characters are 2 dots wide
-        let slope = f64::from(max - min) / (opt.maximum - opt.minimum);
+        let slope = f64::from(max - min) / (maximum - minimum);
         let scale = |value: f64| {
             assert!(
-                value >= opt.minimum && value <= opt.maximum,
-                "value out of bounds: {value} [{}, {}]",
-                opt.minimum,
-                opt.maximum
+                value >= minimum && value <= maximum,
+                "value out of bounds: {value} [{minimum}, {maximum}]"
             );
-            min + (slope * (value - opt.minimum)).round() as u16
+            min + (slope * (value - minimum)).round() as u16
         };
 
         // Clamp where 0 would fit to be inside the output range
-        let zero = if opt.minimum > 0. {
+        let zero = if minimum > 0. {
             min
-        } else if opt.maximum < 0. {
+        } else if maximum < 0. {
             max
         } else {
             scale(0.)

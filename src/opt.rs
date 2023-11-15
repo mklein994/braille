@@ -11,16 +11,33 @@ pub struct Opt {
     pub file: Option<std::path::PathBuf>,
 
     /// The input's minimum value
-    #[arg(allow_negative_numbers = true)]
-    pub minimum: f64,
+    #[arg(allow_negative_numbers = true, group = "bounds")]
+    pub minimum: Option<f64>,
 
     /// The input's maximum value
-    #[arg(allow_negative_numbers = true)]
-    pub maximum: f64,
+    #[arg(allow_negative_numbers = true, requires = "minimum")]
+    pub maximum: Option<f64>,
 
     /// How wide the graph can be (defaults to terminal width)
     #[arg(default_value_t, hide_default_value = true)]
     width: Width,
+}
+
+impl Opt {
+    #[must_use]
+    pub fn new() -> Self {
+        let mut opt = Self::parse();
+        if let (Some(min), None) = (opt.minimum, opt.maximum) {
+            opt.width = Width(min as u16);
+        };
+        opt
+    }
+}
+
+impl Default for Opt {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, ValueEnum)]

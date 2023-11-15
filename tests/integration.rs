@@ -30,6 +30,30 @@ where
 }
 
 macro_rules! t {
+    (auto $name:ident, $width:literal, $gen:expr) => {
+        #[test]
+        fn $name() {
+            let input: Vec<_> = $gen.into_iter().map(|x| Some(x as f64)).collect();
+            println!("{input:?}");
+            let (stdout, stderr) = get_output(&input, [$width.to_string()]);
+            insta::assert_snapshot!(stdout);
+            assert!(stderr.is_empty());
+        }
+    };
+
+    ($name:ident, $min:expr, $max:expr, $width:expr) => {
+        #[test]
+        fn $name() {
+            let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
+            let (stdout, stderr) = get_output(
+                &input,
+                [$min.to_string(), $max.to_string(), $width.to_string()],
+            );
+            insta::assert_snapshot!(stdout);
+            assert!(stderr.is_empty());
+        }
+    };
+
     ($name:ident, $min:expr, $max:expr, $width:expr) => {
         #[test]
         fn $name() {
@@ -171,4 +195,11 @@ t!(
     (0..100)
         .map(|x| Some(f64::sin(f64::from(x) / 10.)))
         .collect()
+);
+
+t!(
+    auto
+    without_bounds_width_4,
+    4,
+    ((-3)..=4).collect::<Vec<_>>()
 );
