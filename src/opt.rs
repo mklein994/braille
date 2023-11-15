@@ -1,6 +1,7 @@
 use clap::{Parser, ValueEnum};
 
 #[derive(Debug, Parser)]
+#[command(version)]
 pub struct Opt {
     /// The kind of graph to print
     #[arg(short, long, value_enum, default_value_t)]
