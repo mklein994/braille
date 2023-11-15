@@ -69,7 +69,7 @@ impl clap::builder::TypedValueParser for WidthValueParser {
         arg: Option<&clap::Arg>,
         value: &std::ffi::OsStr,
     ) -> Result<Self::Value, clap::Error> {
-        let inner = clap::value_parser!(u16);
+        let inner = clap::value_parser!(u16).range(1..);
         let val = inner.parse_ref(cmd, arg, value)?;
         Ok(Width(val))
     }
