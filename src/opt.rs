@@ -11,7 +11,7 @@ pub struct Opt {
     pub file: Option<std::path::PathBuf>,
 
     /// The input's minimum value
-    #[arg(allow_negative_numbers = true, group = "bounds")]
+    #[arg(allow_negative_numbers = true)]
     pub minimum: Option<f64>,
 
     /// The input's maximum value
@@ -24,6 +24,10 @@ pub struct Opt {
 }
 
 impl Opt {
+    /// Parse options
+    ///
+    /// Call this instead of `Opt::parse()`, since it makes some adjustments not supported by
+    /// [`clap`].
     #[must_use]
     pub fn new() -> Self {
         let mut opt = Self::parse();
@@ -48,6 +52,7 @@ pub enum GraphKind {
 }
 
 impl Opt {
+    /// The width of the graph
     #[must_use]
     pub const fn width(&self) -> u16 {
         self.width.0
