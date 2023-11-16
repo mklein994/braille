@@ -27,67 +27,19 @@ pub fn run(mut opt: Opt) -> anyhow::Result<()> {
         }
     };
 
-    let line_iter = maybe_detect_bounds(&mut opt, lines);
-
-    let config = Config::from(&opt);
+    // TODO: figure out how to couple these together
+    // It shouldn't be possible to build the config before creating the iterator
+    let line_iter = opt.get_iter(lines);
+    let config = Config::from(opt);
 
     print_lines(config, line_iter)?;
 
     Ok(())
 }
 
-enum LineIter<BoundlessIter: Iterator<Item = LineResult>, BoundedIter: Iterator<Item = LineResult>>
-{
-    Boundless(BoundlessIter),
-    Bounded(BoundedIter),
-}
-
-impl<BoundlessIter, BoundedIter> Iterator for LineIter<BoundlessIter, BoundedIter>
-where
-    BoundlessIter: Iterator<Item = LineResult>,
-    BoundedIter: Iterator<Item = LineResult>,
-{
-    type Item = LineResult;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self {
-            Self::Boundless(iter) => iter.next(),
-            Self::Bounded(iter) => iter.next(),
-        }
-    }
-}
-
-/// If no bounds were given, look for them from the input and return the resulting iterator
-fn maybe_detect_bounds(
-    opt: &mut Opt,
-    input_lines: impl Iterator<Item = LineResult>,
-) -> LineIter<impl Iterator<Item = LineResult>, impl Iterator<Item = LineResult>> {
-    if opt.minimum.and(opt.maximum).is_none() {
-        let mut lines = vec![];
-        let mut min = f64::MAX;
-        let mut max = f64::MIN;
-
-        for line in input_lines {
-            if let Ok(Some(value)) = line {
-                min = min.min(value);
-                max = max.max(value);
-            }
-            lines.push(line);
-        }
-
-        opt.minimum = Some(min);
-        opt.maximum = Some(max);
-
-        LineIter::Bounded(lines.into_iter())
-    } else {
-        LineIter::Boundless(input_lines)
-    }
-}
-
 /// Print the graph using the options and input lines
 fn print_lines(config: Config, lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
     match config.kind() {
-        // TODO: ensure Graphable has a "new()" function to build from config
         GraphKind::Columns => Columns::new(config).print_lines(lines),
         GraphKind::BrailleLines => Lines::new(config).print_lines(lines),
         GraphKind::BrailleBars => todo!(),

@@ -1,5 +1,7 @@
 use clap::{Parser, ValueEnum};
 
+use crate::LineResult;
+
 #[derive(Debug, Parser)]
 #[command(version)]
 pub struct Opt {
@@ -31,7 +33,7 @@ pub struct Opt {
     pub size: Option<u16>,
 }
 
-pub trait Configurable: for<'a> From<&'a Opt> {
+pub trait Configurable: From<Opt> {
     fn kind(&self) -> GraphKind;
     fn minimum(&self) -> f64;
     fn maximum(&self) -> f64;
@@ -46,8 +48,8 @@ pub struct Config {
     size: u16,
 }
 
-impl From<&Opt> for Config {
-    fn from(value: &Opt) -> Self {
+impl From<Opt> for Config {
+    fn from(value: Opt) -> Self {
         Self {
             kind: value.kind,
             minimum: value.minimum.unwrap(),
@@ -107,11 +109,64 @@ impl Opt {
 
         opt
     }
+
+    /// If no bounds were given, look for them from the input and return the resulting iterator,
+    /// otherwise simply return the resulting iterator.
+    ///
+    /// These are both wrapped inside an enum to allow for `impl Iterator<...>` types.
+    pub fn get_iter(
+        &mut self,
+        input_lines: impl Iterator<Item = LineResult>,
+    ) -> LineIter<impl Iterator<Item = LineResult>, impl Iterator<Item = LineResult>> {
+        if self.minimum.and(self.maximum).is_none() {
+            let mut lines = vec![];
+            let mut min = f64::MAX;
+            let mut max = f64::MIN;
+
+            for line in input_lines {
+                if let Ok(Some(value)) = line {
+                    min = min.min(value);
+                    max = max.max(value);
+                }
+                lines.push(line);
+            }
+
+            self.minimum = Some(min);
+            self.maximum = Some(max);
+
+            LineIter::Bounded(lines.into_iter())
+        } else {
+            LineIter::Boundless(input_lines)
+        }
+    }
 }
 
 impl Default for Opt {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+pub enum LineIter<
+    BoundlessIter: Iterator<Item = LineResult>,
+    BoundedIter: Iterator<Item = LineResult>,
+> {
+    Boundless(BoundlessIter),
+    Bounded(BoundedIter),
+}
+
+impl<BoundlessIter, BoundedIter> Iterator for LineIter<BoundlessIter, BoundedIter>
+where
+    BoundlessIter: Iterator<Item = LineResult>,
+    BoundedIter: Iterator<Item = LineResult>,
+{
+    type Item = LineResult;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Boundless(iter) => iter.next(),
+            Self::Bounded(iter) => iter.next(),
+        }
     }
 }
 
