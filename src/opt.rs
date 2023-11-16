@@ -47,7 +47,7 @@ impl Opt {
         if opt.columns {
             opt.kind = GraphKind::Columns;
         } else if opt.braille {
-            opt.kind = GraphKind::Braille;
+            opt.kind = GraphKind::BrailleLines;
         }
 
         opt
@@ -64,7 +64,8 @@ impl Default for Opt {
 pub enum GraphKind {
     Columns,
     #[default]
-    Braille,
+    #[value(name = "braille")]
+    BrailleLines,
 }
 
 impl Opt {

@@ -1,7 +1,7 @@
 pub mod graph;
 mod opt;
 
-pub use graph::{Braille, ColumnGraphable, Columns};
+pub use graph::{BrailleLines, ColumnGraphable, Columns};
 pub use opt::{GraphKind, Opt};
 use std::fs::File;
 use std::io::prelude::*;
@@ -83,7 +83,7 @@ fn maybe_detect_bounds(
 fn print_lines(opt: &Opt, lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
     match opt.kind {
         GraphKind::Columns => Columns::print_lines(opt, lines),
-        GraphKind::Braille => Braille::print_lines(opt, lines),
+        GraphKind::BrailleLines => BrailleLines::print_lines(opt, lines),
     }
 }
 

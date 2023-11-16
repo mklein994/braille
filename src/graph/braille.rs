@@ -25,9 +25,9 @@ use super::ColumnGraphable;
 use crate::{LineResult, Opt};
 
 #[derive(Debug, Default)]
-pub struct Braille;
+pub struct BrailleLines;
 
-impl ColumnGraphable for Braille {
+impl ColumnGraphable for BrailleLines {
     type Item = f64;
 
     /// Turn a stream of numbers into a graph made of braille characters
@@ -91,7 +91,7 @@ impl ColumnGraphable for Braille {
     }
 }
 
-impl Braille {
+impl BrailleLines {
     /// Turn a value into its representation of braille dots for that row
     ///
     /// # Example:
@@ -125,24 +125,24 @@ impl Braille {
     /// filled, and any before that are blank. Since the value is below zero, it looks like this:
     ///
     /// ```
-    /// # use braille::Braille;
+    /// # use braille::BrailleLines;
     /// //   ┌──── -2 (dot 2)
     /// //  -* **
     /// //      └─  0 (dot 4)
-    /// assert_eq!(vec![[false, true], [true, true]], Braille::into_dot_pairs(2, 4));
+    /// assert_eq!(vec![[false, true], [true, true]], BrailleLines::into_dot_pairs(2, 4));
     /// ```
     ///
     /// In the second example row, the input value is 3, which translates to dot 7. The value is above
     /// zero, and looks like this:
     ///
     /// ```
-    /// # use braille::Braille;
+    /// # use braille::BrailleLines;
     /// //          ┌── 3 (dot 7)
     /// // -- -* ** *-
     /// //     └─────── 0 (dot 4)
     /// assert_eq!(
     ///     vec![[false, false], [false, true], [true, true], [true, false]],
-    ///     Braille::into_dot_pairs(7, 4)
+    ///     BrailleLines::into_dot_pairs(7, 4)
     /// );
     /// ```
     ///
@@ -183,9 +183,9 @@ impl Braille {
     /// # Example
     ///
     /// ```
-    /// # use braille::Braille;
+    /// # use braille::BrailleLines;
     /// assert_eq!(
-    ///     Braille::to_braille_char([
+    ///     BrailleLines::to_braille_char([
     ///         [true, true],
     ///         [false, true],
     ///         [true, false],
@@ -281,7 +281,7 @@ mod tests {
     fn test_into_dot_pairs() {
         assert_eq!(
             vec![[false, false], [false, false], [true, false]],
-            Braille::into_dot_pairs(5, 5)
+            BrailleLines::into_dot_pairs(5, 5)
         );
     }
 
@@ -316,7 +316,7 @@ mod tests {
                 [ true, false],
             ],
         ];
-        let actual = Braille::transpose_row(&input);
+        let actual = BrailleLines::transpose_row(&input);
         for (ex, act) in expected.iter().zip(actual.iter()) {
             eprintln!("{ex:?}");
             eprintln!("{act:?}");
@@ -363,6 +363,6 @@ mod tests {
             ],
         ];
 
-        assert_eq!(expected, Braille::transpose_row(&input));
+        assert_eq!(expected, BrailleLines::transpose_row(&input));
     }
 }

@@ -2,7 +2,7 @@ mod braille;
 mod columns;
 
 use crate::{LineResult, Opt};
-pub use braille::Braille;
+pub use braille::BrailleLines;
 pub use columns::Columns;
 
 pub trait ColumnGraphable {
