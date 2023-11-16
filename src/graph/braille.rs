@@ -30,8 +30,6 @@ pub struct Lines {
     config: Config,
 }
 
-impl ColumnGraphable for Lines {}
-
 impl Graphable for Lines {
     type Config = Config;
     type Item = f64;
@@ -43,7 +41,9 @@ impl Graphable for Lines {
     fn config(&self) -> &Self::Config {
         &self.config
     }
+}
 
+impl ColumnGraphable for Lines {
     fn print_lines(&self, mut input_lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
         let minimum = self.minimum();
         let maximum = self.maximum();

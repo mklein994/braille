@@ -1,10 +1,14 @@
+#![allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+
 pub mod graph;
 mod opt;
 
-pub use graph::{BarGraphable, ColumnGraphable, Columns, Graphable, Lines};
+pub use graph::{BarGraphable, ColumnGraphable, Graphable};
+pub use graph::{Bars, Columns, Lines};
 
 use opt::Config;
 use opt::Configurable;
+use opt::LineIter;
 pub use opt::{GraphKind, Opt};
 use std::fs::File;
 use std::io::prelude::*;
@@ -29,7 +33,7 @@ pub fn run(mut opt: Opt) -> anyhow::Result<()> {
 
     // TODO: figure out how to couple these together
     // It shouldn't be possible to build the config before creating the iterator
-    let line_iter = opt.get_iter(lines);
+    let line_iter = opt.get_iter(lines)?;
     let config = Config::from(opt);
 
     print_lines(config, line_iter)?;
@@ -38,11 +42,16 @@ pub fn run(mut opt: Opt) -> anyhow::Result<()> {
 }
 
 /// Print the graph using the options and input lines
-fn print_lines(config: Config, lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
-    match config.kind() {
-        GraphKind::Columns => Columns::new(config).print_lines(lines),
-        GraphKind::BrailleLines => Lines::new(config).print_lines(lines),
-        GraphKind::BrailleBars => todo!(),
+fn print_lines(
+    config: Config,
+    iter: LineIter<impl Iterator<Item = LineResult> + 'static>,
+) -> anyhow::Result<()> {
+    match (config.kind(), iter) {
+        (GraphKind::Columns, iter) => Columns::new(config).print_lines(iter.into_iter()),
+        (GraphKind::BrailleLines, iter) => Lines::new(config).print_lines(iter.into_iter()),
+        (GraphKind::Bars, LineIter::Bounded { lines }) => Bars::new(config).print_bars(lines),
+        (GraphKind::BrailleBars, LineIter::Bounded { .. }) => todo!(),
+        (kind, _) => panic!("Unknown graph/iter combo: {kind:?}"),
     }
 }
 

@@ -6,8 +6,6 @@ pub struct Columns {
     config: Config,
 }
 
-impl ColumnGraphable for Columns {}
-
 impl Graphable for Columns {
     type Config = Config;
     type Item = f64;
@@ -19,7 +17,9 @@ impl Graphable for Columns {
     fn config(&self) -> &Self::Config {
         &self.config
     }
+}
 
+impl ColumnGraphable for Columns {
     /// ```plain
     /// █
     /// ▉

@@ -103,7 +103,7 @@ impl Opt {
 
             opt.size = Some(match opt.kind {
                 GraphKind::Columns | GraphKind::BrailleLines => width,
-                GraphKind::BrailleBars => height,
+                GraphKind::Bars | GraphKind::BrailleBars => height,
             });
         }
 
@@ -116,8 +116,8 @@ impl Opt {
     /// These are both wrapped inside an enum to allow for `impl Iterator<...>` types.
     pub fn get_iter(
         &mut self,
-        input_lines: impl Iterator<Item = LineResult>,
-    ) -> LineIter<impl Iterator<Item = LineResult>, impl Iterator<Item = LineResult>> {
+        input_lines: impl Iterator<Item = LineResult> + 'static,
+    ) -> anyhow::Result<LineIter<impl Iterator<Item = LineResult> + 'static>> {
         if self.minimum.and(self.maximum).is_none() {
             let mut lines = vec![];
             let mut min = f64::MAX;
@@ -134,9 +134,13 @@ impl Opt {
             self.minimum = Some(min);
             self.maximum = Some(max);
 
-            LineIter::Bounded(lines.into_iter())
+            Ok(LineIter::Bounded { lines })
+        } else if matches!(self.kind, GraphKind::Bars | GraphKind::BrailleBars) {
+            Ok(LineIter::Bounded {
+                lines: input_lines.collect(),
+            })
         } else {
-            LineIter::Boundless(input_lines)
+            Ok(LineIter::Boundless(input_lines))
         }
     }
 }
@@ -147,25 +151,24 @@ impl Default for Opt {
     }
 }
 
-pub enum LineIter<
-    BoundlessIter: Iterator<Item = LineResult>,
-    BoundedIter: Iterator<Item = LineResult>,
-> {
+#[derive(Debug)]
+pub enum LineIter<BoundlessIter: Iterator<Item = LineResult> + 'static> {
     Boundless(BoundlessIter),
-    Bounded(BoundedIter),
+    Bounded { lines: Vec<LineResult> },
 }
 
-impl<BoundlessIter, BoundedIter> Iterator for LineIter<BoundlessIter, BoundedIter>
+impl<BoundlessIter> IntoIterator for LineIter<BoundlessIter>
 where
-    BoundlessIter: Iterator<Item = LineResult>,
-    BoundedIter: Iterator<Item = LineResult>,
+    BoundlessIter: Iterator<Item = LineResult> + 'static,
 {
     type Item = LineResult;
 
-    fn next(&mut self) -> Option<Self::Item> {
+    type IntoIter = Box<dyn Iterator<Item = Self::Item>>;
+
+    fn into_iter(self) -> Self::IntoIter {
         match self {
-            Self::Boundless(iter) => iter.next(),
-            Self::Bounded(iter) => iter.next(),
+            LineIter::Boundless(lines) => Box::new(lines),
+            LineIter::Bounded { lines } => Box::new(lines.into_iter()),
         }
     }
 }
@@ -179,6 +182,8 @@ pub enum GraphKind {
     BrailleLines,
 
     BrailleBars,
+
+    Bars,
 }
 
 #[cfg(test)]
