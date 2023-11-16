@@ -84,6 +84,7 @@ fn print_lines(opt: &Opt, lines: impl Iterator<Item = LineResult>) -> anyhow::Re
     match opt.kind {
         GraphKind::Columns => Columns::print_lines(opt, lines),
         GraphKind::BrailleLines => BrailleLines::print_lines(opt, lines),
+        GraphKind::BrailleBars => todo!(),
     }
 }
 

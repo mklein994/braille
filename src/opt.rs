@@ -28,8 +28,7 @@ pub struct Opt {
     pub maximum: Option<f64>,
 
     /// How wide the graph can be (defaults to terminal width)
-    #[arg(default_value_t, hide_default_value = true)]
-    width: Width,
+    size: Option<u16>,
 }
 
 impl Opt {
@@ -40,9 +39,6 @@ impl Opt {
     #[must_use]
     pub fn new() -> Self {
         let mut opt = Self::parse();
-        if let (Some(min), None) = (opt.minimum, opt.maximum) {
-            opt.width = Width(min as u16);
-        };
 
         if opt.columns {
             opt.kind = GraphKind::Columns;
@@ -50,7 +46,27 @@ impl Opt {
             opt.kind = GraphKind::BrailleLines;
         }
 
+        // The "minimum" value will be parsed as the size if a maximum is not provided
+        if let (Some(size), None) = (opt.minimum, opt.maximum) {
+            opt.size = Some(size as u16);
+        } else if opt.size.is_none() {
+            use terminal_size::{Height, Width};
+
+            let (width, height) = terminal_size::terminal_size()
+                .map_or((80, 24), |(Width(width), Height(height))| (width, height));
+
+            opt.size = Some(match opt.kind {
+                GraphKind::Columns | GraphKind::BrailleLines => width,
+                GraphKind::BrailleBars => height,
+            });
+        }
+
         opt
+    }
+
+    #[must_use]
+    pub fn size(&self) -> u16 {
+        self.size.unwrap()
     }
 }
 
@@ -63,59 +79,12 @@ impl Default for Opt {
 #[derive(Debug, Default, Clone, Copy, ValueEnum)]
 pub enum GraphKind {
     Columns,
+
     #[default]
     #[value(name = "braille")]
     BrailleLines,
-}
 
-impl Opt {
-    /// The width of the graph
-    #[must_use]
-    pub const fn width(&self) -> u16 {
-        self.width.0
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-struct Width(u16);
-
-impl Default for Width {
-    fn default() -> Self {
-        match terminal_size::terminal_size() {
-            Some((terminal_size::Width(width), _)) => Self(width),
-            None => Self(80),
-        }
-    }
-}
-
-impl std::fmt::Display for Width {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl clap::builder::ValueParserFactory for Width {
-    type Parser = WidthValueParser;
-    fn value_parser() -> Self::Parser {
-        WidthValueParser
-    }
-}
-
-#[derive(Clone, Debug)]
-struct WidthValueParser;
-impl clap::builder::TypedValueParser for WidthValueParser {
-    type Value = Width;
-
-    fn parse_ref(
-        &self,
-        cmd: &clap::Command,
-        arg: Option<&clap::Arg>,
-        value: &std::ffi::OsStr,
-    ) -> Result<Self::Value, clap::Error> {
-        let inner = clap::value_parser!(u16).range(1..);
-        let val = inner.parse_ref(cmd, arg, value)?;
-        Ok(Width(val))
-    }
+    BrailleBars,
 }
 
 #[cfg(test)]
