@@ -1,7 +1,10 @@
 pub mod graph;
 mod opt;
 
-pub use graph::{BrailleLines, ColumnGraphable, Columns};
+pub use graph::{BarGraphable, ColumnGraphable, Columns, Graphable, Lines};
+
+use opt::Config;
+use opt::Configurable;
 pub use opt::{GraphKind, Opt};
 use std::fs::File;
 use std::io::prelude::*;
@@ -12,7 +15,7 @@ use std::path::Path;
 pub type LineResult = Result<Option<f64>, <f64 as std::str::FromStr>::Err>;
 
 /// Main entry point for the program
-pub fn run(opt: &mut Opt) -> anyhow::Result<()> {
+pub fn run(mut opt: Opt) -> anyhow::Result<()> {
     let lines: Box<dyn Iterator<Item = LineResult>> = match &opt.file {
         None => Box::new(get_lines()),
         Some(path) => {
@@ -24,9 +27,11 @@ pub fn run(opt: &mut Opt) -> anyhow::Result<()> {
         }
     };
 
-    let line_iter = maybe_detect_bounds(opt, lines);
+    let line_iter = maybe_detect_bounds(&mut opt, lines);
 
-    print_lines(opt, line_iter)?;
+    let config = Config::from(&opt);
+
+    print_lines(config, line_iter)?;
 
     Ok(())
 }
@@ -80,10 +85,11 @@ fn maybe_detect_bounds(
 }
 
 /// Print the graph using the options and input lines
-fn print_lines(opt: &Opt, lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
-    match opt.kind {
-        GraphKind::Columns => Columns::print_lines(opt, lines),
-        GraphKind::BrailleLines => BrailleLines::print_lines(opt, lines),
+fn print_lines(config: Config, lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
+    match config.kind() {
+        // TODO: ensure Graphable has a "new()" function to build from config
+        GraphKind::Columns => Columns::new(config).print_lines(lines),
+        GraphKind::BrailleLines => Lines::new(config).print_lines(lines),
         GraphKind::BrailleBars => todo!(),
     }
 }

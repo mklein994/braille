@@ -1,11 +1,24 @@
-use super::ColumnGraphable;
-use crate::{LineResult, Opt};
+use crate::graph::{ColumnGraphable, Graphable};
+use crate::opt::Config;
+use crate::LineResult;
 
-#[derive(Debug, Default)]
-pub struct Columns;
+pub struct Columns {
+    config: Config,
+}
 
-impl ColumnGraphable for Columns {
+impl ColumnGraphable for Columns {}
+
+impl Graphable for Columns {
+    type Config = Config;
     type Item = f64;
+
+    fn new(config: Self::Config) -> Self {
+        Self { config }
+    }
+
+    fn config(&self) -> &Self::Config {
+        &self.config
+    }
 
     /// ```plain
     /// █
@@ -18,12 +31,12 @@ impl ColumnGraphable for Columns {
     /// ▏
     ///   (space)
     /// ```
-    fn print_lines(opt: &Opt, input_lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
-        let minimum = opt.minimum.unwrap();
-        let maximum = opt.maximum.unwrap();
+    fn print_lines(&self, input_lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
+        let minimum = self.minimum();
+        let maximum = self.maximum();
 
         let min = 1.; // reserve an empty line for null values
-        let max = f64::from(opt.size() * 8); // braille characters are 2 dots wide
+        let max = f64::from(self.width() * 8); // braille characters are 2 dots wide
         let slope = (max - min) / (maximum - minimum);
         let scale = |value: f64| {
             assert!(

@@ -28,7 +28,51 @@ pub struct Opt {
     pub maximum: Option<f64>,
 
     /// How wide the graph can be (defaults to terminal width)
-    size: Option<u16>,
+    pub size: Option<u16>,
+}
+
+pub trait Configurable: for<'a> From<&'a Opt> {
+    fn kind(&self) -> GraphKind;
+    fn minimum(&self) -> f64;
+    fn maximum(&self) -> f64;
+    fn size(&self) -> u16;
+}
+
+#[derive(Debug)]
+pub struct Config {
+    kind: GraphKind,
+    minimum: f64,
+    maximum: f64,
+    size: u16,
+}
+
+impl From<&Opt> for Config {
+    fn from(value: &Opt) -> Self {
+        Self {
+            kind: value.kind,
+            minimum: value.minimum.unwrap(),
+            maximum: value.maximum.unwrap(),
+            size: value.size.unwrap(),
+        }
+    }
+}
+
+impl Configurable for Config {
+    fn kind(&self) -> GraphKind {
+        self.kind
+    }
+
+    fn minimum(&self) -> f64 {
+        self.minimum
+    }
+
+    fn maximum(&self) -> f64 {
+        self.maximum
+    }
+
+    fn size(&self) -> u16 {
+        self.size
+    }
 }
 
 impl Opt {
@@ -62,11 +106,6 @@ impl Opt {
         }
 
         opt
-    }
-
-    #[must_use]
-    pub fn size(&self) -> u16 {
-        self.size.unwrap()
     }
 }
 
