@@ -117,7 +117,7 @@ impl Opt {
     pub fn get_iter(
         &mut self,
         input_lines: SourceLineIterator,
-    ) -> anyhow::Result<LineIter<impl Iterator<Item = LineResult> + 'static>> {
+    ) -> anyhow::Result<ValueIter<impl Iterator<Item = LineResult> + 'static>> {
         if self.minimum.and(self.maximum).is_none() {
             let mut lines = vec![];
             let mut min = f64::MAX;
@@ -134,13 +134,13 @@ impl Opt {
             self.minimum = Some(min);
             self.maximum = Some(max);
 
-            Ok(LineIter::Bounded { lines })
+            Ok(ValueIter::Bounded { lines })
         } else if matches!(self.kind, GraphKind::Bars | GraphKind::BrailleBars) {
-            Ok(LineIter::Bounded {
+            Ok(ValueIter::Bounded {
                 lines: input_lines.into_iter().collect(),
             })
         } else {
-            Ok(LineIter::Boundless(input_lines.into_iter()))
+            Ok(ValueIter::Boundless(input_lines.into_iter()))
         }
     }
 }
@@ -152,12 +152,12 @@ impl Default for Opt {
 }
 
 #[derive(Debug)]
-pub enum LineIter<BoundlessIter: Iterator<Item = LineResult> + 'static> {
+pub enum ValueIter<BoundlessIter: Iterator<Item = LineResult> + 'static> {
     Boundless(BoundlessIter),
     Bounded { lines: Vec<LineResult> },
 }
 
-impl<BoundlessIter> IntoIterator for LineIter<BoundlessIter>
+impl<BoundlessIter> IntoIterator for ValueIter<BoundlessIter>
 where
     BoundlessIter: Iterator<Item = LineResult> + 'static,
 {
@@ -167,8 +167,8 @@ where
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            LineIter::Boundless(lines) => Box::new(lines),
-            LineIter::Bounded { lines } => Box::new(lines.into_iter()),
+            ValueIter::Boundless(lines) => Box::new(lines),
+            ValueIter::Bounded { lines } => Box::new(lines.into_iter()),
         }
     }
 }
