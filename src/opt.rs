@@ -43,7 +43,13 @@ pub struct Opt {
     /// ⠙⢿
     /// ⠀⢸⣷⣄
     /// ```
-    #[arg(short, long, exclusive = true, conflicts_with = "file", verbatim_doc_comment)]
+    #[arg(
+        short,
+        long,
+        exclusive = true,
+        conflicts_with = "file",
+        verbatim_doc_comment
+    )]
     pub modeline: bool,
 
     /// The kind of graph to print
