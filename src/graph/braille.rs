@@ -31,14 +31,11 @@ pub struct Lines {
 }
 
 impl Graphable for Lines {
-    type Config = Config;
-    type Item = f64;
-
-    fn new(config: Self::Config) -> Self {
+    fn new(config: Config) -> Self {
         Self { config }
     }
 
-    fn config(&self) -> &Self::Config {
+    fn config(&self) -> &Config {
         &self.config
     }
 }

@@ -2,19 +2,16 @@ mod bars;
 mod braille;
 mod columns;
 
-use crate::opt::Configurable;
+use crate::opt::{Config, Configurable};
 use crate::LineResult;
 pub use bars::Bars;
 pub use braille::Lines;
 pub use columns::Columns;
 
-pub trait Graphable {
-    type Config: Configurable;
-    type Item: std::str::FromStr;
+pub trait Graphable<Conf: Configurable = Config> {
+    fn new(config: Conf) -> Self;
 
-    fn new(config: Self::Config) -> Self;
-
-    fn config(&self) -> &Self::Config;
+    fn config(&self) -> &Conf;
 
     fn minimum(&self) -> f64 {
         self.config().minimum()
