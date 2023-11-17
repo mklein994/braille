@@ -176,14 +176,32 @@ where
 
 #[derive(Debug, Default, Clone, Copy, ValueEnum)]
 pub enum GraphKind {
+    /// █▉▊▋▌▍▎▏ Column graph with block characters
     Columns,
 
+    /// ⠙⣇ Column graph with braille characters
+    ///
+    /// ```plain
+    /// ** *-
+    /// -* *-
+    /// -- *-
+    /// -- **
+    /// ```
     #[default]
     #[value(name = "braille")]
     BrailleLines,
 
+    /// ⡶⠚ Bar graph with braille characters
+    ///
+    /// ```plain
+    /// -- -*
+    /// ** **
+    /// ** --
+    /// *- --
+    /// ```
     BrailleBars,
 
+    /// ▁▂▃▄▅▆▇█ Bar graph with block characters
     Bars,
 }
 
