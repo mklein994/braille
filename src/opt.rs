@@ -6,7 +6,14 @@ use crate::{input::SourceLineIterator, LineResult};
 #[command(version)]
 pub struct Opt {
     /// The kind of graph to print
-    #[arg(short, long, value_enum, default_value_t)]
+    ///
+    /// Kinds supported with their matching option parameters:
+    ///
+    /// | Kind    | Column    | Bar    |
+    /// |---------|-----------|--------|
+    /// | Braille | `braille` |        |
+    /// | Block   | `columns` | `bars` |
+    #[arg(short, long, value_enum, default_value_t, verbatim_doc_comment)]
     pub kind: GraphKind,
 
     /// Shortcut for --kind columns
