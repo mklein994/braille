@@ -34,7 +34,6 @@ macro_rules! t {
         #[test]
         fn $name() {
             let input: Vec<_> = $gen.into_iter().map(|x| Some(x as f64)).collect();
-            println!("{input:?}");
             let (stdout, stderr) = get_output(&input, [$width.to_string()]);
             insta::assert_snapshot!(stdout);
             assert!(stderr.is_empty());
