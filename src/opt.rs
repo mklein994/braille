@@ -159,7 +159,7 @@ impl Opt {
             let mut first_line = String::new();
             std::io::stdin().read_line(&mut first_line)?;
 
-            if let Some(args) = Self::parse_modeline(&mut cmd, &first_line)? {
+            if let Some(args) = Self::parse_modeline(&mut cmd, first_line.trim())? {
                 let matches = cmd.get_matches_from(args);
 
                 opt = Self::from_arg_matches(&matches)?;
@@ -214,10 +214,9 @@ impl Opt {
             Err(cmd.error(
                 ErrorKind::ValueValidation,
                 ContextValue::String(format!(
-                    r#"Invalid modeline: {:?}
+                    r#"Invalid modeline: {line:?}
 
-The first line should be the string "braille:", followed by spaced separated options"#,
-                    line.trim()
+The first line should be the string "braille:", followed by spaced separated options"#
                 )),
             ))
         } else {
