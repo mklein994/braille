@@ -8,9 +8,9 @@ pub use graph::{BarGraphable, ColumnGraphable, Graphable};
 pub use graph::{Bars, Columns, Lines};
 
 use input::SourceLineIterator;
-use opt::Config;
 use opt::Configurable;
 use opt::ValueIter;
+use opt::{Config, FirstLine};
 pub use opt::{GraphKind, Opt};
 
 /// The type used as the iterator item while parsing lines
@@ -18,7 +18,11 @@ pub type LineResult = Result<Option<f64>, <f64 as std::str::FromStr>::Err>;
 
 /// Main entry point for the program
 pub fn run(mut opt: Opt) -> anyhow::Result<()> {
-    let lines = SourceLineIterator::try_from_path(opt.file.as_deref())?;
+    let first_value = match opt.first_line {
+        Some(FirstLine::Value(ref value)) => Some(value.trim().to_string()),
+        _ => None,
+    };
+    let lines = SourceLineIterator::try_from_path(first_value, opt.file.as_deref())?;
 
     let values = opt.get_iter(lines)?;
     let config = Config::from(opt);

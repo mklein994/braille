@@ -10,12 +10,12 @@ pub struct SourceLineIterator {
 }
 
 impl SourceLineIterator {
-    pub fn try_from_path(path: Option<&Path>) -> anyhow::Result<Self> {
+    pub fn try_from_path(first_value: Option<String>, path: Option<&Path>) -> anyhow::Result<Self> {
         let lines: Box<dyn Iterator<Item = LineResult>> = match path {
-            None => Box::new(Self::get_lines()),
+            None => Box::new(Self::get_lines(first_value)),
             Some(path) => {
                 if path.as_os_str() == "-" {
-                    Box::new(Self::get_lines())
+                    Box::new(Self::get_lines(first_value))
                 } else {
                     Box::new(Self::get_lines_from_file(path)?)
                 }
@@ -35,9 +35,15 @@ impl SourceLineIterator {
     }
 
     /// Parse input from stdin
-    fn get_lines() -> impl Iterator<Item = LineResult> {
-        std::io::stdin()
-            .lines()
+    fn get_lines(first_value: Option<String>) -> impl Iterator<Item = LineResult> {
+        let start = match first_value {
+            Some(value) => vec![Ok(value)],
+            None => vec![],
+        };
+
+        start
+            .into_iter()
+            .chain(std::io::stdin().lines())
             .map_while(Result::ok)
             .map(|x| Self::parse_line(&x))
     }

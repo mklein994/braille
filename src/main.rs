@@ -1,6 +1,6 @@
 use braille::Opt;
 
 fn main() -> anyhow::Result<()> {
-    let opt = Opt::new();
+    let opt = Opt::try_new()?;
     braille::run(opt)
 }

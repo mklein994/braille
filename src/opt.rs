@@ -5,6 +5,10 @@ use crate::{input::SourceLineIterator, LineResult};
 #[derive(Debug, Parser)]
 #[command(version)]
 pub struct Opt {
+    /// Interpret arguments from the very first line of the input
+    #[arg(short, long, exclusive = true, conflicts_with = "file")]
+    pub modeline: bool,
+
     /// The kind of graph to print
     ///
     /// Kinds supported with their matching option parameters:
@@ -25,7 +29,7 @@ pub struct Opt {
     pub braille: bool,
 
     /// Path to file to read from (defaults to standard input)
-    #[arg(short, long)]
+    #[arg(short, long, conflicts_with = "modeline")]
     pub file: Option<std::path::PathBuf>,
 
     /// The input's minimum value
@@ -38,6 +42,15 @@ pub struct Opt {
 
     /// How wide or tall the graph can be (defaults to terminal size)
     pub size: Option<u16>,
+
+    #[arg(skip)]
+    pub first_line: Option<FirstLine>,
+}
+
+#[derive(Debug)]
+pub enum FirstLine {
+    ModeLine,
+    Value(String),
 }
 
 pub trait Configurable: From<Opt> {
@@ -89,9 +102,31 @@ impl Opt {
     ///
     /// Call this instead of `Opt::parse()`, since it makes some adjustments not supported by
     /// [`clap`].
-    #[must_use]
-    pub fn new() -> Self {
+    pub fn try_new() -> anyhow::Result<Self> {
         let mut opt = Self::parse();
+
+        if opt.modeline {
+            use clap::{CommandFactory, FromArgMatches};
+            let mut cmd = Self::command_for_update()
+                .no_binary_name(true)
+                .mut_arg("modeline", |arg| arg.exclusive(false))
+                .mut_arg("file", |arg| arg.conflicts_with("modeline"));
+            cmd.build();
+
+            let mut first_line = String::new();
+            std::io::stdin().read_line(&mut first_line)?;
+
+            if let Some(args) = Self::parse_modeline(&first_line) {
+                let matches = cmd.get_matches_from(args);
+
+                opt = Self::from_arg_matches(&matches)?;
+                opt.first_line = Some(FirstLine::ModeLine);
+            } else {
+                opt.first_line = Some(FirstLine::Value(first_line));
+            }
+        } else {
+            opt.first_line = None;
+        }
 
         if opt.columns {
             opt.kind = GraphKind::Columns;
@@ -115,7 +150,21 @@ impl Opt {
             });
         }
 
-        opt
+        // println!("{opt:?}");
+
+        Ok(opt)
+    }
+
+    fn parse_modeline(line: &str) -> Option<Vec<&str>> {
+        if line.starts_with("braille:") {
+            Some(
+                line.trim_start_matches("braille:")
+                    .split_whitespace()
+                    .collect(),
+            )
+        } else {
+            None
+        }
     }
 
     /// If no bounds were given, look for them from the input and return the resulting iterator,
@@ -150,12 +199,6 @@ impl Opt {
         } else {
             Ok(ValueIter::Boundless(input_lines.into_iter()))
         }
-    }
-}
-
-impl Default for Opt {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
