@@ -36,7 +36,7 @@ pub struct Opt {
     #[arg(allow_negative_numbers = true, requires = "minimum")]
     pub maximum: Option<f64>,
 
-    /// How wide the graph can be (defaults to terminal width)
+    /// How wide or tall the graph can be (defaults to terminal size)
     pub size: Option<u16>,
 }
 
