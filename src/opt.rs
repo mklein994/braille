@@ -211,8 +211,6 @@ impl Opt {
             });
         }
 
-        // println!("{opt:?}");
-
         Ok(opt)
     }
 
