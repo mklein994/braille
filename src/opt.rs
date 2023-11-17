@@ -140,6 +140,27 @@ impl Configurable for Config {
     }
 }
 
+/// Determine the terminal size from the terminal itself if possible, with fallbacks
+fn get_terminal_size() -> anyhow::Result<(u16, u16)> {
+    use terminal_size::{Height, Width};
+
+    if let Some((Width(width), Height(height))) = terminal_size::terminal_size() {
+        Ok((width, height))
+    } else {
+        use std::env::VarError;
+
+        let parse_from_environment = |name, default| match std::env::var(name) {
+            Ok(value) => Ok(value.parse()?),
+            Err(VarError::NotPresent) => Ok(default),
+            Err(err) => Err(anyhow::Error::from(err)),
+        };
+
+        let width = parse_from_environment("COLUMNS", 80)?;
+        let height = parse_from_environment("LINES", 24)?;
+        Ok((width, height))
+    }
+}
+
 impl Opt {
     /// Parse options
     ///
@@ -181,10 +202,7 @@ impl Opt {
         if let (Some(size), None) = (opt.minimum, opt.maximum) {
             opt.size = Some(size as u16);
         } else if opt.size.is_none() {
-            use terminal_size::{Height, Width};
-
-            let (width, height) = terminal_size::terminal_size()
-                .map_or((80, 24), |(Width(width), Height(height))| (width, height));
+            let (width, height) = get_terminal_size()?;
 
             opt.size = Some(match opt.kind {
                 GraphKind::Columns | GraphKind::BrailleLines => width,
