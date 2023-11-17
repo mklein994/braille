@@ -1,0 +1,12 @@
+---
+source: tests/modeline/mod.rs
+expression: stderr
+---
+error: unexpected argument '--foo' found
+
+  tip: to pass '--foo' as a value, use '-- --foo'
+
+Usage: braille [OPTIONS] [MINIMUM] [MAXIMUM] [SIZE]
+
+For more information, try '--help'.
+

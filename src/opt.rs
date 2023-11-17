@@ -1,4 +1,4 @@
-use clap::{Parser, ValueEnum};
+use clap::{Command, Parser, ValueEnum};
 
 use crate::{input::SourceLineIterator, LineResult};
 
@@ -6,7 +6,44 @@ use crate::{input::SourceLineIterator, LineResult};
 #[command(version)]
 pub struct Opt {
     /// Interpret arguments from the very first line of the input
-    #[arg(short, long, exclusive = true, conflicts_with = "file")]
+    ///
+    /// If this is passed, then the first line from standard input should match the following:
+    ///
+    /// ```plain
+    /// braille: [OPTIONS] [ARGUMENTS...]
+    /// [VALUES...]
+    /// ```
+    ///
+    /// Where `OPTIONS` and `ARGUMENTS` are space separated values as you would pass them on the
+    /// command line, and `VALUES` are the values you want to graph.
+    ///
+    /// # Example
+    ///
+    /// `input.txt`
+    ///
+    /// ```plain
+    /// braille: -3 4 4
+    /// -3
+    /// -2
+    /// -1
+    /// 0
+    /// 1
+    /// 2
+    /// 3
+    /// 4
+    /// ```
+    ///
+    /// ```console
+    /// cat input.txt | braille --modeline
+    /// ```
+    ///
+    /// ## Output
+    ///
+    /// ```plain
+    /// ⠙⢿
+    /// ⠀⢸⣷⣄
+    /// ```
+    #[arg(short, long, exclusive = true, conflicts_with = "file", verbatim_doc_comment)]
     pub modeline: bool,
 
     /// The kind of graph to print
@@ -116,7 +153,7 @@ impl Opt {
             let mut first_line = String::new();
             std::io::stdin().read_line(&mut first_line)?;
 
-            if let Some(args) = Self::parse_modeline(&first_line) {
+            if let Some(args) = Self::parse_modeline(&mut cmd, &first_line)? {
                 let matches = cmd.get_matches_from(args);
 
                 opt = Self::from_arg_matches(&matches)?;
@@ -155,15 +192,30 @@ impl Opt {
         Ok(opt)
     }
 
-    fn parse_modeline(line: &str) -> Option<Vec<&str>> {
+    /// Parse the first line as a modeline, or try parsing it as the first value
+    fn parse_modeline<'a>(
+        cmd: &mut Command,
+        line: &'a str,
+    ) -> Result<Option<Vec<&'a str>>, clap::Error> {
         if line.starts_with("braille:") {
-            Some(
+            Ok(Some(
                 line.trim_start_matches("braille:")
                     .split_whitespace()
                     .collect(),
-            )
+            ))
+        } else if !line.is_empty() && line.parse::<f64>().is_err() {
+            use clap::error::{ContextValue, ErrorKind};
+            Err(cmd.error(
+                ErrorKind::ValueValidation,
+                ContextValue::String(format!(
+                    r#"Invalid modeline: {:?}
+
+The first line should be the string "braille:", followed by spaced separated options"#,
+                    line.trim()
+                )),
+            ))
         } else {
-            None
+            Ok(None)
         }
     }
 

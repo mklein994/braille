@@ -1,5 +1,5 @@
 ---
-source: tests/integration.rs
+source: tests/modeline/mod.rs
 expression: stdout
 ---
 ⠈⠹⠄
