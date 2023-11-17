@@ -1,6 +1,6 @@
 use clap::{Parser, ValueEnum};
 
-use crate::LineResult;
+use crate::{input::SourceLineIterator, LineResult};
 
 #[derive(Debug, Parser)]
 #[command(version)]
@@ -116,7 +116,7 @@ impl Opt {
     /// These are both wrapped inside an enum to allow for `impl Iterator<...>` types.
     pub fn get_iter(
         &mut self,
-        input_lines: impl Iterator<Item = LineResult> + 'static,
+        input_lines: SourceLineIterator,
     ) -> anyhow::Result<LineIter<impl Iterator<Item = LineResult> + 'static>> {
         if self.minimum.and(self.maximum).is_none() {
             let mut lines = vec![];
@@ -137,10 +137,10 @@ impl Opt {
             Ok(LineIter::Bounded { lines })
         } else if matches!(self.kind, GraphKind::Bars | GraphKind::BrailleBars) {
             Ok(LineIter::Bounded {
-                lines: input_lines.collect(),
+                lines: input_lines.into_iter().collect(),
             })
         } else {
-            Ok(LineIter::Boundless(input_lines))
+            Ok(LineIter::Boundless(input_lines.into_iter()))
         }
     }
 }
