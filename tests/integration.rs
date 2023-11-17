@@ -1,17 +1,22 @@
 use std::process::{Command, Stdio};
 
-fn get_output<I, S>(inputs: &[Option<f64>], args: I) -> (String, String)
+fn from_numbers(inputs: &[Option<f64>]) -> String {
+    let lines = inputs
+        .iter()
+        .map(|x| x.map(|value| value.to_string()).unwrap_or_default())
+        .collect::<Vec<_>>();
+    lines.join("\n")
+}
+
+fn get_output_from_str<In, Iter, S>(input: In, args: Iter) -> (String, String)
 where
-    I: IntoIterator<Item = S>,
+    In: AsRef<std::ffi::OsStr>,
+    Iter: IntoIterator<Item = S>,
     S: AsRef<std::ffi::OsStr>,
 {
     let bin = concat!(env!("CARGO_MANIFEST_DIR"), "/target/debug/braille"); // bin name
-    let input = inputs
-        .iter()
-        .map(|x: &Option<f64>| x.map(|value| value.to_string()).unwrap_or_default())
-        .collect::<Vec<_>>();
     let echo = Command::new("echo")
-        .arg(input.join("\n"))
+        .arg(input)
         .stdout(Stdio::piped())
         .spawn()
         .unwrap();
@@ -27,6 +32,14 @@ where
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     (stdout, stderr)
+}
+
+fn get_output<I, S>(inputs: &[Option<f64>], args: I) -> (String, String)
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
+{
+    get_output_from_str(from_numbers(inputs), args)
 }
 
 macro_rules! t {
@@ -212,4 +225,26 @@ t!(
     (0..100)
         .map(|x| Some(f64::sin(f64::from(x) / 10.)))
         .collect()
+);
+
+macro_rules! t_modeline {
+    ($name:ident, $input:literal) => {
+        #[test]
+        fn $name() {
+            let (stdout, stderr) = get_output_from_str($input, ["-m".to_string()]);
+            insta::assert_snapshot!(stdout);
+            assert!(stderr.is_empty());
+        }
+    };
+}
+
+t_modeline!(
+    test_correct_modeline,
+    r"braille: -3 4 4
+-2
+0
+1
+
+3
+4"
 );
