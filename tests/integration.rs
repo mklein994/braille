@@ -79,7 +79,7 @@ macro_rules! t {
         }
     };
 
-    (columns $name:ident, $min:expr, $max:expr, $width:expr) => {
+    ($kind:literal, $name:ident, $min:expr, $max:expr, $size:expr) => {
         #[test]
         fn $name() {
             let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
@@ -87,10 +87,10 @@ macro_rules! t {
                 &input,
                 [
                     "--kind".to_string(),
-                    "columns".to_string(),
+                    $kind.to_string(),
                     $min.to_string(),
                     $max.to_string(),
-                    $width.to_string(),
+                    $size.to_string(),
                 ],
             );
             insta::assert_snapshot!(stdout);
@@ -98,7 +98,7 @@ macro_rules! t {
         }
     };
 
-    (columns $name:ident, $min:expr, $max:expr, $width:expr, $gen:expr) => {
+    ($kind:literal, $name:ident, $min:expr, $max:expr, $size:expr, $gen:expr) => {
         #[test]
         fn $name() {
             let input: ::std::vec::Vec<_> = $gen;
@@ -106,10 +106,10 @@ macro_rules! t {
                 &input,
                 [
                     "--kind".to_string(),
-                    "columns".to_string(),
+                    $kind.to_string(),
                     $min.to_string(),
                     $max.to_string(),
-                    $width.to_string(),
+                    $size.to_string(),
                 ],
             );
             insta::assert_snapshot!(stdout);
@@ -183,10 +183,10 @@ t!(
         .collect()
 );
 
-t!(columns column_characters_1_8_1, 1, 8, 1);
+t!("columns", column_characters_1_8_1, 1, 8, 1);
 
 t!(
-    columns
+    "columns",
     columns_sine_wave,
     -1,
     1,
@@ -201,4 +201,15 @@ t!(
     without_bounds_width_4,
     4,
     ((-3)..=4).collect::<Vec<_>>()
+);
+
+t!(
+    "bars",
+    bars_sine_wave,
+    -1,
+    1,
+    40,
+    (0..100)
+        .map(|x| Some(f64::sin(f64::from(x) / 10.)))
+        .collect()
 );
