@@ -103,7 +103,8 @@ impl Opt {
 
             opt.size = Some(match opt.kind {
                 GraphKind::Columns | GraphKind::BrailleLines => width,
-                GraphKind::Bars | GraphKind::BrailleBars => height,
+                // Leave enough room for the shell prompt
+                GraphKind::Bars | GraphKind::BrailleBars => height - 1,
             });
         }
 
