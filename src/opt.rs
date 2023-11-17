@@ -221,10 +221,13 @@ impl Opt {
         cmd: &mut Command,
         line: &'a str,
     ) -> Result<Option<Vec<&'a str>>, clap::Error> {
-        if line.starts_with("braille:") {
+        if line.starts_with('#') {
+            Ok(Some(vec![]))
+        } else if line.starts_with("braille:") {
             Ok(Some(
                 line.trim_start_matches("braille:")
                     .split_whitespace()
+                    .take_while(|x| !x.starts_with('#'))
                     .collect(),
             ))
         } else if !line.is_empty() && line.parse::<f64>().is_err() {
