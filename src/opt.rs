@@ -251,7 +251,30 @@ The first line should be the string "braille:", followed by spaced separated opt
         &mut self,
         input_lines: SourceLineIterator,
     ) -> anyhow::Result<ValueIter<impl Iterator<Item = LineResult> + 'static>> {
-        if self.minimum.and(self.maximum).is_none() {
+        let validate_bounds = |min, max| {
+            if min > max {
+                use clap::{error::ErrorKind, CommandFactory};
+                let mut cmd = Self::command();
+                anyhow::bail!(cmd.error(
+                    ErrorKind::ValueValidation,
+                    format!("min < max failed: {min} < {max}")
+                ));
+            }
+
+            Ok(())
+        };
+
+        if let (Some(min), Some(max)) = (self.minimum, self.maximum) {
+            validate_bounds(min, max)?;
+
+            if matches!(self.kind, GraphKind::Bars | GraphKind::BrailleBars) {
+                Ok(ValueIter::Bounded {
+                    lines: input_lines.into_iter().collect(),
+                })
+            } else {
+                Ok(ValueIter::Boundless(input_lines.into_iter()))
+            }
+        } else {
             let mut lines = vec![];
             let mut min = f64::MAX;
             let mut max = f64::MIN;
@@ -264,16 +287,12 @@ The first line should be the string "braille:", followed by spaced separated opt
                 lines.push(line);
             }
 
+            validate_bounds(min, max)?;
+
             self.minimum = Some(min);
             self.maximum = Some(max);
 
             Ok(ValueIter::Bounded { lines })
-        } else if matches!(self.kind, GraphKind::Bars | GraphKind::BrailleBars) {
-            Ok(ValueIter::Bounded {
-                lines: input_lines.into_iter().collect(),
-            })
-        } else {
-            Ok(ValueIter::Boundless(input_lines.into_iter()))
         }
     }
 }
