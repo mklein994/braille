@@ -24,7 +24,7 @@ macro_rules! t_modeline {
 
 t_modeline!(
     test_correct_modeline,
-    r"braille: -3 4 4
+    r"braille -3 4 4
 -2
 0
 1
@@ -33,13 +33,13 @@ t_modeline!(
 4"
 );
 
-t_modeline!(invalid test_invalid_modeline_prefix, r"braile: -3 4 4
+t_modeline!(invalid test_invalid_modeline_prefix, r"braile -3 4 4
 1
 2
 3
 ");
 
-t_modeline!(invalid test_invalid_modeline_arg, r"braille: --foo
+t_modeline!(invalid test_invalid_modeline_arg, r"braille --foo
 1
 2
 3

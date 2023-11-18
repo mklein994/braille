@@ -221,9 +221,9 @@ impl Opt {
     ) -> Result<Option<Vec<&'a str>>, clap::Error> {
         if line.starts_with('#') {
             Ok(Some(vec![]))
-        } else if line.starts_with("braille:") {
+        } else if line.starts_with("braille") {
             Ok(Some(
-                line.trim_start_matches("braille:")
+                line.trim_start_matches("braille")
                     .split_whitespace()
                     .take_while(|x| !x.starts_with('#'))
                     .collect(),
@@ -235,7 +235,7 @@ impl Opt {
                 ContextValue::String(format!(
                     r#"Invalid modeline: {line:?}
 
-The first line should be the string "braille:", followed by spaced separated options"#
+The first line should be the string "braille", followed by spaced separated options"#
                 )),
             ))
         } else {
