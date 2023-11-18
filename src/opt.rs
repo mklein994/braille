@@ -251,13 +251,25 @@ The first line should be the string "braille", followed by spaced separated opti
         &mut self,
         input_lines: SourceLineIterator,
     ) -> anyhow::Result<ValueIter<impl Iterator<Item = LineResult> + 'static>> {
-        let validate_bounds = |min, max| {
+        let validate_bounds = |min: f64, max: f64| {
             if min > max {
                 use clap::{error::ErrorKind, CommandFactory};
                 let mut cmd = Self::command();
                 anyhow::bail!(cmd.error(
                     ErrorKind::ValueValidation,
-                    format!("min < max failed: {min} < {max}")
+                    format!(
+                        "min < max failed: {} < {}",
+                        if min == f64::MAX {
+                            "f64::MAX".to_string()
+                        } else {
+                            min.to_string()
+                        },
+                        if max == f64::MIN {
+                            "f64::MIN".to_string()
+                        } else {
+                            max.to_string()
+                        },
+                    )
                 ));
             }
 
