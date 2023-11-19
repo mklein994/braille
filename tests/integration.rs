@@ -20,7 +20,12 @@ macro_rules! t {
             let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
             let (stdout, stderr) = get_output(
                 &input,
-                [$min.to_string(), $max.to_string(), $width.to_string()],
+                [
+                    "-r".to_string(),
+                    $min.to_string(),
+                    $max.to_string(),
+                    $width.to_string(),
+                ],
             );
             insta::assert_snapshot!(stdout);
             assert!(stderr.is_empty());
@@ -33,7 +38,12 @@ macro_rules! t {
             let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
             let (stdout, stderr) = get_output(
                 &input,
-                [$min.to_string(), $max.to_string(), $width.to_string()],
+                [
+                    "-r".to_string(),
+                    $min.to_string(),
+                    $max.to_string(),
+                    $width.to_string(),
+                ],
             );
             insta::assert_snapshot!(stdout);
             assert!(stderr.is_empty());
@@ -46,7 +56,12 @@ macro_rules! t {
             let input: ::std::vec::Vec<_> = $gen;
             let (stdout, stderr) = get_output(
                 &input,
-                [$min.to_string(), $max.to_string(), $width.to_string()],
+                [
+                    "-r".to_string(),
+                    $min.to_string(),
+                    $max.to_string(),
+                    $width.to_string(),
+                ],
             );
             insta::assert_snapshot!(stdout);
             assert!(stderr.is_empty());
@@ -62,6 +77,7 @@ macro_rules! t {
                 [
                     "--kind".to_string(),
                     $kind.to_string(),
+                    "-r".to_string(),
                     $min.to_string(),
                     $max.to_string(),
                     $size.to_string(),
@@ -81,6 +97,7 @@ macro_rules! t {
                 [
                     "--kind".to_string(),
                     $kind.to_string(),
+                    "-r".to_string(),
                     $min.to_string(),
                     $max.to_string(),
                     $size.to_string(),

@@ -5,6 +5,17 @@ use crate::{input::SourceLineIterator, LineResult};
 #[derive(Debug, Parser)]
 #[command(version)]
 pub struct Opt {
+    /// The input's minimum and maximum values
+    #[arg(
+        short,
+        long,
+        alias = "bounds",
+        number_of_values = 2,
+        allow_negative_numbers = true,
+        value_names = ["MIN", "MAX"],
+    )]
+    range: Vec<f64>,
+
     /// Interpret arguments from the very first line of the input
     ///
     /// If this is passed, then the first line from standard input should match the following:
@@ -75,15 +86,8 @@ pub struct Opt {
     #[arg(short, long, conflicts_with = "modeline")]
     pub file: Option<std::path::PathBuf>,
 
-    /// The input's minimum value
-    #[arg(allow_negative_numbers = true)]
-    pub minimum: Option<f64>,
-
-    /// The input's maximum value
-    #[arg(allow_negative_numbers = true, requires = "minimum")]
-    pub maximum: Option<f64>,
-
     /// How wide or tall the graph can be (defaults to terminal size)
+    #[arg(value_parser = clap::value_parser!(u16).range(1..))]
     pub size: Option<u16>,
 
     #[arg(skip)]
@@ -113,11 +117,15 @@ pub struct Config {
 
 impl From<Opt> for Config {
     fn from(value: Opt) -> Self {
-        Self {
-            kind: value.kind,
-            minimum: value.minimum.unwrap(),
-            maximum: value.maximum.unwrap(),
-            size: value.size.unwrap(),
+        if let [min, max] = value.range[0..2] {
+            Self {
+                kind: value.kind,
+                minimum: min,
+                maximum: max,
+                size: value.size.unwrap(),
+            }
+        } else {
+            unreachable!("The bounds should already have been calculated")
         }
     }
 }
@@ -149,9 +157,9 @@ fn get_terminal_size() -> anyhow::Result<(u16, u16)> {
     } else {
         use std::env::VarError;
 
-        let parse_from_environment = |name, default| match std::env::var(name) {
+        let parse_from_environment = |name, fallback| match std::env::var(name) {
             Ok(value) => Ok(value.parse()?),
-            Err(VarError::NotPresent) => Ok(default),
+            Err(VarError::NotPresent) => Ok(fallback),
             Err(err) => Err(anyhow::Error::from(err)),
         };
 
@@ -169,12 +177,10 @@ impl Opt {
     pub fn try_new() -> anyhow::Result<Self> {
         let mut opt = Self::parse();
 
+        // Parse the modeline if requested
         if opt.modeline {
             use clap::{CommandFactory, FromArgMatches};
-            let mut cmd = Self::command_for_update()
-                .no_binary_name(true)
-                .mut_arg("modeline", |arg| arg.exclusive(false))
-                .mut_arg("file", |arg| arg.conflicts_with("modeline"));
+            let mut cmd = Self::command_for_update().no_binary_name(true);
             cmd.build();
 
             let mut first_line = String::new();
@@ -192,16 +198,15 @@ impl Opt {
             opt.first_line = None;
         }
 
+        // Handle shortcuts
         if opt.columns {
             opt.kind = GraphKind::Columns;
         } else if opt.braille {
             opt.kind = GraphKind::BrailleLines;
         }
 
-        // The "minimum" value will be parsed as the size if a maximum is not provided
-        if let (Some(size), None) = (opt.minimum, opt.maximum) {
-            opt.size = Some(size as u16);
-        } else if opt.size.is_none() {
+        // If the graph size isn't already set, try detecting it from the environment
+        if opt.size.is_none() {
             let (width, height) = get_terminal_size()?;
 
             opt.size = Some(match opt.kind {
@@ -276,15 +281,16 @@ The first line should be the string "braille", followed by spaced separated opti
             Ok(())
         };
 
-        if let (Some(min), Some(max)) = (self.minimum, self.maximum) {
-            validate_bounds(min, max)?;
+        if let Some([min, max]) = self.range.get(0..2) {
+            validate_bounds(*min, *max)?;
 
-            if matches!(self.kind, GraphKind::Bars | GraphKind::BrailleBars) {
-                Ok(ValueIter::Bounded {
+            match self.kind {
+                GraphKind::Bars | GraphKind::BrailleBars => Ok(ValueIter::Bounded {
                     lines: input_lines.into_iter().collect(),
-                })
-            } else {
-                Ok(ValueIter::Boundless(input_lines.into_iter()))
+                }),
+                GraphKind::Columns | GraphKind::BrailleLines => {
+                    Ok(ValueIter::Boundless(input_lines.into_iter()))
+                }
             }
         } else {
             let mut lines = vec![];
@@ -301,8 +307,7 @@ The first line should be the string "braille", followed by spaced separated opti
 
             validate_bounds(min, max)?;
 
-            self.minimum = Some(min);
-            self.maximum = Some(max);
+            self.range = vec![min, max];
 
             Ok(ValueIter::Bounded { lines })
         }
