@@ -10,7 +10,7 @@ pub struct Opt {
     /// If this is passed, then the first line from standard input should match the following:
     ///
     /// ```plain
-    /// braille: [OPTIONS] [ARGUMENTS...]
+    /// braille [OPTIONS] [ARGUMENTS...]
     /// [VALUES...]
     /// ```
     ///
@@ -22,7 +22,7 @@ pub struct Opt {
     /// `input.txt`
     ///
     /// ```plain
-    /// braille: -3 4 4
+    /// braille -r -3 4 4
     /// -3
     /// -2
     /// -1
