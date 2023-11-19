@@ -25,12 +25,13 @@ impl SourceLineIterator {
         Ok(Self { iter: lines })
     }
 
-    /// Parse the line as a float, and treat empty values as missing
+    /// Parse the line as a float, and treat empty values or the lteral string "null" as
+    /// missing
     fn parse_line(line: &str) -> LineResult {
-        if line.is_empty() {
-            Ok(None)
-        } else {
-            Some(line.parse()).transpose()
+        match line {
+            l if l.is_empty() => Ok(None),
+            "null" => Ok(None),
+            _ => Some(line.parse()).transpose(),
         }
     }
 
@@ -67,5 +68,35 @@ impl IntoIterator for SourceLineIterator {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_line_with_blank() {
+        assert_eq!(Ok(None), SourceLineIterator::parse_line(""));
+    }
+
+    #[test]
+    fn parse_line_with_null() {
+        assert_eq!(Ok(None), SourceLineIterator::parse_line("null"));
+    }
+
+    #[test]
+    fn parse_line_with_integer() {
+        assert_eq!(Ok(Some(3.)), SourceLineIterator::parse_line("3"));
+    }
+
+    #[test]
+    fn parse_line_with_rational() {
+        assert_eq!(Ok(Some(2.5)), SourceLineIterator::parse_line("2.5"));
+    }
+
+    #[test]
+    fn parse_line_with_non_number() {
+        assert!(SourceLineIterator::parse_line("hello").is_err());
     }
 }
