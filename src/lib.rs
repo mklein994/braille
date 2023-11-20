@@ -4,8 +4,11 @@ pub mod graph;
 mod input;
 mod opt;
 
+pub use graph::{
+    blocks::{Bars as BlockBars, Columns as BlockColumns},
+    braille::{Columns as BrailleColumns, Lines as BrailleLines},
+};
 pub use graph::{BarGraphable, ColumnGraphable, Graphable};
-pub use graph::{Bars, Columns, Lines};
 
 use input::SourceLineIterator;
 use opt::Configurable;
@@ -38,10 +41,14 @@ fn print_graph(
     values: ValueIter<impl Iterator<Item = LineResult> + 'static>,
 ) -> anyhow::Result<()> {
     match (config.kind(), values) {
-        (GraphKind::Columns, values) => Columns::new(config).print_lines(values.into_iter()),
-        (GraphKind::BrailleLines, values) => Lines::new(config).print_lines(values.into_iter()),
-        (GraphKind::Bars, ValueIter::Bounded { lines }) => Bars::new(config).print_bars(lines),
-        (GraphKind::BrailleBars, ValueIter::Bounded { .. }) => todo!(),
+        (GraphKind::Columns, values) => BlockColumns::new(config).print_lines(values.into_iter()),
+        (GraphKind::BrailleLines, values) => {
+            BrailleLines::new(config).print_lines(values.into_iter())
+        }
+        (GraphKind::Bars, ValueIter::Bounded { lines }) => BlockBars::new(config).print_bars(lines),
+        (GraphKind::BrailleBars, ValueIter::Bounded { lines }) => {
+            BrailleColumns::new(config).print_bars(lines)
+        }
         (kind, _) => panic!("Unknown graph/iter combo: {kind:?}"),
     }
 }

@@ -1,12 +1,8 @@
-mod bars;
-mod braille;
-mod columns;
+pub mod blocks;
+pub mod braille;
 
 use crate::opt::{Config, Configurable};
 use crate::LineResult;
-pub use bars::Bars;
-pub use braille::Lines;
-pub use columns::Columns;
 
 pub trait Graphable<Conf: Configurable = Config> {
     fn new(config: Conf) -> Self;

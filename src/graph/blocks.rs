@@ -1,5 +1,5 @@
+mod bars;
 mod columns;
-mod lines;
 
+pub use bars::Bars;
 pub use columns::Columns;
-pub use lines::Lines;

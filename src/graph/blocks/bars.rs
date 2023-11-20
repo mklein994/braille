@@ -1,5 +1,5 @@
-use super::{BarGraphable, Graphable};
-use crate::{opt::Config, LineResult};
+use crate::graph::{BarGraphable, Graphable};
+use crate::{Config, LineResult};
 
 pub struct Bars {
     config: Config,
