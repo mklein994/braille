@@ -1,4 +1,4 @@
-use clap::{Command, Parser, ValueEnum};
+use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
 
 use crate::{input::SourceLineIterator, LineResult};
 
@@ -98,7 +98,7 @@ pub struct Opt {
     /// By default, space is given for the prompt (either at the terminal or through a pager like
     /// `less`). Use this flag to instead take up the full height given. Passing a size overrides
     /// this flag. Does nothing if the graph is not vertical.
-    #[arg(long)]
+    #[arg(long, env = "BRAILLE_USE_FULL_DEFAULT_HEIGHT", value_parser = BoolishValueParser::new())]
     pub use_full_default_height: bool,
 
     /// How wide or tall the graph can be (defaults to terminal size)
