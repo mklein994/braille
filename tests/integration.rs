@@ -204,3 +204,14 @@ t!(
         .map(|x| Some(f64::sin(f64::from(x) / 10.)))
         .collect()
 );
+
+t!(
+    "braille-columns",
+    braille_columns_sine_wave,
+    -1,
+    1,
+    40,
+    (0..200)
+        .map(|x| Some(f64::sin(f64::from(x) / 10.)))
+        .collect()
+);
