@@ -18,18 +18,18 @@ pub trait Graphable<Conf: Configurable = Config> {
     }
 }
 
-pub trait ColumnGraphable: Graphable {
+pub trait BarGraphable: Graphable {
     fn width(&self) -> u16 {
         self.config().size()
     }
 
-    fn print_lines(&self, lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()>;
+    fn print_bars(&self, lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()>;
 }
 
-pub trait BarGraphable: Graphable {
+pub trait ColumnGraphable: Graphable {
     fn height(&self) -> u16 {
         self.config().size()
     }
 
-    fn print_bars(&self, lines: Vec<LineResult>) -> anyhow::Result<()>;
+    fn print_columns(&self, lines: Vec<LineResult>) -> anyhow::Result<()>;
 }

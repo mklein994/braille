@@ -1,4 +1,4 @@
-use crate::graph::{BarGraphable, Graphable};
+use crate::graph::{ColumnGraphable, Graphable};
 use crate::Config;
 
 pub struct Columns {
@@ -15,8 +15,8 @@ impl Graphable for Columns {
     }
 }
 
-impl BarGraphable for Columns {
-    fn print_bars(&self, _lines: Vec<crate::LineResult>) -> anyhow::Result<()> {
+impl ColumnGraphable for Columns {
+    fn print_columns(&self, _lines: Vec<crate::LineResult>) -> anyhow::Result<()> {
         todo!()
     }
 }

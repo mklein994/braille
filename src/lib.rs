@@ -41,13 +41,15 @@ fn print_graph(
     values: ValueIter<impl Iterator<Item = LineResult> + 'static>,
 ) -> anyhow::Result<()> {
     match (config.kind(), values) {
-        (GraphKind::Columns, values) => BlockColumns::new(config).print_lines(values.into_iter()),
-        (GraphKind::BrailleLines, values) => {
-            BrailleLines::new(config).print_lines(values.into_iter())
+        (GraphKind::Bars, values) => BlockBars::new(config).print_bars(values.into_iter()),
+        (GraphKind::BrailleBars, values) => {
+            BrailleLines::new(config).print_bars(values.into_iter())
         }
-        (GraphKind::Bars, ValueIter::Bounded { lines }) => BlockBars::new(config).print_bars(lines),
-        (GraphKind::BrailleBars, ValueIter::Bounded { lines }) => {
-            BrailleColumns::new(config).print_bars(lines)
+        (GraphKind::Columns, ValueIter::Bounded { lines }) => {
+            BlockColumns::new(config).print_columns(lines)
+        }
+        (GraphKind::BrailleColumns, ValueIter::Bounded { lines }) => {
+            BrailleColumns::new(config).print_columns(lines)
         }
         (kind, _) => panic!("Unknown graph/iter combo: {kind:?}"),
     }

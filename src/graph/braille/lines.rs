@@ -21,7 +21,7 @@
 //! ⠀⠀⠀⢸⣶⣤⣀
 //! ```
 
-use crate::graph::{ColumnGraphable, Graphable};
+use crate::graph::{BarGraphable, Graphable};
 use crate::opt::Config;
 use crate::LineResult;
 
@@ -40,8 +40,8 @@ impl Graphable for Lines {
     }
 }
 
-impl ColumnGraphable for Lines {
-    fn print_lines(&self, mut input_lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
+impl BarGraphable for Lines {
+    fn print_bars(&self, mut input_lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
         let minimum = self.minimum();
         let maximum = self.maximum();
 

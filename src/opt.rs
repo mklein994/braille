@@ -62,7 +62,7 @@ pub struct Opt {
             "range",
             "file",
             "kind",
-            "columns",
+            "bars",
             "braille",
             "size",
         ],
@@ -74,20 +74,28 @@ pub struct Opt {
     ///
     /// Kinds supported with their matching option parameters:
     ///
-    /// | Kind    | Column    | Bar    |
-    /// |---------|-----------|--------|
-    /// | Braille | `braille` |        |
-    /// | Block   | `columns` | `bars` |
+    /// | Kind    | Bar (horizontal) | Column (vertical)   |
+    /// |---------|------------------|---------------------|
+    /// | Braille | `braille` (-b)   | `braille-bars` (-c) |
+    /// | Block   | `bars` (-B)      | `columns` (-C)      |
     #[arg(short, long, value_enum, default_value_t, verbatim_doc_comment)]
     pub kind: GraphKind,
+
+    /// Shortcut for --kind bars
+    #[arg(short = 'B', conflicts_with = "kind")]
+    pub bars: bool,
 
     /// Shortcut for --kind columns
     #[arg(short = 'C', conflicts_with = "kind")]
     pub columns: bool,
 
     /// Shortcut for --kind braille
-    #[arg(short = 'B', conflicts_with = "kind")]
+    #[arg(short = 'b', conflicts_with = "kind")]
     pub braille: bool,
+
+    /// Shortcut for --kind braille-columns
+    #[arg(short = 'c', conflicts_with = "kind")]
+    pub braille_columns: bool,
 
     /// Path to file to read from (defaults to standard input)
     #[arg(short, long, conflicts_with = "modeline")]
@@ -214,10 +222,14 @@ impl Opt {
         }
 
         // Handle shortcuts
-        if opt.columns {
-            opt.kind = GraphKind::Columns;
+        if opt.bars {
+            opt.kind = GraphKind::Bars;
         } else if opt.braille {
-            opt.kind = GraphKind::BrailleLines;
+            opt.kind = GraphKind::BrailleBars;
+        } else if opt.braille_columns {
+            opt.kind = GraphKind::BrailleColumns;
+        } else if opt.columns {
+            opt.kind = GraphKind::Columns;
         }
 
         // If the graph size isn't already set, try detecting it from the environment
@@ -225,9 +237,9 @@ impl Opt {
             let (width, height) = get_terminal_size()?;
 
             opt.size = Some(match opt.kind {
-                GraphKind::Columns | GraphKind::BrailleLines => width,
+                GraphKind::Bars | GraphKind::BrailleBars => width,
                 // Leave enough room for the shell prompt
-                GraphKind::Bars | GraphKind::BrailleBars => {
+                GraphKind::Columns | GraphKind::BrailleColumns => {
                     if opt.use_full_default_height {
                         height
                     } else {
@@ -306,12 +318,12 @@ The first line should be the string "braille", followed by spaced separated opti
             validate_bounds(*min, *max)?;
 
             match self.kind {
-                GraphKind::Bars | GraphKind::BrailleBars => Ok(ValueIter::Bounded {
-                    lines: input_lines.into_iter().collect(),
-                }),
-                GraphKind::Columns | GraphKind::BrailleLines => {
+                GraphKind::Bars | GraphKind::BrailleBars => {
                     Ok(ValueIter::Boundless(input_lines.into_iter()))
                 }
+                GraphKind::Columns | GraphKind::BrailleColumns => Ok(ValueIter::Bounded {
+                    lines: input_lines.into_iter().collect(),
+                }),
             }
         } else {
             let mut lines = vec![];
@@ -359,10 +371,13 @@ where
 
 #[derive(Debug, Default, Clone, Copy, ValueEnum)]
 pub enum GraphKind {
-    /// █▉▊▋▌▍▎▏ Column graph with block characters
+    /// █▉▊▋▌▍▎▏ Bar graph with block characters
+    Bars,
+
+    /// ▁▂▃▄▅▆▇█ Column graph with block characters
     Columns,
 
-    /// ⠙⣇ Column graph with braille characters
+    /// ⠙⣇ Bar graph with braille characters
     ///
     /// ```plain
     /// ** *-
@@ -372,9 +387,9 @@ pub enum GraphKind {
     /// ```
     #[default]
     #[value(name = "braille")]
-    BrailleLines,
+    BrailleBars,
 
-    /// ⡶⠚ Bar graph with braille characters
+    /// ⡶⠚ Column graph with braille characters
     ///
     /// ```plain
     /// -- -*
@@ -382,10 +397,7 @@ pub enum GraphKind {
     /// ** --
     /// *- --
     /// ```
-    BrailleBars,
-
-    /// ▁▂▃▄▅▆▇█ Bar graph with block characters
-    Bars,
+    BrailleColumns,
 }
 
 #[cfg(test)]

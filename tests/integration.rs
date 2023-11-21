@@ -174,11 +174,11 @@ t!(
         .collect()
 );
 
-t!("columns", column_characters_1_8_1, 1, 8, 1);
+t!("bars", bar_characters_1_8_1, 1, 8, 1);
 
 t!(
-    "columns",
-    columns_sine_wave,
+    "bars",
+    bar_sine_wave,
     -1,
     1,
     40,
@@ -195,8 +195,8 @@ t!(
 );
 
 t!(
-    "bars",
-    bars_sine_wave,
+    "columns",
+    column_sine_wave,
     -1,
     1,
     40,
