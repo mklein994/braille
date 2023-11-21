@@ -16,7 +16,7 @@ impl Graphable for Columns {
 }
 
 impl BarGraphable for Columns {
-    fn print_bars(&self, lines: Vec<crate::LineResult>) -> anyhow::Result<()> {
+    fn print_bars(&self, _lines: Vec<crate::LineResult>) -> anyhow::Result<()> {
         todo!()
     }
 }
