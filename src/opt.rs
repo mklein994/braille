@@ -4,6 +4,7 @@ use crate::{input::SourceLineIterator, LineResult};
 
 #[derive(Debug, Parser)]
 #[command(version)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Opt {
     /// The input's minimum and maximum values
     #[arg(
@@ -57,8 +58,14 @@ pub struct Opt {
     #[arg(
         short,
         long,
-        exclusive = true,
-        conflicts_with = "file",
+        conflicts_with_all = [
+            "range",
+            "file",
+            "kind",
+            "columns",
+            "braille",
+            "size",
+        ],
         verbatim_doc_comment
     )]
     pub modeline: bool,
@@ -85,6 +92,14 @@ pub struct Opt {
     /// Path to file to read from (defaults to standard input)
     #[arg(short, long, conflicts_with = "modeline")]
     pub file: Option<std::path::PathBuf>,
+
+    /// Use the full height if none given
+    ///
+    /// By default, space is given for the prompt (either at the terminal or through a pager like
+    /// `less`). Use this flag to instead take up the full height given. Passing a size overrides
+    /// this flag. Does nothing if the graph is not vertical.
+    #[arg(long)]
+    pub use_full_default_height: bool,
 
     /// How wide or tall the graph can be (defaults to terminal size)
     #[arg(value_parser = clap::value_parser!(u16).range(1..))]
@@ -212,7 +227,13 @@ impl Opt {
             opt.size = Some(match opt.kind {
                 GraphKind::Columns | GraphKind::BrailleLines => width,
                 // Leave enough room for the shell prompt
-                GraphKind::Bars | GraphKind::BrailleBars => height - 1,
+                GraphKind::Bars | GraphKind::BrailleBars => {
+                    if opt.use_full_default_height {
+                        height
+                    } else {
+                        height - 1
+                    }
+                }
             });
         }
 
