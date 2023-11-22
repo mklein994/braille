@@ -22,8 +22,7 @@ macro_rules! t {
                 &input,
                 [
                     "-r".to_string(),
-                    $min.to_string(),
-                    $max.to_string(),
+                    format!("{}:{}", $min, $max),
                     $width.to_string(),
                 ],
             );
@@ -40,8 +39,7 @@ macro_rules! t {
                 &input,
                 [
                     "-r".to_string(),
-                    $min.to_string(),
-                    $max.to_string(),
+                    format!("{}:{}", $min, $max),
                     $width.to_string(),
                 ],
             );
@@ -58,8 +56,7 @@ macro_rules! t {
                 &input,
                 [
                     "-r".to_string(),
-                    $min.to_string(),
-                    $max.to_string(),
+                    format!("{}:{}", $min, $max),
                     $width.to_string(),
                 ],
             );
@@ -78,8 +75,7 @@ macro_rules! t {
                     "--kind".to_string(),
                     $kind.to_string(),
                     "-r".to_string(),
-                    $min.to_string(),
-                    $max.to_string(),
+                    format!("{}:{}", $min, $max),
                     $size.to_string(),
                 ],
             );
@@ -98,8 +94,7 @@ macro_rules! t {
                     "--kind".to_string(),
                     $kind.to_string(),
                     "-r".to_string(),
-                    $min.to_string(),
-                    $max.to_string(),
+                    format!("{}:{}", $min, $max),
                     $size.to_string(),
                 ],
             );

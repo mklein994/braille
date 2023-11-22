@@ -2,20 +2,99 @@ use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
 
 use crate::{input::SourceLineIterator, LineResult};
 
+#[derive(Debug, Copy, Clone, Default)]
+struct GraphRangeBound(Option<f64>);
+
+impl std::fmt::Display for GraphRangeBound {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.map(|x| x.to_string()).unwrap_or_default().fmt(f)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Default)]
+struct GraphRange {
+    min: GraphRangeBound,
+    max: GraphRangeBound,
+}
+
+impl GraphRange {
+    fn new(min: Option<f64>, max: Option<f64>) -> Self {
+        Self {
+            min: GraphRangeBound(min),
+            max: GraphRangeBound(max),
+        }
+    }
+
+    fn min(&self) -> Option<f64> {
+        self.min.0
+    }
+
+    fn max(&self) -> Option<f64> {
+        self.max.0
+    }
+}
+
+impl std::fmt::Display for GraphRange {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}", self.min, self.max)
+    }
+}
+
+impl std::str::FromStr for GraphRange {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == ":" {
+            return Ok(Self::default());
+        }
+
+        if !s.contains(':') {
+            anyhow::bail!("Invalid range syntax");
+        }
+
+        let maybe_parse = |value: &str| -> Result<Option<f64>, <f64 as std::str::FromStr>::Err> {
+            if value.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(value.parse()?))
+            }
+        };
+
+        let (min, max) = {
+            let (min, max) = s.split_once(':').expect("Invalid match range syntax");
+            (maybe_parse(min)?, maybe_parse(max)?)
+        };
+
+        Ok(Self::new(min, max))
+    }
+}
+
 #[derive(Debug, Parser)]
 #[command(version)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Opt {
     /// The input's minimum and maximum values
+    ///
+    /// If provided, at least one of `MIN` or `MAX` must be given.
+    ///
+    /// # Example
+    ///
+    /// ```plain
+    /// --range -3:4  # Use bounds given
+    /// --range -3:   # Automatically determine maximum
+    /// --range :4    # Automatically determine minimum
+    /// ```
     #[arg(
         short,
         long,
         alias = "bounds",
-        number_of_values = 2,
-        allow_negative_numbers = true,
-        value_names = ["MIN", "MAX"],
+        verbatim_doc_comment,
+        allow_hyphen_values = true,
+        default_value_t,
+        hide_default_value = true,
+        value_name = "[MIN]:[MAX]"
     )]
-    range: Vec<f64>,
+    range: GraphRange,
 
     /// Interpret arguments from the very first line of the input
     ///
@@ -140,7 +219,7 @@ pub struct Config {
 
 impl From<Opt> for Config {
     fn from(value: Opt) -> Self {
-        if let [min, max] = value.range[0..2] {
+        if let (Some(min), Some(max)) = (value.range.min(), value.range.max()) {
             Self {
                 kind: value.kind,
                 minimum: min,
@@ -314,8 +393,8 @@ The first line should be the string "braille", followed by spaced separated opti
             Ok(())
         };
 
-        if let Some([min, max]) = self.range.get(0..2) {
-            validate_bounds(*min, *max)?;
+        if let (Some(min), Some(max)) = (self.range.min(), self.range.max()) {
+            validate_bounds(min, max)?;
 
             match self.kind {
                 GraphKind::Bars | GraphKind::BrailleBars => {
@@ -327,20 +406,28 @@ The first line should be the string "braille", followed by spaced separated opti
             }
         } else {
             let mut lines = vec![];
-            let mut min = f64::MAX;
-            let mut max = f64::MIN;
+            let has_min = self.range.min().is_some();
+            let has_max = self.range.max().is_some();
+            assert!(!has_min || !has_max);
+            let mut min = self.range.min().unwrap_or(f64::MAX);
+            let mut max = self.range.max().unwrap_or(f64::MIN);
 
             for line in input_lines {
                 if let Ok(Some(value)) = line {
-                    min = min.min(value);
-                    max = max.max(value);
+                    if !has_min {
+                        min = min.min(value);
+                    }
+
+                    if !has_max {
+                        max = max.max(value);
+                    }
                 }
                 lines.push(line);
             }
 
             validate_bounds(min, max)?;
 
-            self.range = vec![min, max];
+            self.range = GraphRange::new(Some(min), Some(max));
 
             Ok(ValueIter::Bounded { lines })
         }

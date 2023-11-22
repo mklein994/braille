@@ -2,7 +2,7 @@
 source: tests/modeline/mod.rs
 expression: stderr
 ---
-Error: error: Invalid modeline: "braile -r -3 4 4"
+Error: error: Invalid modeline: "braile -r -3:4 4"
 
 The first line should be the string "braille", followed by spaced separated options
 
