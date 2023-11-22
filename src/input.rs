@@ -1,9 +1,10 @@
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
 use std::path::Path;
-use std::str::FromStr;
 
-type LineResult = Result<Option<f64>, <f64 as FromStr>::Err>;
+/// The type used as the iterator item while parsing lines
+pub type Line = Result<Option<f64>, <f64 as std::str::FromStr>::Err>;
+use Line as LineResult;
 
 pub struct SourceLineIterator {
     iter: Box<dyn Iterator<Item = LineResult>>,

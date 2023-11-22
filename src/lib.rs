@@ -16,8 +16,7 @@ use opt::ValueIter;
 use opt::{Config, FirstLine};
 pub use opt::{GraphKind, Opt};
 
-/// The type used as the iterator item while parsing lines
-pub type LineResult = Result<Option<f64>, <f64 as std::str::FromStr>::Err>;
+pub use input::Line as LineResult;
 
 /// Main entry point for the program
 pub fn run(mut opt: Opt) -> anyhow::Result<()> {
