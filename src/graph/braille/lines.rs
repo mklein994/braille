@@ -22,15 +22,15 @@
 //! ```
 
 use crate::graph::{BarGraphable, Graphable};
-use crate::opt::Config;
-use crate::LineResult;
+use crate::input::{InputLine, InputLineSinglable};
+use crate::opt::{Config, ValueIter};
 
 #[derive(Debug)]
 pub struct Lines {
     config: Config,
 }
 
-impl Graphable for Lines {
+impl Graphable<Option<f64>> for Lines {
     fn new(config: Config) -> Self {
         Self { config }
     }
@@ -38,12 +38,11 @@ impl Graphable for Lines {
     fn config(&self) -> &Config {
         &self.config
     }
-}
 
-impl BarGraphable for Lines {
-    fn print_bars(&self, mut input_lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
-        let minimum = self.minimum();
-        let maximum = self.maximum();
+    fn print_graph(&self, input_lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
+        let mut input_lines = input_lines.into_iter();
+        let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
+        let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
 
         let min = 1; // reserve an empty line for null values
         let max = self.width() * 2; // braille characters are 2 dots wide
@@ -77,7 +76,7 @@ impl BarGraphable for Lines {
 
                 if let Some(new_line) = input_line
                     .transpose()?
-                    .flatten()
+                    .and_then(InputLine::into_inner)
                     .map(scale)
                     .map(|value| Self::into_dot_pairs(value, zero))
                 {
@@ -97,6 +96,8 @@ impl BarGraphable for Lines {
         Ok(())
     }
 }
+
+impl BarGraphable<Option<f64>> for Lines {}
 
 impl Lines {
     /// Turn a value into its representation of braille dots for that row
@@ -170,6 +171,34 @@ impl Lines {
 
         let stem_length = usize::from(value.abs_diff(zero) + 1);
         iter.resize(iter.len() + stem_length, true);
+
+        let chunks = iter.chunks_exact(2);
+        let tip = chunks.remainder().to_vec();
+        let mut row: Vec<[bool; 2]> = chunks
+            .into_iter()
+            .map(|chunk| [chunk[0], chunk[1]])
+            .collect();
+        if !tip.is_empty() {
+            row.push([tip[0], tip.get(1).copied().unwrap_or_default()]);
+        }
+        row
+    }
+
+    pub fn into_dot_array_pairs<const N: usize>(line_set: [u16; N], zero: u16) -> Vec<[bool; 2]> {
+        assert_eq!(2, line_set.len(), "Not yet supported");
+        let start = line_set[0];
+        let end = line_set[1];
+        let (start, end, filled) = if start <= end {
+            (start, end, true)
+        } else {
+            (end, start, false)
+        };
+
+        let prefix_length = usize::from(start - 1);
+        let mut iter = vec![false; prefix_length];
+
+        let stem_length = usize::from(start.abs_diff(end) + 1);
+        iter.resize(iter.len() + stem_length, filled);
 
         let chunks = iter.chunks_exact(2);
         let tip = chunks.remainder().to_vec();
@@ -274,6 +303,79 @@ impl Lines {
         }
 
         output_row
+    }
+}
+
+impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
+    fn new(config: Config) -> Self {
+        Self { config }
+    }
+
+    fn config(&self) -> &Config {
+        &self.config
+    }
+
+    fn print_graph(&self, input_lines: ValueIter<[Option<f64>; N]>) -> anyhow::Result<()> {
+        let mut input_lines = input_lines.into_iter();
+        let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
+        let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
+
+        let min = 1; // reserve an empty line for null values
+        let max = self.width() * 2; // braille characters are 2 dots wide
+        let slope = f64::from(max - min) / (maximum - minimum);
+        let scale = |value: f64| {
+            assert!(
+                value >= minimum && value <= maximum,
+                "value out of bounds: {value} [{minimum}, {maximum}]"
+            );
+            min + (slope * (value - minimum)).round() as u16
+        };
+
+        // Clamp where 0 would fit to be inside the output range
+        let zero = if minimum > 0. {
+            min
+        } else if maximum < 0. {
+            max
+        } else {
+            scale(0.)
+        };
+
+        // Each braille character is 4 dots tall
+        let mut buffer = [vec![], vec![], vec![], vec![]];
+        let mut has_more_lines = true;
+        while has_more_lines {
+            for buffer_line in &mut buffer {
+                let input_line = input_lines.next();
+                if input_line.is_none() {
+                    has_more_lines = false;
+                }
+
+                if let Some(new_line) = input_line
+                    .transpose()?
+                    .and_then(|x| {
+                        if x.as_single_iter().all(|x| x.is_none()) {
+                            None
+                        } else {
+                            let line = x.into_iter().map(|x| scale(x.unwrap())).collect::<Vec<_>>();
+                            Some(<[_; N]>::try_from(line).unwrap())
+                        }
+                    })
+                    .map(|line_set| Self::into_dot_array_pairs(line_set, zero))
+                {
+                    *buffer_line = new_line;
+                }
+            }
+
+            if has_more_lines || buffer.iter().any(|x| !x.is_empty()) {
+                let transposed = Self::transpose_row(&buffer);
+                let braille_char = Self::to_braille_char_row(&transposed);
+                println!("{braille_char}");
+            }
+
+            buffer.fill(vec![]);
+        }
+
+        Ok(())
     }
 }
 

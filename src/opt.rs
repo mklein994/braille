@@ -1,6 +1,8 @@
+use std::str::FromStr;
+
 use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
 
-use crate::{input::SourceLineIterator, LineResult};
+use crate::input::{InputLine, InputLineResult as LineResult, InputLineSinglable, InputLines};
 
 #[derive(Debug, Copy, Clone, Default)]
 struct GraphRangeBound(Option<f64>);
@@ -95,6 +97,12 @@ pub struct Opt {
         value_name = "[MIN]:[MAX]"
     )]
     range: GraphRange,
+
+    /// Number of values per line of input
+    ///
+    /// When the graph kind supports it, each value represents a separate series.
+    #[arg(long, default_value_t = 1)]
+    pub values_per_line: u8,
 
     /// Interpret arguments from the very first line of the input
     ///
@@ -207,6 +215,7 @@ pub trait Configurable: From<Opt> {
     fn minimum(&self) -> f64;
     fn maximum(&self) -> f64;
     fn size(&self) -> u16;
+    fn values_per_line(&self) -> u8;
 }
 
 #[derive(Debug)]
@@ -215,6 +224,7 @@ pub struct Config {
     minimum: f64,
     maximum: f64,
     size: u16,
+    values_per_line: u8,
 }
 
 impl From<Opt> for Config {
@@ -225,6 +235,7 @@ impl From<Opt> for Config {
                 minimum: min,
                 maximum: max,
                 size: value.size.unwrap(),
+                values_per_line: value.values_per_line,
             }
         } else {
             unreachable!("The bounds should already have been calculated")
@@ -247,6 +258,10 @@ impl Configurable for Config {
 
     fn size(&self) -> u16 {
         self.size
+    }
+
+    fn values_per_line(&self) -> u8 {
+        self.values_per_line
     }
 }
 
@@ -311,6 +326,13 @@ impl Opt {
             opt.kind = GraphKind::Columns;
         }
 
+        match (opt.kind, opt.values_per_line) {
+            (GraphKind::Columns | GraphKind::Bars, x) if x > 1 => {
+                anyhow::bail!("Multiple values per line not supported for this graph kind");
+            }
+            _ => {}
+        }
+
         // If the graph size isn't already set, try detecting it from the environment
         if opt.size.is_none() {
             let (width, height) = get_terminal_size()?;
@@ -364,10 +386,10 @@ The first line should be the string "braille", followed by spaced separated opti
     /// otherwise simply return the resulting iterator.
     ///
     /// These are both wrapped inside an enum to allow for `impl Iterator<...>` types.
-    pub fn get_iter(
-        &mut self,
-        input_lines: SourceLineIterator,
-    ) -> anyhow::Result<ValueIter<impl Iterator<Item = LineResult> + 'static>> {
+    pub fn get_iter<T>(&mut self, input_lines: InputLines<T>) -> anyhow::Result<ValueIter<T>>
+    where
+        InputLine<T>: FromStr + InputLineSinglable,
+    {
         let validate_bounds = |min: f64, max: f64| {
             if min > max {
                 use clap::{error::ErrorKind, CommandFactory};
@@ -413,7 +435,10 @@ The first line should be the string "braille", followed by spaced separated opti
             let mut max = self.range.max().unwrap_or(f64::MIN);
 
             for line in input_lines {
-                if let Ok(Some(value)) = line {
+                for value in line
+                    .iter()
+                    .flat_map(|line| line.as_single_iter().flatten())
+                {
                     if !has_min {
                         min = min.min(value);
                     }
@@ -422,6 +447,7 @@ The first line should be the string "braille", followed by spaced separated opti
                         max = max.max(value);
                     }
                 }
+
                 lines.push(line);
             }
 
@@ -434,17 +460,20 @@ The first line should be the string "braille", followed by spaced separated opti
     }
 }
 
-#[derive(Debug)]
-pub enum ValueIter<BoundlessIter: Iterator<Item = LineResult> + 'static> {
-    Boundless(BoundlessIter),
-    Bounded { lines: Vec<LineResult> },
+// pub enum ValueIter<T, BoundlessIter: Iterator<Item = LineResult<T>> + 'static> {
+pub enum ValueIter<T>
+where
+    InputLine<T>: FromStr,
+{
+    Boundless(InputLines<T>),
+    Bounded { lines: Vec<LineResult<T>> },
 }
 
-impl<BoundlessIter> IntoIterator for ValueIter<BoundlessIter>
+impl<T: 'static> IntoIterator for ValueIter<T>
 where
-    BoundlessIter: Iterator<Item = LineResult> + 'static,
+    InputLine<T>: FromStr,
 {
-    type Item = LineResult;
+    type Item = LineResult<T>;
 
     type IntoIter = Box<dyn Iterator<Item = Self::Item>>;
 

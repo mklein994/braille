@@ -1,12 +1,12 @@
 use crate::graph::{BarGraphable, Graphable};
-use crate::opt::Config;
-use crate::LineResult;
+
+use crate::opt::{Config, ValueIter};
 
 pub struct Bars {
     config: Config,
 }
 
-impl Graphable for Bars {
+impl Graphable<Option<f64>> for Bars {
     fn new(config: Config) -> Self {
         Self { config }
     }
@@ -14,9 +14,7 @@ impl Graphable for Bars {
     fn config(&self) -> &Config {
         &self.config
     }
-}
 
-impl BarGraphable for Bars {
     /// ```plain
     /// █
     /// ▉
@@ -28,7 +26,7 @@ impl BarGraphable for Bars {
     /// ▏
     ///   (space)
     /// ```
-    fn print_bars(&self, input_lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()> {
+    fn print_graph(&self, input_lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
         let minimum = self.minimum();
         let maximum = self.maximum();
 
@@ -44,12 +42,14 @@ impl BarGraphable for Bars {
         };
 
         for line in input_lines {
-            println!("{}", Self::print_line(line?.map(scale)));
+            println!("{}", Self::print_line(line?.into_inner().map(scale)));
         }
 
         Ok(())
     }
 }
+
+impl BarGraphable<Option<f64>> for Bars {}
 
 impl Bars {
     const BLOCKS: [&'static str; 9] = [

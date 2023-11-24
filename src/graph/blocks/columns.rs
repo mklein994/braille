@@ -1,5 +1,9 @@
+use std::str::FromStr;
+
 use crate::graph::{ColumnGraphable, Graphable};
-use crate::{Config, LineResult};
+use crate::input::InputLine;
+use crate::opt::ValueIter;
+use crate::Config;
 
 pub struct Columns {
     config: Config,
@@ -7,7 +11,7 @@ pub struct Columns {
 
 impl Columns
 where
-    Self: ColumnGraphable,
+    Self: ColumnGraphable<Option<f64>>,
 {
     // // FOR DEBUGGING
     // const BLOCKS: [&'static str; 9] = [
@@ -51,7 +55,10 @@ where
     }
 }
 
-impl Graphable for Columns {
+impl Graphable<Option<f64>> for Columns
+where
+    InputLine<Option<f64>>: FromStr,
+{
     fn new(config: Config) -> Self {
         Self { config }
     }
@@ -59,10 +66,9 @@ impl Graphable for Columns {
     fn config(&self) -> &Config {
         &self.config
     }
-}
 
-impl ColumnGraphable for Columns {
-    fn print_columns(&self, lines: Vec<LineResult>) -> anyhow::Result<()> {
+    fn print_graph(&self, lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
+        let lines: Vec<_> = lines.into_iter().collect();
         let minimum = self.minimum();
         let maximum = self.maximum();
 
@@ -81,7 +87,7 @@ impl ColumnGraphable for Columns {
         };
 
         for line in lines {
-            let column = Self::calculate_column(line?.map(scale));
+            let column = Self::calculate_column(line?.into_inner().map(scale));
             columns.push(column);
         }
 
@@ -95,3 +101,5 @@ impl ColumnGraphable for Columns {
         Ok(())
     }
 }
+
+impl ColumnGraphable<Option<f64>> for Columns {}

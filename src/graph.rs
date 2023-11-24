@@ -1,10 +1,15 @@
 pub mod blocks;
 pub mod braille;
 
-use crate::opt::{Config, Configurable};
-use crate::LineResult;
+use std::str::FromStr;
 
-pub trait Graphable<Conf: Configurable = Config> {
+use crate::input::InputLine;
+use crate::opt::{Config, Configurable, ValueIter};
+
+pub trait Graphable<T, Conf: Configurable = Config>
+where
+    InputLine<T>: FromStr,
+{
     fn new(config: Conf) -> Self;
 
     fn config(&self) -> &Conf;
@@ -16,20 +21,26 @@ pub trait Graphable<Conf: Configurable = Config> {
     fn maximum(&self) -> f64 {
         self.config().maximum()
     }
+
+    fn print_graph(&self, lines: ValueIter<T>) -> anyhow::Result<()>
+    where
+        InputLine<T>: FromStr;
 }
 
-pub trait BarGraphable: Graphable {
+pub trait BarGraphable<T>: Graphable<T>
+where
+    InputLine<T>: FromStr,
+{
     fn width(&self) -> u16 {
         self.config().size()
     }
-
-    fn print_bars(&self, lines: impl Iterator<Item = LineResult>) -> anyhow::Result<()>;
 }
 
-pub trait ColumnGraphable: Graphable {
+pub trait ColumnGraphable<T>: Graphable<T>
+where
+    InputLine<T>: FromStr,
+{
     fn height(&self) -> u16 {
         self.config().size()
     }
-
-    fn print_columns(&self, lines: Vec<LineResult>) -> anyhow::Result<()>;
 }

@@ -1,14 +1,15 @@
 use std::io::LineWriter;
 use std::io::Write;
 
+use crate::opt::ValueIter;
+use crate::Config;
 use crate::{ColumnGraphable, Graphable};
-use crate::{Config, LineResult};
 
 pub struct Columns {
     config: Config,
 }
 
-impl Graphable for Columns {
+impl Graphable<Option<f64>> for Columns {
     fn new(config: Config) -> Self {
         Self { config }
     }
@@ -16,10 +17,8 @@ impl Graphable for Columns {
     fn config(&self) -> &Config {
         &self.config
     }
-}
 
-impl ColumnGraphable for Columns {
-    fn print_columns(&self, lines: Vec<LineResult>) -> anyhow::Result<()> {
+    fn print_graph(&self, lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
         let minimum = self.minimum();
         let maximum = self.maximum();
 
@@ -56,7 +55,7 @@ impl ColumnGraphable for Columns {
 
             let mut column = [vec![], vec![]];
             for (i, side) in [left, right].into_iter().enumerate() {
-                if let Some(value) = side.transpose()?.flatten().map(scale) {
+                if let Some(value) = side.transpose()?.and_then(|x| x.into_inner()).map(scale) {
                     column[i] = Self::into_dot_quads(value, zero);
                 }
             }
@@ -71,9 +70,11 @@ impl ColumnGraphable for Columns {
     }
 }
 
+impl ColumnGraphable<Option<f64>> for Columns {}
+
 impl Columns
 where
-    Self: ColumnGraphable,
+    Self: ColumnGraphable<Option<f64>>,
 {
     fn into_dot_quads(value: u16, zero: u16) -> Vec<[bool; 4]> {
         let prefix_length = usize::from(value.min(zero) - 1);
