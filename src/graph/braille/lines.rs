@@ -184,7 +184,8 @@ impl Lines {
         row
     }
 
-    pub fn into_dot_array_pairs<const N: usize>(line_set: [u16; N], zero: u16) -> Vec<[bool; 2]> {
+    #[must_use]
+    pub fn into_dot_array_pairs<const N: usize>(line_set: [u16; N]) -> Vec<[bool; 2]> {
         assert_eq!(2, line_set.len(), "Not yet supported");
         let start = line_set[0];
         let end = line_set[1];
@@ -197,8 +198,14 @@ impl Lines {
         let prefix_length = usize::from(start - 1);
         let mut iter = vec![false; prefix_length];
 
-        let stem_length = usize::from(start.abs_diff(end) + 1);
-        iter.resize(iter.len() + stem_length, filled);
+        let stem_length = usize::from(start.abs_diff(end));
+        for i in 0..=stem_length {
+            if i == 0 || i == stem_length {
+                iter.push(true);
+            } else {
+                iter.push(filled);
+            }
+        }
 
         let chunks = iter.chunks_exact(2);
         let tip = chunks.remainder().to_vec();
@@ -331,15 +338,6 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
             min + (slope * (value - minimum)).round() as u16
         };
 
-        // Clamp where 0 would fit to be inside the output range
-        let zero = if minimum > 0. {
-            min
-        } else if maximum < 0. {
-            max
-        } else {
-            scale(0.)
-        };
-
         // Each braille character is 4 dots tall
         let mut buffer = [vec![], vec![], vec![], vec![]];
         let mut has_more_lines = true;
@@ -360,7 +358,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
                             Some(<[_; N]>::try_from(line).unwrap())
                         }
                     })
-                    .map(|line_set| Self::into_dot_array_pairs(line_set, zero))
+                    .map(Self::into_dot_array_pairs)
                 {
                     *buffer_line = new_line;
                 }
