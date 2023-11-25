@@ -34,7 +34,25 @@ where
     (stdout, stderr)
 }
 
-pub fn get_output<I, S>(inputs: &[Option<f64>], args: I) -> (String, String)
+pub fn get_output<Iter, S>(args: Iter) -> (String, String)
+where
+    Iter: IntoIterator<Item = S>,
+    S: AsRef<std::ffi::OsStr>,
+{
+    let bin = concat!(env!("CARGO_MANIFEST_DIR"), "/target/debug/braille"); // bin name
+    let output = Command::new(bin)
+        .args(args)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    (stdout, stderr)
+}
+pub fn get_output_from_numbers<I, S>(inputs: &[Option<f64>], args: I) -> (String, String)
 where
     I: IntoIterator<Item = S>,
     S: AsRef<std::ffi::OsStr>,

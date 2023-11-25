@@ -8,7 +8,7 @@ macro_rules! t {
         #[test]
         fn $name() {
             let input: Vec<_> = $gen.into_iter().map(|x| Some(x as f64)).collect();
-            let (stdout, stderr) = get_output(&input, [$width.to_string()]);
+            let (stdout, stderr) = get_output_from_numbers(&input, [$width.to_string()]);
             insta::assert_snapshot!(stdout);
             assert!(stderr.is_empty());
         }
@@ -18,7 +18,7 @@ macro_rules! t {
         #[test]
         fn $name() {
             let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
-            let (stdout, stderr) = get_output(
+            let (stdout, stderr) = get_output_from_numbers(
                 &input,
                 [
                     "-r".to_string(),
@@ -35,7 +35,7 @@ macro_rules! t {
         #[test]
         fn $name() {
             let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
-            let (stdout, stderr) = get_output(
+            let (stdout, stderr) = get_output_from_numbers(
                 &input,
                 [
                     "-r".to_string(),
@@ -52,7 +52,7 @@ macro_rules! t {
         #[test]
         fn $name() {
             let input: ::std::vec::Vec<_> = $gen;
-            let (stdout, stderr) = get_output(
+            let (stdout, stderr) = get_output_from_numbers(
                 &input,
                 [
                     "-r".to_string(),
@@ -69,7 +69,7 @@ macro_rules! t {
         #[test]
         fn $name() {
             let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
-            let (stdout, stderr) = get_output(
+            let (stdout, stderr) = get_output_from_numbers(
                 &input,
                 [
                     "--kind".to_string(),
@@ -88,7 +88,7 @@ macro_rules! t {
         #[test]
         fn $name() {
             let input: ::std::vec::Vec<_> = $gen;
-            let (stdout, stderr) = get_output(
+            let (stdout, stderr) = get_output_from_numbers(
                 &input,
                 [
                     "--kind".to_string(),
@@ -281,6 +281,16 @@ fn thick_staircase() {
 15 17";
 
     let (stdout, stderr) = util::get_output_from_str(input, ["--values-per-line", "2", "4"]);
+
+    insta::assert_snapshot!(stdout);
+    assert!(stderr.is_empty());
+}
+
+#[test]
+fn braille_column_read_pairs_from_file() {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/sine_area.tsv");
+
+    let (stdout, stderr) = util::get_output(["-f", path, "-c", "--values-per-line", "2", "2"]);
 
     insta::assert_snapshot!(stdout);
     assert!(stderr.is_empty());
