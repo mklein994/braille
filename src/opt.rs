@@ -435,10 +435,7 @@ The first line should be the string "braille", followed by spaced separated opti
             let mut max = self.range.max().unwrap_or(f64::MIN);
 
             for line in input_lines {
-                for value in line
-                    .iter()
-                    .flat_map(|line| line.as_single_iter().flatten())
-                {
+                for value in line.iter().flat_map(|line| line.as_single_iter().flatten()) {
                     if !has_min {
                         min = min.min(value);
                     }
