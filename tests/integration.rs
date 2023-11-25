@@ -210,3 +210,28 @@ t!(
         .map(|x| Some(f64::sin(f64::from(x) / 10.)))
         .collect()
 );
+
+#[test]
+fn thick_sine_wave() {
+    let input = r"4 6
+5 7
+3 5
+1 3
+0 2
+2 4
+4 6
+5 7
+3 5
+1 3
+0 2
+1 3
+3 5
+5 7
+4 6
+2 4";
+
+    let (stdout, stderr) = util::get_output_from_str(input, ["--values-per-line", "2", "4"]);
+
+    insta::assert_snapshot!(stdout);
+    assert!(stderr.is_empty());
+}
