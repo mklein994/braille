@@ -1,6 +1,7 @@
 use std::io::LineWriter;
 use std::io::Write;
 
+use crate::input::InputLine;
 use crate::opt::ValueIter;
 use crate::Config;
 use crate::{ColumnGraphable, Graphable};
@@ -55,7 +56,7 @@ impl Graphable<Option<f64>> for Columns {
 
             let mut column = [vec![], vec![]];
             for (i, side) in [left, right].into_iter().enumerate() {
-                if let Some(value) = side.transpose()?.and_then(|x| x.into_inner()).map(scale) {
+                if let Some(value) = side.transpose()?.and_then(InputLine::into_inner).map(scale) {
                     column[i] = Self::into_dot_quads(value, zero);
                 }
             }
