@@ -19,8 +19,8 @@ impl Graphable<Option<f64>> for Columns {
     }
 
     fn print_graph(&self, lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
-        let minimum = self.minimum();
-        let maximum = self.maximum();
+        let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
+        let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
 
         let min = 1;
         let max = self.height() * 4;
@@ -70,12 +70,68 @@ impl Graphable<Option<f64>> for Columns {
     }
 }
 
+impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
+    fn new(config: Config) -> Self {
+        Self { config }
+    }
+
+    fn config(&self) -> &Config {
+        &self.config
+    }
+
+    fn print_graph(&self, lines: ValueIter<[Option<f64>; N]>) -> anyhow::Result<()> {
+        let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
+        let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
+
+        let min = 1;
+        let max = self.height() * 4;
+        let slope = f64::from(max - min) / (maximum - minimum);
+        let scale = |value: f64| {
+            assert!(
+                value >= minimum && value <= maximum,
+                "value out of bounds: {value} [{minimum}, {maximum}]"
+            );
+            min + (slope * (value - minimum)).round() as u16
+        };
+
+        let mut input_lines = lines.into_iter();
+
+        let mut column_quads = vec![];
+
+        loop {
+            let left = input_lines.next();
+            let right = input_lines.next();
+            if right.is_none() {
+                break;
+            }
+
+            let mut column = [vec![], vec![]];
+            for (i, side) in [left, right].into_iter().enumerate() {
+                if let Some(value) = side.transpose()?.map(|input_line_value| {
+                    input_line_value
+                        .into_iter()
+                        .map(|x| x.map(scale).unwrap_or_default())
+                        .collect::<Vec<_>>()
+                        .try_into()
+                        .unwrap()
+                }) {
+                    column[i] = Self::into_dot_quads_from_array::<N>(value);
+                }
+            }
+
+            column_quads.push(column);
+        }
+
+        let mut writer = LineWriter::new(std::io::stdout());
+        Self::into_braille_rows(&mut writer, &column_quads, usize::from(self.height()))?;
+
+        Ok(())
+    }
+}
+
 impl ColumnGraphable<Option<f64>> for Columns {}
 
-impl Columns
-where
-    Self: ColumnGraphable<Option<f64>>,
-{
+impl Columns {
     fn into_dot_quads(value: u16, zero: u16) -> Vec<[bool; 4]> {
         let prefix_length = usize::from(value.min(zero) - 1);
         let mut iter = vec![false; prefix_length];
@@ -138,6 +194,46 @@ where
         line_writer.flush()?;
 
         Ok(())
+    }
+
+    fn into_dot_quads_from_array<const N: usize>(line_set: [u16; N]) -> Vec<[bool; 4]> {
+        assert_eq!(2, line_set.len(), "Not yet supported");
+        let start = line_set[0];
+        let end = line_set[1];
+        let (start, end, filled) = if start <= end {
+            (start, end, true)
+        } else {
+            (end, start, false)
+        };
+
+        let prefix_length = usize::from(start - 1);
+        let mut iter = vec![false; prefix_length];
+
+        let stem_length = usize::from(start.abs_diff(end));
+        for i in 0..=stem_length {
+            if i == 0 || i == stem_length {
+                iter.push(true);
+            } else {
+                iter.push(filled);
+            }
+        }
+
+        let chunks = iter.chunks_exact(4);
+        let tip = chunks.remainder().to_vec();
+        let mut column: Vec<[bool; 4]> = chunks
+            .into_iter()
+            .map(|chunk| [chunk[0], chunk[1], chunk[2], chunk[3]])
+            .collect();
+        if !tip.is_empty() {
+            column.push([
+                tip[0],
+                tip.get(1).copied().unwrap_or_default(),
+                tip.get(2).copied().unwrap_or_default(),
+                tip.get(3).copied().unwrap_or_default(),
+            ]);
+        }
+
+        column
     }
 }
 

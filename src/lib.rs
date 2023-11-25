@@ -23,7 +23,7 @@ pub fn run(opt: Opt) -> anyhow::Result<()> {
         (GraphKind::BrailleBars, 1) => build_graph::<Option<f64>, BrailleLines>(opt)?,
         (GraphKind::BrailleBars, 2) => build_graph::<[Option<f64>; 2], BrailleLines>(opt)?,
         (GraphKind::BrailleColumns, 1) => build_graph::<Option<f64>, BrailleColumns>(opt)?,
-        // (GraphKind::BrailleColumns, 2) => build_graph::<[Option<f64>; 2], BrailleColumns>(opt)?,
+        (GraphKind::BrailleColumns, 2) => build_graph::<[Option<f64>; 2], BrailleColumns>(opt)?,
         _ => todo!(),
     };
 
