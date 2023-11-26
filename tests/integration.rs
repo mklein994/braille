@@ -230,7 +230,7 @@ fn thick_sine_wave() {
 4 6
 2 4";
 
-    let (stdout, stderr) = util::get_output_from_str(input, ["--values-per-line", "2", "4"]);
+    let (stdout, stderr) = util::get_output_from_str(input, ["--per", "2", "4"]);
 
     insta::assert_snapshot!(stdout);
     assert!(stderr.is_empty());
@@ -255,7 +255,7 @@ fn hollow_sine_wave() {
 6 4
 4 2";
 
-    let (stdout, stderr) = util::get_output_from_str(input, ["--values-per-line", "2", "4"]);
+    let (stdout, stderr) = util::get_output_from_str(input, ["--per", "2", "4"]);
 
     insta::assert_snapshot!(stdout);
     assert!(stderr.is_empty());
@@ -280,7 +280,7 @@ fn thick_staircase() {
 14 16
 15 17";
 
-    let (stdout, stderr) = util::get_output_from_str(input, ["--values-per-line", "2", "4"]);
+    let (stdout, stderr) = util::get_output_from_str(input, ["--per", "2", "4"]);
 
     insta::assert_snapshot!(stdout);
     assert!(stderr.is_empty());
@@ -290,7 +290,7 @@ fn thick_staircase() {
 fn braille_column_read_pairs_from_file() {
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/sine_area.tsv");
 
-    let (stdout, stderr) = util::get_output(["-f", path, "-c", "--values-per-line", "2", "2"]);
+    let (stdout, stderr) = util::get_output(["-f", path, "-c", "--per", "2", "2"]);
 
     insta::assert_snapshot!(stdout);
     assert!(stderr.is_empty());

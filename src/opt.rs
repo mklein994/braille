@@ -101,8 +101,8 @@ pub struct Opt {
     /// Number of values per line of input
     ///
     /// When the graph kind supports it, each value represents a separate series.
-    #[arg(long, default_value_t = 1)]
-    pub values_per_line: u8,
+    #[arg(short, long, default_value_t = 1, value_parser(clap::value_parser!(u8).range(1..=2)))]
+    pub per: u8,
 
     /// Interpret arguments from the very first line of the input
     ///
@@ -235,7 +235,7 @@ impl From<Opt> for Config {
                 minimum: min,
                 maximum: max,
                 size: value.size.unwrap(),
-                values_per_line: value.values_per_line,
+                values_per_line: value.per,
             }
         } else {
             unreachable!("The bounds should already have been calculated")
@@ -326,7 +326,7 @@ impl Opt {
             opt.kind = GraphKind::Columns;
         }
 
-        match (opt.kind, opt.values_per_line) {
+        match (opt.kind, opt.per) {
             (GraphKind::Columns | GraphKind::Bars, x) if x > 1 => {
                 anyhow::bail!("Multiple values per line not supported for this graph kind");
             }

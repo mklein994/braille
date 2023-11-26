@@ -17,7 +17,7 @@ pub use opt::{GraphKind, Opt};
 
 /// Main entry point for the program
 pub fn run(opt: Opt) -> anyhow::Result<()> {
-    match (opt.kind, opt.values_per_line) {
+    match (opt.kind, opt.per) {
         (GraphKind::Bars, 1) => build_graph::<Option<f64>, BlockBars>(opt)?,
         (GraphKind::Columns, 1) => build_graph::<Option<f64>, BlockColumns>(opt)?,
         (GraphKind::BrailleBars, 1) => build_graph::<Option<f64>, BrailleLines>(opt)?,
