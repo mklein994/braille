@@ -412,7 +412,7 @@ mod tests {
     fn test_into_dot_pairs() {
         assert_eq!(
             vec![[false, false], [false, false], [true, false]],
-            Lines::into_dot_pairs(5, 5, Default::default())
+            Lines::into_dot_pairs(5, 5, GraphStyle::default())
         );
     }
 
