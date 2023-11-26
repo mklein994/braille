@@ -4,6 +4,7 @@ use std::io::Write;
 use crate::input::InputLine;
 use crate::opt::ValueIter;
 use crate::Config;
+use crate::GraphStyle;
 use crate::{ColumnGraphable, Graphable};
 
 pub struct Columns {
@@ -22,6 +23,7 @@ impl Graphable<Option<f64>> for Columns {
     fn print_graph(&self, lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
+        let style = <Self as Graphable<Option<f64>, Config>>::style(self);
 
         let min = 1;
         let max = self.height() * 4;
@@ -57,7 +59,7 @@ impl Graphable<Option<f64>> for Columns {
             let mut column = [vec![], vec![]];
             for (i, side) in [left, right].into_iter().enumerate() {
                 if let Some(value) = side.transpose()?.and_then(InputLine::into_inner).map(scale) {
-                    column[i] = Self::into_dot_quads(value, zero);
+                    column[i] = Self::into_dot_quads(value, zero, style);
                 }
             }
 
@@ -83,6 +85,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
     fn print_graph(&self, lines: ValueIter<[Option<f64>; N]>) -> anyhow::Result<()> {
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
+        let style = <Self as Graphable<Option<f64>, Config>>::style(self);
 
         let min = 1;
         let max = self.height() * 4;
@@ -116,7 +119,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
                         .try_into()
                         .unwrap()
                 }) {
-                    column[i] = Self::into_dot_quads_from_array::<N>(value);
+                    column[i] = Self::into_dot_quads_from_array::<N>(value, style);
                 }
             }
 
@@ -133,12 +136,21 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
 impl ColumnGraphable<Option<f64>> for Columns {}
 
 impl Columns {
-    fn into_dot_quads(value: u16, zero: u16) -> Vec<[bool; 4]> {
+    fn into_dot_quads(value: u16, zero: u16, style: GraphStyle) -> Vec<[bool; 4]> {
         let prefix_length = usize::from(value.min(zero) - 1);
         let mut iter = vec![false; prefix_length];
 
-        let stem_length = usize::from(value.abs_diff(zero) + 1);
-        iter.resize(iter.len() + stem_length, true);
+        let stem_length = usize::from(value.abs_diff(zero));
+        for i in 0..=stem_length {
+            if i == stem_length {
+                iter.push(true);
+            } else {
+                iter.push(match style {
+                    GraphStyle::Auto | GraphStyle::Filled => true,
+                    GraphStyle::Line => false,
+                });
+            }
+        }
 
         let chunks = iter.chunks_exact(4);
         let tip = chunks.remainder().to_vec();
@@ -197,14 +209,23 @@ impl Columns {
         Ok(())
     }
 
-    fn into_dot_quads_from_array<const N: usize>(line_set: [u16; N]) -> Vec<[bool; 4]> {
+    fn into_dot_quads_from_array<const N: usize>(
+        line_set: [u16; N],
+        style: GraphStyle,
+    ) -> Vec<[bool; 4]> {
         assert_eq!(2, line_set.len(), "Not yet supported");
         let start = line_set[0];
         let end = line_set[1];
-        let (start, end, filled) = if start <= end {
-            (start, end, true)
+        let filled = match (start, end, style) {
+            (start, end, GraphStyle::Auto) => start <= end,
+            (_, _, GraphStyle::Line) => false,
+            (_, _, GraphStyle::Filled) => true,
+        };
+
+        let (start, end) = if start <= end {
+            (start, end)
         } else {
-            (end, start, false)
+            (end, start)
         };
 
         let prefix_length = usize::from(start - 1);
