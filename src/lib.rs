@@ -13,7 +13,7 @@ pub use graph::{
 pub use graph::{BarGraphable, ColumnGraphable, Graphable};
 
 use opt::{Config, FirstLine};
-pub use opt::{GraphKind, Opt};
+pub use opt::{GraphKind, GraphStyle, Opt};
 
 /// Main entry point for the program
 pub fn run(opt: Opt) -> anyhow::Result<()> {

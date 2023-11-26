@@ -4,7 +4,7 @@ pub mod braille;
 use std::str::FromStr;
 
 use crate::input::InputLine;
-use crate::opt::{Config, Configurable, ValueIter};
+use crate::opt::{Config, Configurable, GraphStyle, ValueIter};
 
 pub trait Graphable<T, Conf: Configurable = Config>
 where
@@ -20,6 +20,10 @@ where
 
     fn maximum(&self) -> f64 {
         self.config().maximum()
+    }
+
+    fn style(&self) -> GraphStyle {
+        self.config().style()
     }
 
     fn print_graph(&self, lines: ValueIter<T>) -> anyhow::Result<()>

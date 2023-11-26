@@ -23,7 +23,7 @@
 
 use crate::graph::{BarGraphable, Graphable};
 use crate::input::{InputLine, InputLineSinglable};
-use crate::opt::{Config, ValueIter};
+use crate::opt::{Config, GraphStyle, ValueIter};
 
 #[derive(Debug)]
 pub struct Lines {
@@ -64,6 +64,8 @@ impl Graphable<Option<f64>> for Lines {
             scale(0.)
         };
 
+        let style = <Self as Graphable<Option<f64>, Config>>::style(self);
+
         // Each braille character is 4 dots tall
         let mut buffer = [vec![], vec![], vec![], vec![]];
         let mut has_more_lines = true;
@@ -78,7 +80,7 @@ impl Graphable<Option<f64>> for Lines {
                     .transpose()?
                     .and_then(InputLine::into_inner)
                     .map(scale)
-                    .map(|value| Self::into_dot_pairs(value, zero))
+                    .map(|value| Self::into_dot_pairs(value, zero, style))
                 {
                     *buffer_line = new_line;
                 }
@@ -136,7 +138,7 @@ impl Lines {
     /// //   ┌──── -2 (dot 2)
     /// //  -* **
     /// //      └─  0 (dot 4)
-    /// assert_eq!(vec![[false, true], [true, true]], braille::BrailleLines::into_dot_pairs(2, 4));
+    /// assert_eq!(vec![[false, true], [true, true]], braille::BrailleLines::into_dot_pairs(2, 4, braille::GraphStyle::default()));
     /// ```
     ///
     /// In the second example row, the input value is 3, which translates to dot 7. The value is above
@@ -148,7 +150,8 @@ impl Lines {
     /// //     └─────── 0 (dot 4)
     /// assert_eq!(
     ///     vec![[false, false], [false, true], [true, true], [true, false]],
-    ///     braille::BrailleLines::into_dot_pairs(7, 4)
+    ///     braille::BrailleLines::into_dot_pairs(7, 4,
+    ///     braille::GraphStyle::default())
     /// );
     /// ```
     ///
@@ -165,12 +168,21 @@ impl Lines {
     ///         └─┴┴──── stem
     /// ```
     #[must_use]
-    pub fn into_dot_pairs(value: u16, zero: u16) -> Vec<[bool; 2]> {
+    pub fn into_dot_pairs(value: u16, zero: u16, style: GraphStyle) -> Vec<[bool; 2]> {
         let prefix_length = usize::from(value.min(zero) - 1);
         let mut iter = vec![false; prefix_length];
 
-        let stem_length = usize::from(value.abs_diff(zero) + 1);
-        iter.resize(iter.len() + stem_length, true);
+        let stem_length = usize::from(value.abs_diff(zero));
+        for i in 0..=stem_length {
+            if i == stem_length {
+                iter.push(true);
+            } else {
+                iter.push(match style {
+                    GraphStyle::Auto | GraphStyle::Filled => true,
+                    GraphStyle::Line => false,
+                });
+            }
+        }
 
         let chunks = iter.chunks_exact(2);
         let tip = chunks.remainder().to_vec();
@@ -185,14 +197,24 @@ impl Lines {
     }
 
     #[must_use]
-    pub fn into_dot_array_pairs<const N: usize>(line_set: [u16; N]) -> Vec<[bool; 2]> {
+    pub fn into_dot_array_pairs<const N: usize>(
+        line_set: [u16; N],
+        style: GraphStyle,
+    ) -> Vec<[bool; 2]> {
         assert_eq!(2, line_set.len(), "Not yet supported");
         let start = line_set[0];
         let end = line_set[1];
-        let (start, end, filled) = if start <= end {
-            (start, end, true)
+
+        let filled = match (start, end, style) {
+            (_, _, GraphStyle::Line) => false,
+            (_, _, GraphStyle::Filled) => true,
+            (start, end, GraphStyle::Auto) => start <= end,
+        };
+
+        let (start, end) = if start <= end {
+            (start, end)
         } else {
-            (end, start, false)
+            (end, start)
         };
 
         let prefix_length = usize::from(start - 1);
@@ -358,7 +380,12 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
                             Some(<[_; N]>::try_from(line).unwrap())
                         }
                     })
-                    .map(Self::into_dot_array_pairs)
+                    .map(|x| {
+                        Self::into_dot_array_pairs(
+                            x,
+                            <Self as Graphable<Option<f64>, Config>>::style(self),
+                        )
+                    })
                 {
                     *buffer_line = new_line;
                 }
@@ -385,7 +412,7 @@ mod tests {
     fn test_into_dot_pairs() {
         assert_eq!(
             vec![[false, false], [false, false], [true, false]],
-            Lines::into_dot_pairs(5, 5)
+            Lines::into_dot_pairs(5, 5, Default::default())
         );
     }
 

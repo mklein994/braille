@@ -71,6 +71,20 @@ impl std::str::FromStr for GraphRange {
     }
 }
 
+#[derive(Debug, Default, ValueEnum, Clone, Copy)]
+pub enum GraphStyle {
+    /// Fill space between series when the first is less or equal to the second value,
+    /// hollow otherwise
+    #[default]
+    Auto,
+
+    /// Never fill between series (show each independently as a line)
+    Line,
+
+    /// Always fill the space between multiple series
+    Filled,
+}
+
 #[derive(Debug, Parser)]
 #[command(version)]
 #[allow(clippy::struct_excessive_bools)]
@@ -103,6 +117,10 @@ pub struct Opt {
     /// When the graph kind supports it, each value represents a separate series.
     #[arg(short, long, default_value_t = 1, value_parser(clap::value_parser!(u8).range(1..=2)))]
     pub per: u8,
+
+    /// How the space between multiple series should be handled
+    #[arg(short, long, value_enum, default_value_t)]
+    pub style: GraphStyle,
 
     /// Interpret arguments from the very first line of the input
     ///
@@ -212,19 +230,19 @@ pub enum FirstLine {
 
 pub trait Configurable: From<Opt> {
     fn kind(&self) -> GraphKind;
+    fn style(&self) -> GraphStyle;
     fn minimum(&self) -> f64;
     fn maximum(&self) -> f64;
     fn size(&self) -> u16;
-    fn values_per_line(&self) -> u8;
 }
 
 #[derive(Debug)]
 pub struct Config {
     kind: GraphKind,
+    style: GraphStyle,
     minimum: f64,
     maximum: f64,
     size: u16,
-    values_per_line: u8,
 }
 
 impl From<Opt> for Config {
@@ -232,10 +250,10 @@ impl From<Opt> for Config {
         if let (Some(min), Some(max)) = (value.range.min(), value.range.max()) {
             Self {
                 kind: value.kind,
+                style: value.style,
                 minimum: min,
                 maximum: max,
                 size: value.size.unwrap(),
-                values_per_line: value.per,
             }
         } else {
             unreachable!("The bounds should already have been calculated")
@@ -248,6 +266,10 @@ impl Configurable for Config {
         self.kind
     }
 
+    fn style(&self) -> GraphStyle {
+        self.style
+    }
+
     fn minimum(&self) -> f64 {
         self.minimum
     }
@@ -258,10 +280,6 @@ impl Configurable for Config {
 
     fn size(&self) -> u16 {
         self.size
-    }
-
-    fn values_per_line(&self) -> u8 {
-        self.values_per_line
     }
 }
 
