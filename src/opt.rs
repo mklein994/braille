@@ -75,13 +75,13 @@ impl std::str::FromStr for GraphRange {
 pub enum GraphStyle {
     /// Fill space between series when the first is less or equal to the second value,
     /// hollow otherwise
-    #[default]
     Auto,
 
     /// Never fill between series (show each independently as a line)
     Line,
 
     /// Always fill the space between multiple series
+    #[default]
     Filled,
 }
 

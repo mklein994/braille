@@ -172,15 +172,18 @@ impl Lines {
         let prefix_length = usize::from(value.min(zero) - 1);
         let mut iter = vec![false; prefix_length];
 
+        let filled = match (value, zero, style) {
+            (v, z, GraphStyle::Auto) => v >= z,
+            (_, _, GraphStyle::Filled) => true,
+            (_, _, GraphStyle::Line) => false,
+        };
+
         let stem_length = usize::from(value.abs_diff(zero));
         for i in 0..=stem_length {
-            if i == stem_length {
+            if (value < zero && i == 0) || (value >= zero && i == stem_length) {
                 iter.push(true);
             } else {
-                iter.push(match style {
-                    GraphStyle::Auto | GraphStyle::Filled => true,
-                    GraphStyle::Line => false,
-                });
+                iter.push(filled);
             }
         }
 

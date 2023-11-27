@@ -255,7 +255,7 @@ fn hollow_sine_wave() {
 6 4
 4 2";
 
-    let (stdout, stderr) = util::get_output_from_str(input, ["--per", "2", "4"]);
+    let (stdout, stderr) = util::get_output_from_str(input, ["--per", "2", "-s", "line", "4"]);
 
     insta::assert_snapshot!(stdout);
     assert!(stderr.is_empty());
@@ -291,6 +291,16 @@ fn braille_column_read_pairs_from_file() {
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/sine_area.tsv");
 
     let (stdout, stderr) = util::get_output(["-f", path, "-c", "--per", "2", "2"]);
+
+    insta::assert_snapshot!(stdout);
+    assert!(stderr.is_empty());
+}
+
+#[test]
+fn braille_line_line_style_all_negative() {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/single_all_negative.tsv");
+
+    let (stdout, stderr) = util::get_output(["-f", path, "-s", "line", "56"]);
 
     insta::assert_snapshot!(stdout);
     assert!(stderr.is_empty());
