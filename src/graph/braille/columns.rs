@@ -1,8 +1,10 @@
 use std::io::LineWriter;
 use std::io::Write;
 
+use super::BrailleLike;
 use crate::input::InputLine;
 use crate::opt::ValueIter;
+use crate::BrailleChar;
 use crate::Config;
 use crate::GraphStyle;
 use crate::{ColumnGraphable, Graphable};
@@ -10,6 +12,8 @@ use crate::{ColumnGraphable, Graphable};
 pub struct Columns {
     config: Config,
 }
+
+impl BrailleLike<4> for Columns {}
 
 impl Graphable<Option<f64>> for Columns {
     fn new(config: Config) -> Self {
@@ -59,7 +63,7 @@ impl Graphable<Option<f64>> for Columns {
             let mut column = [vec![], vec![]];
             for (i, side) in [left, right].into_iter().enumerate() {
                 if let Some(value) = side.transpose()?.and_then(InputLine::into_inner).map(scale) {
-                    column[i] = Self::into_dot_quads(value, zero, style);
+                    column[i] = Self::into_dot_groups(value, zero, style);
                 }
             }
 
@@ -136,43 +140,6 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
 impl ColumnGraphable<Option<f64>> for Columns {}
 
 impl Columns {
-    fn into_dot_quads(value: u16, zero: u16, style: GraphStyle) -> Vec<[bool; 4]> {
-        let prefix_length = usize::from(value.min(zero) - 1);
-        let mut iter = vec![false; prefix_length];
-
-        let filled = match (value, zero, style) {
-            (v, z, GraphStyle::Auto) => v >= z,
-            (_, _, GraphStyle::Filled) => true,
-            (_, _, GraphStyle::Line) => false,
-        };
-
-        let stem_length = usize::from(value.abs_diff(zero));
-        for i in 0..=stem_length {
-            if (value < zero && i == 0) || (value >= zero && i == stem_length) {
-                iter.push(true);
-            } else {
-                iter.push(filled);
-            }
-        }
-
-        let chunks = iter.chunks_exact(4);
-        let tip = chunks.remainder().to_vec();
-        let mut column: Vec<[bool; 4]> = chunks
-            .into_iter()
-            .map(|chunk| [chunk[0], chunk[1], chunk[2], chunk[3]])
-            .collect();
-        if !tip.is_empty() {
-            column.push([
-                tip[0],
-                tip.get(1).copied().unwrap_or_default(),
-                tip.get(2).copied().unwrap_or_default(),
-                tip.get(3).copied().unwrap_or_default(),
-            ]);
-        }
-
-        column
-    }
-
     fn into_braille_rows<W: ?Sized + Write>(
         line_writer: &mut LineWriter<W>,
         column_quads: &[[Vec<[bool; 4]>; 2]],
@@ -200,7 +167,7 @@ impl Columns {
                 write!(
                     line_writer,
                     "{}",
-                    super::Lines::to_braille_char(raw_braille_char)
+                    BrailleChar::new(raw_braille_char).as_char()
                 )?;
             }
 
@@ -244,18 +211,14 @@ impl Columns {
         }
 
         let chunks = iter.chunks_exact(4);
-        let tip = chunks.remainder().to_vec();
+        let mut tip = chunks.remainder().to_vec();
         let mut column: Vec<[bool; 4]> = chunks
             .into_iter()
-            .map(|chunk| [chunk[0], chunk[1], chunk[2], chunk[3]])
+            .map(|chunk| chunk.try_into().unwrap())
             .collect();
         if !tip.is_empty() {
-            column.push([
-                tip[0],
-                tip.get(1).copied().unwrap_or_default(),
-                tip.get(2).copied().unwrap_or_default(),
-                tip.get(3).copied().unwrap_or_default(),
-            ]);
+            tip.resize(4, false);
+            column.push(tip.try_into().unwrap());
         }
 
         column
@@ -287,23 +250,22 @@ mod tests {
         // -1  ** *- -- --
         // -2  ** -- -- --
         // -3  *- -- -- --
-        #[rustfmt::skip]
         let input = vec![
             [
-                vec![[ true,  true,  true,  true], [false, false, false, false]], // -3
-                vec![[false,  true,  true,  true], [false, false, false, false]], // -2
+                vec![[true, true, true, true], [false, false, false, false]], // -3
+                vec![[false, true, true, true], [false, false, false, false]], // -2
             ],
             [
-                vec![[false, false,  true,  true], [false, false, false, false]], // -1
-                vec![[false, false, false,  true], [false, false, false, false]], //  0
+                vec![[false, false, true, true], [false, false, false, false]], // -1
+                vec![[false, false, false, true], [false, false, false, false]], //  0
             ],
             [
-                vec![[false, false, false,  true], [ true, false, false, false]], //  1
-                vec![[false, false, false,  true], [ true,  true, false, false]], //  2
+                vec![[false, false, false, true], [true, false, false, false]], //  1
+                vec![[false, false, false, true], [true, true, false, false]],  //  2
             ],
             [
-                vec![[false, false, false,  true], [ true,  true,  true, false]], //  3
-                vec![[false, false, false,  true], [ true,  true,  true,  true]], //  4
+                vec![[false, false, false, true], [true, true, true, false]], //  3
+                vec![[false, false, false, true], [true, true, true, true]],  //  4
             ],
         ];
 
@@ -359,6 +321,107 @@ mod tests {
                     [false, false],
                     [false, false],
                     [false, false],
+                ],
+            ],
+        ];
+
+        let mut buffer = vec![];
+        {
+            let mut line_writer = LineWriter::new(&mut buffer);
+            Columns::into_braille_rows(&mut line_writer, &input, 2).unwrap();
+        }
+        let dot_pairs = String::from_utf8(buffer)
+            .unwrap()
+            .lines()
+            .map(|line| line.chars().map(as_dot_pairs).collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+
+        assert_eq!(expected, dot_pairs);
+    }
+
+    #[test]
+    fn transpose_all_max_2() {
+        // 7  ** ** ** **
+        // 6  ** ** ** **
+        // 5  ** ** ** **
+        // 4  ** ** ** **
+        //
+        // 3  ** ** ** **
+        // 2  ** ** ** **
+        // 1  ** ** ** **
+        // 0  ** ** ** **
+        #[rustfmt::skip]
+        let input = vec![
+            [
+                vec![[ true,  true,  true,  true], [ true,  true,  true,  true]],
+                vec![[ true,  true,  true,  true], [ true,  true,  true,  true]],
+            ],
+            [
+                vec![[ true,  true,  true,  true], [ true,  true,  true,  true]],
+                vec![[ true,  true,  true,  true], [ true,  true,  true,  true]],
+            ],
+            [
+                vec![[ true,  true,  true,  true], [ true,  true,  true,  true]],
+                vec![[ true,  true,  true,  true], [ true,  true,  true,  true]],
+            ],
+            [
+                vec![[ true,  true,  true,  true], [ true,  true,  true,  true]],
+                vec![[ true,  true,  true,  true], [ true,  true,  true,  true]],
+            ],
+        ];
+
+        #[rustfmt::skip]
+        let expected = vec![
+            vec![
+                [
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                ],
+                [
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                ],
+                [
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                ],
+                [
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                ],
+            ],
+            vec![
+                [
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                ],
+                [
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                ],
+                [
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                ],
+                [
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
+                    [ true,  true],
                 ],
             ],
         ];

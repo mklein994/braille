@@ -8,7 +8,7 @@ use input::{InputLine, InputLineSinglable, InputLines};
 
 pub use graph::{
     blocks::{Bars as BlockBars, Columns as BlockColumns},
-    braille::{Columns as BrailleColumns, Lines as BrailleLines},
+    braille::{BrailleChar, Columns as BrailleColumns, Lines as BrailleLines},
 };
 pub use graph::{BarGraphable, ColumnGraphable, Graphable};
 

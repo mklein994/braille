@@ -5,7 +5,7 @@
 //! ## Sine graph
 //!
 //! ```console
-//! $ awk 'BEGIN { for (i = 0; i < 20; i++) { print sin(i / 3); } }' | braille -1 1 4
+//! $ awk 'BEGIN { for (i = 0; i < 20; i++) { print sin(i / 3); } }' | braille 4
 //! ⠀⠀⠀⠀⠀⣷⣶⣤⣀
 //! ⠀⠀⠀⠀⠀⣿⣿⣿⡿⠟
 //! ⠀⠀⢀⣀⣤⡟⠉⠁
@@ -16,7 +16,7 @@
 //! ## Simple number sequence
 //!
 //! ```console
-//! $ seq -4 3 | braille -4 3 7
+//! $ seq -4 3 | braille 7
 //! ⠉⠛⠿⣿
 //! ⠀⠀⠀⢸⣶⣤⣀
 //! ```
@@ -25,10 +25,14 @@ use crate::graph::{BarGraphable, Graphable};
 use crate::input::{InputLine, InputLineSinglable};
 use crate::opt::{Config, GraphStyle, ValueIter};
 
+use super::{BrailleChar, BrailleLike};
+
 #[derive(Debug)]
 pub struct Lines {
     config: Config,
 }
+
+impl BrailleLike<2> for Lines {}
 
 impl Graphable<Option<f64>> for Lines {
     fn new(config: Config) -> Self {
@@ -80,7 +84,7 @@ impl Graphable<Option<f64>> for Lines {
                     .transpose()?
                     .and_then(InputLine::into_inner)
                     .map(scale)
-                    .map(|value| Self::into_dot_pairs(value, zero, style))
+                    .map(|value| Self::into_dot_groups(value, zero, style))
                 {
                     *buffer_line = new_line;
                 }
@@ -88,8 +92,11 @@ impl Graphable<Option<f64>> for Lines {
 
             if has_more_lines || buffer.iter().any(|x| !x.is_empty()) {
                 let transposed = Self::transpose_row(&buffer);
-                let braille_char = Self::to_braille_char_row(&transposed);
-                println!("{braille_char}");
+                let braille_line = transposed
+                    .into_iter()
+                    .map(|x| BrailleChar::new(x).as_char())
+                    .collect::<String>();
+                println!("{braille_line}");
             }
 
             buffer.fill(vec![]);
@@ -102,103 +109,6 @@ impl Graphable<Option<f64>> for Lines {
 impl BarGraphable<Option<f64>> for Lines {}
 
 impl Lines {
-    /// Turn a value into its representation of braille dots for that row
-    ///
-    /// # Example:
-    ///
-    /// Let's say the width is 4 characters wide, and the input is all integers in the range `[-3, 4]`
-    /// incrementing by one. The braille pattern would look like this:
-    ///
-    /// ```plain
-    /// ⠙⢿
-    /// ⠀⢸⣷⣄
-    /// ```
-    ///
-    /// Depending on your font, this may appear with gaps between lines or characters. In my
-    /// experience, [Cascadia Code](https://github.com/microsoft/cascadia-code) looks really good.
-    ///
-    /// Breaking this down, let's look at these lines in particular:
-    ///
-    /// | Value | ASCII braille | Notes            |
-    /// |------:|:--------------|------------------|
-    /// |    -3 | `** **`       |                  |
-    /// |    -2 | `-* **`       | 1st example row  |
-    /// |    -1 | `-- **`       |                  |
-    /// |     0 | `-- -*`       |                  |
-    /// |       |               | _next character_ |
-    /// |     1 | `-- -* *- --` |                  |
-    /// |     2 | `-- -* ** --` |                  |
-    /// |     3 | `-- -* ** *-` | 2nd example row  |
-    /// |     4 | `-- -* ** **` |                  |
-    ///
-    /// In the first example row, the value -2 translates to dot 4. This means dots 2 through 4 are
-    /// filled, and any before that are blank. Since the value is below zero, it looks like this:
-    ///
-    /// ```
-    /// //   ┌──── -2 (dot 2)
-    /// //  -* **
-    /// //      └─  0 (dot 4)
-    /// assert_eq!(vec![[false, true], [true, true]], braille::BrailleLines::into_dot_pairs(2, 4, braille::GraphStyle::default()));
-    /// ```
-    ///
-    /// In the second example row, the input value is 3, which translates to dot 7. The value is above
-    /// zero, and looks like this:
-    ///
-    /// ```
-    /// //          ┌── 3 (dot 7)
-    /// // -- -* ** *-
-    /// //     └─────── 0 (dot 4)
-    /// assert_eq!(
-    ///     vec![[false, false], [false, true], [true, true], [true, false]],
-    ///     braille::BrailleLines::into_dot_pairs(7, 4,
-    ///     braille::GraphStyle::default())
-    /// );
-    /// ```
-    ///
-    /// Looking at each example line more closely, we can see it broken down into parts:
-    ///
-    /// ```plain
-    ///     ┌───── prefix
-    /// 1.  -* **
-    ///      └─┴┴─ stem
-    ///
-    ///     ┌┬─┬──────── prefix
-    ///     ││ │     ┌┬─ tip
-    /// 2.  -- -* ** *-
-    ///         └─┴┴──── stem
-    /// ```
-    #[must_use]
-    pub fn into_dot_pairs(value: u16, zero: u16, style: GraphStyle) -> Vec<[bool; 2]> {
-        let prefix_length = usize::from(value.min(zero) - 1);
-        let mut iter = vec![false; prefix_length];
-
-        let filled = match (value, zero, style) {
-            (v, z, GraphStyle::Auto) => v >= z,
-            (_, _, GraphStyle::Filled) => true,
-            (_, _, GraphStyle::Line) => false,
-        };
-
-        let stem_length = usize::from(value.abs_diff(zero));
-        for i in 0..=stem_length {
-            if (value < zero && i == 0) || (value >= zero && i == stem_length) {
-                iter.push(true);
-            } else {
-                iter.push(filled);
-            }
-        }
-
-        let chunks = iter.chunks_exact(2);
-        let tip = chunks.remainder().to_vec();
-        let mut row: Vec<[bool; 2]> = chunks
-            .into_iter()
-            .map(|chunk| [chunk[0], chunk[1]])
-            .collect();
-        if !tip.is_empty() {
-            row.push([tip[0], tip.get(1).copied().unwrap_or_default()]);
-        }
-        row
-    }
-
     #[must_use]
     pub fn into_dot_array_pairs<const N: usize>(
         line_set: [u16; N],
@@ -233,85 +143,16 @@ impl Lines {
         }
 
         let chunks = iter.chunks_exact(2);
-        let tip = chunks.remainder().to_vec();
+        let mut tip = chunks.remainder().to_vec();
         let mut row: Vec<[bool; 2]> = chunks
             .into_iter()
-            .map(|chunk| [chunk[0], chunk[1]])
+            .map(|chunk| chunk.try_into().unwrap())
             .collect();
         if !tip.is_empty() {
-            row.push([tip[0], tip.get(1).copied().unwrap_or_default()]);
+            tip.resize(2, false);
+            row.push(tip.try_into().unwrap());
         }
         row
-    }
-
-    /// Turns an array of dot pairs into a braille character.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// assert_eq!(
-    ///     braille::BrailleLines::to_braille_char([
-    ///         [true, true],
-    ///         [false, true],
-    ///         [true, false],
-    ///         [true, true],
-    ///     ]),
-    ///     '⣝'
-    /// );
-    /// ```
-    ///
-    /// See also: <https://en.wikipedia.org/wiki/Braille_Patterns>
-    #[must_use]
-    pub fn to_braille_char(dot_pairs: [[bool; 2]; 4]) -> char {
-        // Turn this:
-        //
-        // ```plain
-        // [
-        //   [0, 3],
-        //   [1, 4],
-        //   [2, 5],
-        //   [6, 7],
-        // ]
-        // ```
-        //
-        // into this:
-        //
-        // ```plain
-        // [0, 1, 2, 3, 4, 5, 6, 7]
-        // ```
-        let bits = [
-            dot_pairs[0][0],
-            dot_pairs[1][0],
-            dot_pairs[2][0],
-            dot_pairs[0][1],
-            dot_pairs[1][1],
-            dot_pairs[2][1],
-            dot_pairs[3][0],
-            dot_pairs[3][1],
-        ];
-
-        let mut block = 0x2800_u32; // empty braille character
-
-        for (index, bit) in bits.iter().enumerate() {
-            if *bit {
-                let position = u32::try_from(index).unwrap();
-                block += (2_u32).pow(position);
-            }
-        }
-
-        char::from_u32(block).expect("braille character not valid")
-    }
-
-    /// Render a list of braille dot blocks as a string
-    #[must_use]
-    pub fn to_braille_char_row(transposed: &[[[bool; 2]; 4]]) -> String {
-        let mut line = String::new();
-        for dot_pairs in transposed {
-            let braille_char = Self::to_braille_char(*dot_pairs);
-
-            line.push(braille_char);
-        }
-        line
     }
 
     /// Turn a list of braille dot pairs into a list of braille dot blocks
@@ -319,7 +160,7 @@ impl Lines {
     pub fn transpose_row(input_row: &[Vec<[bool; 2]>; 4]) -> Vec<[[bool; 2]; 4]> {
         let longest = input_row.iter().map(Vec::len).max().unwrap();
 
-        let mut output_row: Vec<[[bool; 2]; 4]> = vec![];
+        let mut output_row = vec![];
         for column in 0..longest {
             let mut braille_character = [[false, false]; 4];
 
@@ -396,8 +237,11 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
 
             if has_more_lines || buffer.iter().any(|x| !x.is_empty()) {
                 let transposed = Self::transpose_row(&buffer);
-                let braille_char = Self::to_braille_char_row(&transposed);
-                println!("{braille_char}");
+                let braille_line = transposed
+                    .into_iter()
+                    .map(|x| BrailleChar::new(x).as_char())
+                    .collect::<String>();
+                println!("{braille_line}");
             }
 
             buffer.fill(vec![]);
@@ -415,7 +259,7 @@ mod tests {
     fn test_into_dot_pairs() {
         assert_eq!(
             vec![[false, false], [false, false], [true, false]],
-            Lines::into_dot_pairs(5, 5, GraphStyle::default())
+            Lines::into_dot_groups(5, 5, GraphStyle::default())
         );
     }
 
