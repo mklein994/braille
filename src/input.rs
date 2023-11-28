@@ -23,10 +23,10 @@ pub trait InputLineSinglable {
 }
 
 impl InputLineSinglable for InputLine<Option<f64>> {
-    type Iter = std::vec::IntoIter<Option<f64>>;
+    type Iter = std::iter::Once<Option<f64>>;
 
     fn as_single_iter(&self) -> Self::Iter {
-        vec![self.0].into_iter()
+        std::iter::once(self.0)
     }
 }
 
@@ -119,12 +119,11 @@ where
     }
 
     pub fn from_buf_reader<R: BufRead + 'static>(first_line: Option<String>, reader: R) -> Self {
-        let first = first_line.map(|line| vec![Ok(line)]).unwrap_or_default();
-
         Self {
             iter: Box::new(
-                first
+                first_line
                     .into_iter()
+                    .map(Ok)
                     .chain(reader.lines())
                     .map_while(Result::ok)
                     .map(|x| x.parse()),
