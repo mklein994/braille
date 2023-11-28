@@ -478,7 +478,6 @@ The first line should be the string "braille", followed by spaced separated opti
     }
 }
 
-// pub enum ValueIter<T, BoundlessIter: Iterator<Item = LineResult<T>> + 'static> {
 pub enum ValueIter<T>
 where
     InputLine<T>: FromStr,
