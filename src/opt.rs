@@ -182,10 +182,10 @@ pub struct Opt {
     ///
     /// Kinds supported with their matching option parameters:
     ///
-    /// | Kind    | Bar (horizontal) | Column (vertical)   |
-    /// |---------|------------------|---------------------|
-    /// | Braille | `braille` (-b)   | `braille-bars` (-c) |
-    /// | Block   | `bars` (-B)      | `columns` (-C)      |
+    /// | Kind    | Bar (horizontal) | Column (vertical)      |
+    /// |---------|------------------|------------------------|
+    /// | Braille | `braille` (-b)   | `braille-columns` (-c) |
+    /// | Block   | `bars` (-B)      | `columns` (-C)         |
     #[arg(short, long, value_enum, default_value_t, verbatim_doc_comment)]
     pub kind: GraphKind,
 
