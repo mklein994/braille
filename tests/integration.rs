@@ -323,7 +323,6 @@ fn invalid_input_multiple() {
 }
 
 #[test]
-#[ignore]
 fn braille_column_large_value_at_end() {
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/large_value_at_end.txt");
 
