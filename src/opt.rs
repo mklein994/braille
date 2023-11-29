@@ -130,7 +130,7 @@ pub struct Opt {
     /// If this is passed, then the first line from standard input should match the following:
     ///
     /// ```plain
-    /// braille [OPTIONS] [ARGUMENTS...]
+    /// braille [OPTIONS] [ARGUMENTS]
     /// [VALUES...]
     /// ```
     ///
@@ -152,6 +152,8 @@ pub struct Opt {
     /// 3
     /// 4
     /// ```
+    ///
+    /// ## Command
     ///
     /// ```console
     /// cat input.txt | braille --modeline
@@ -405,6 +407,7 @@ The first line should be the string "braille", followed by spaced separated opti
         }
     }
 
+    /// Verify that min is less than max, bailing with an error if not
     fn validate_bounds(min: f64, max: f64) -> anyhow::Result<()> {
         if min > max {
             use clap::{error::ErrorKind, CommandFactory};
