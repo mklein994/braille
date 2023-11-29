@@ -142,7 +142,7 @@ pub struct Opt {
     /// `input.txt`
     ///
     /// ```plain
-    /// braille -r -3 4 4
+    /// braille -r -3:4 4
     /// -3
     /// -2
     /// -1
