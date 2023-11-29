@@ -305,3 +305,19 @@ fn braille_line_line_style_all_negative() {
     insta::assert_snapshot!(stdout);
     assert!(stderr.is_empty());
 }
+
+#[test]
+fn invalid_input_single() {
+    let input = "hello";
+    let (stdout, stderr) = util::get_output_from_str::<_, &[&str], _>(input, &[]);
+    insta::assert_snapshot!(stderr);
+    assert!(stdout.is_empty());
+}
+
+#[test]
+fn invalid_input_multiple() {
+    let input = "1 hello";
+    let (stdout, stderr) = util::get_output_from_str::<_, &[&str], _>(input, &["-p", "2"]);
+    insta::assert_snapshot!(stderr);
+    assert!(stdout.is_empty());
+}

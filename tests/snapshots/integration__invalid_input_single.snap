@@ -1,0 +1,6 @@
+---
+source: tests/integration.rs
+expression: stderr
+---
+Error: invalid float literal
+
