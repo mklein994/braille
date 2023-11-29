@@ -59,7 +59,7 @@ impl Graphable<Option<f64>> for Columns {
         loop {
             let left = input_lines.next();
             let right = input_lines.next();
-            if right.is_none() {
+            if left.is_none() {
                 break;
             }
 
@@ -115,7 +115,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
         loop {
             let left = input_lines.next();
             let right = input_lines.next();
-            if left.is_none() || right.is_none() {
+            if left.is_none() {
                 break;
             }
 
