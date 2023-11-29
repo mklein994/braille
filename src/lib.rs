@@ -4,6 +4,8 @@ pub mod graph;
 mod input;
 mod opt;
 
+use std::str::FromStr;
+
 use input::{InputLine, InputLineSinglable, InputLines};
 
 pub use graph::{
@@ -32,7 +34,8 @@ pub fn run(opt: Opt) -> anyhow::Result<()> {
 
 fn build_graph<LineType: 'static, Graph>(mut opt: Opt) -> anyhow::Result<()>
 where
-    InputLine<LineType>: std::str::FromStr + InputLineSinglable,
+    InputLine<LineType>: FromStr + InputLineSinglable,
+    <InputLine<LineType> as FromStr>::Err: std::error::Error + Send + Sync,
     Graph: Graphable<LineType>,
 {
     let first_value = match opt.first_line {

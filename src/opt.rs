@@ -410,6 +410,7 @@ The first line should be the string "braille", followed by spaced separated opti
     pub fn get_iter<T>(&mut self, input_lines: InputLines<T>) -> anyhow::Result<ValueIter<T>>
     where
         InputLine<T>: FromStr + InputLineSinglable,
+        <InputLine<T> as FromStr>::Err: std::error::Error + Send + Sync + 'static,
     {
         let validate_bounds = |min: f64, max: f64| {
             if min > max {
@@ -456,7 +457,8 @@ The first line should be the string "braille", followed by spaced separated opti
             let mut max = self.range.max().unwrap_or(f64::MIN);
 
             for line in input_lines {
-                for value in line.iter().flat_map(|line| line.as_single_iter().flatten()) {
+                let line = line?;
+                for value in line.as_single_iter().flatten() {
                     if !has_min {
                         min = min.min(value);
                     }
@@ -466,7 +468,7 @@ The first line should be the string "braille", followed by spaced separated opti
                     }
                 }
 
-                lines.push(line);
+                lines.push(Ok(line));
             }
 
             validate_bounds(min, max)?;
