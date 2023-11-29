@@ -108,8 +108,6 @@ impl Graphable<Option<f64>> for Lines {
             buffer.fill(vec![]);
         }
 
-        writer.flush()?;
-
         Ok(())
     }
 }
@@ -258,8 +256,6 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
 
             buffer.fill(vec![]);
         }
-
-        writer.flush()?;
 
         Ok(())
     }

@@ -179,8 +179,6 @@ impl Columns {
             writeln!(line_writer)?;
         }
 
-        line_writer.flush()?;
-
         Ok(())
     }
 

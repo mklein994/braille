@@ -55,8 +55,6 @@ impl Graphable<Option<f64>> for Bars {
             )?;
         }
 
-        writer.flush()?;
-
         Ok(())
     }
 }
