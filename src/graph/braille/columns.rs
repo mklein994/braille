@@ -1,5 +1,4 @@
-use std::io::LineWriter;
-use std::io::Write;
+use std::io::{LineWriter, Write};
 
 use super::Brailleish;
 use super::Char as BrailleChar;
@@ -24,7 +23,11 @@ impl Graphable<Option<f64>> for Columns {
         &self.config
     }
 
-    fn print_graph(&self, lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
+    fn print_graph<W: Write>(
+        &self,
+        lines: ValueIter<Option<f64>>,
+        writer: LineWriter<W>,
+    ) -> anyhow::Result<()> {
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
         let style = <Self as Graphable<Option<f64>, Config>>::style(self);
@@ -70,8 +73,7 @@ impl Graphable<Option<f64>> for Columns {
             column_quads.push(column);
         }
 
-        let mut writer = LineWriter::new(std::io::stdout());
-        Self::into_braille_rows(&mut writer, &column_quads, usize::from(self.height()))?;
+        Self::into_braille_rows(writer, &column_quads, usize::from(self.height()))?;
 
         Ok(())
     }
@@ -86,7 +88,11 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
         &self.config
     }
 
-    fn print_graph(&self, lines: ValueIter<[Option<f64>; N]>) -> anyhow::Result<()> {
+    fn print_graph<W: Write>(
+        &self,
+        lines: ValueIter<[Option<f64>; N]>,
+        writer: LineWriter<W>,
+    ) -> anyhow::Result<()> {
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
         let style = <Self as Graphable<Option<f64>, Config>>::style(self);
@@ -130,8 +136,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
             column_quads.push(column);
         }
 
-        let mut writer = LineWriter::new(std::io::stdout());
-        Self::into_braille_rows(&mut writer, &column_quads, usize::from(self.height()))?;
+        Self::into_braille_rows(writer, &column_quads, usize::from(self.height()))?;
 
         Ok(())
     }
@@ -140,8 +145,8 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
 impl ColumnGraphable<Option<f64>> for Columns {}
 
 impl Columns {
-    fn into_braille_rows<W: ?Sized + Write>(
-        line_writer: &mut LineWriter<W>,
+    fn into_braille_rows<W: Write>(
+        mut line_writer: LineWriter<W>,
         column_quads: &[[Vec<[bool; 4]>; 2]],
         height: usize,
     ) -> std::io::Result<()> {
@@ -327,8 +332,8 @@ mod tests {
 
         let mut buffer = vec![];
         {
-            let mut line_writer = LineWriter::new(&mut buffer);
-            Columns::into_braille_rows(&mut line_writer, &input, 2).unwrap();
+            let line_writer = LineWriter::new(&mut buffer);
+            Columns::into_braille_rows(line_writer, &input, 2).unwrap();
         }
         let dot_pairs = String::from_utf8(buffer)
             .unwrap()
@@ -428,8 +433,8 @@ mod tests {
 
         let mut buffer = vec![];
         {
-            let mut line_writer = LineWriter::new(&mut buffer);
-            Columns::into_braille_rows(&mut line_writer, &input, 2).unwrap();
+            let line_writer = LineWriter::new(&mut buffer);
+            Columns::into_braille_rows(line_writer, &input, 2).unwrap();
         }
         let dot_pairs = String::from_utf8(buffer)
             .unwrap()

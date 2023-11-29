@@ -1,6 +1,7 @@
 pub mod blocks;
 pub mod braille;
 
+use std::io::{LineWriter, Write};
 use std::str::FromStr;
 
 use crate::opt::{Config, Configurable, GraphStyle, ValueIter};
@@ -26,7 +27,11 @@ where
         self.config().style()
     }
 
-    fn print_graph(&self, lines: ValueIter<T>) -> anyhow::Result<()>
+    fn print_graph<W: Write>(
+        &self,
+        lines: ValueIter<T>,
+        writer: LineWriter<W>,
+    ) -> anyhow::Result<()>
     where
         InputLine<T>: FromStr;
 }

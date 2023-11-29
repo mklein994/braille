@@ -21,6 +21,8 @@
 //! ⠀⠀⠀⢸⣶⣤⣀
 //! ```
 
+use std::io::{LineWriter, Write};
+
 use super::Brailleish;
 use super::Char as BrailleChar;
 use crate::graph::{BarGraphable, Graphable};
@@ -43,7 +45,11 @@ impl Graphable<Option<f64>> for Lines {
         &self.config
     }
 
-    fn print_graph(&self, input_lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
+    fn print_graph<W: Write>(
+        &self,
+        input_lines: ValueIter<Option<f64>>,
+        mut writer: LineWriter<W>,
+    ) -> anyhow::Result<()> {
         let mut input_lines = input_lines.into_iter();
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
@@ -96,11 +102,13 @@ impl Graphable<Option<f64>> for Lines {
                     .into_iter()
                     .map(|x| BrailleChar::new(x).as_char())
                     .collect::<String>();
-                println!("{braille_line}");
+                writeln!(writer, "{braille_line}")?;
             }
 
             buffer.fill(vec![]);
         }
+
+        writer.flush()?;
 
         Ok(())
     }
@@ -188,7 +196,11 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
         &self.config
     }
 
-    fn print_graph(&self, input_lines: ValueIter<[Option<f64>; N]>) -> anyhow::Result<()> {
+    fn print_graph<W: Write>(
+        &self,
+        input_lines: ValueIter<[Option<f64>; N]>,
+        mut writer: LineWriter<W>,
+    ) -> anyhow::Result<()> {
         let mut input_lines = input_lines.into_iter();
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
@@ -241,11 +253,13 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
                     .into_iter()
                     .map(|x| BrailleChar::new(x).as_char())
                     .collect::<String>();
-                println!("{braille_line}");
+                writeln!(writer, "{braille_line}")?;
             }
 
             buffer.fill(vec![]);
         }
+
+        writer.flush()?;
 
         Ok(())
     }

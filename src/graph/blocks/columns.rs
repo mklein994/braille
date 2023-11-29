@@ -1,3 +1,4 @@
+use std::io::{LineWriter, Write};
 use std::str::FromStr;
 
 use crate::graph::{ColumnGraphable, Graphable};
@@ -67,7 +68,11 @@ where
         &self.config
     }
 
-    fn print_graph(&self, lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
+    fn print_graph<W: Write>(
+        &self,
+        lines: ValueIter<Option<f64>>,
+        mut writer: LineWriter<W>,
+    ) -> anyhow::Result<()> {
         let lines: Vec<_> = lines.into_iter().collect();
         let minimum = self.minimum();
         let maximum = self.maximum();
@@ -93,9 +98,9 @@ where
 
         for row in (0..usize::from(self.height())).rev() {
             for column in &columns {
-                print!("{}", column.get(row).unwrap_or(&" "));
+                write!(writer, "{}", column.get(row).unwrap_or(&" "))?;
             }
-            println!();
+            writeln!(writer)?;
         }
 
         Ok(())

@@ -4,6 +4,8 @@ pub mod graph;
 mod input;
 mod opt;
 
+use std::io::prelude::*;
+use std::io::LineWriter;
 use std::str::FromStr;
 
 use input::{
@@ -20,21 +22,28 @@ use opt::{Config, FirstLine};
 pub use opt::{GraphKind, GraphStyle, Opt};
 
 /// Main entry point for the program
-pub fn run(opt: Opt) -> anyhow::Result<()> {
+pub fn run<W: Write>(opt: Opt, writer: LineWriter<W>) -> anyhow::Result<()> {
     match (opt.kind, opt.per) {
-        (GraphKind::Bars, 1) => build_graph::<Option<f64>, BlockBars>(opt)?,
-        (GraphKind::Columns, 1) => build_graph::<Option<f64>, BlockColumns>(opt)?,
-        (GraphKind::BrailleBars, 1) => build_graph::<Option<f64>, BrailleLines>(opt)?,
-        (GraphKind::BrailleBars, 2) => build_graph::<[Option<f64>; 2], BrailleLines>(opt)?,
-        (GraphKind::BrailleColumns, 1) => build_graph::<Option<f64>, BrailleColumns>(opt)?,
-        (GraphKind::BrailleColumns, 2) => build_graph::<[Option<f64>; 2], BrailleColumns>(opt)?,
+        (GraphKind::Bars, 1) => build_graph::<Option<f64>, BlockBars, W>(opt, writer),
+        (GraphKind::Columns, 1) => build_graph::<Option<f64>, BlockColumns, W>(opt, writer),
+        (GraphKind::BrailleBars, 1) => build_graph::<Option<f64>, BrailleLines, W>(opt, writer),
+        (GraphKind::BrailleBars, 2) => {
+            build_graph::<[Option<f64>; 2], BrailleLines, W>(opt, writer)
+        }
+        (GraphKind::BrailleColumns, 1) => {
+            build_graph::<Option<f64>, BrailleColumns, W>(opt, writer)
+        }
+        (GraphKind::BrailleColumns, 2) => {
+            build_graph::<[Option<f64>; 2], BrailleColumns, W>(opt, writer)
+        }
         _ => todo!(),
-    };
-
-    Ok(())
+    }
 }
 
-fn build_graph<LineType: 'static, Graph>(mut opt: Opt) -> anyhow::Result<()>
+fn build_graph<LineType: 'static, Graph, W: Write>(
+    mut opt: Opt,
+    writer: LineWriter<W>,
+) -> anyhow::Result<()>
 where
     InputLine<LineType>: FromStr + InputLineSinglable,
     <InputLine<LineType> as FromStr>::Err: std::error::Error + Send + Sync,
@@ -50,7 +59,7 @@ where
     let values = opt.get_iter(lines)?;
     let config = Config::from(opt);
 
-    Graph::new(config).print_graph(values)?;
+    Graph::new(config).print_graph::<W>(values, writer)?;
 
     Ok(())
 }

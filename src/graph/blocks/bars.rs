@@ -1,3 +1,5 @@
+use std::io::{LineWriter, Write};
+
 use crate::graph::{BarGraphable, Graphable};
 
 use crate::opt::{Config, ValueIter};
@@ -26,7 +28,11 @@ impl Graphable<Option<f64>> for Bars {
     /// ▏
     ///   (space)
     /// ```
-    fn print_graph(&self, input_lines: ValueIter<Option<f64>>) -> anyhow::Result<()> {
+    fn print_graph<W: Write>(
+        &self,
+        input_lines: ValueIter<Option<f64>>,
+        mut writer: LineWriter<W>,
+    ) -> anyhow::Result<()> {
         let minimum = self.minimum();
         let maximum = self.maximum();
 
@@ -42,8 +48,14 @@ impl Graphable<Option<f64>> for Bars {
         };
 
         for line in input_lines {
-            println!("{}", Self::print_line(line?.into_inner().map(scale)));
+            writeln!(
+                writer,
+                "{}",
+                Self::print_line(line?.into_inner().map(scale))
+            )?;
         }
+
+        writer.flush()?;
 
         Ok(())
     }
