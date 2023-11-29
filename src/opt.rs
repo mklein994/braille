@@ -312,8 +312,10 @@ impl Opt {
     ///
     /// Call this instead of `Opt::parse()`, since it makes some adjustments not supported by
     /// [`clap`].
-    pub fn try_new() -> anyhow::Result<Self> {
-        let mut opt = Self::parse();
+    pub fn try_new<I: IntoIterator<Item = S>, S: Into<std::ffi::OsString> + Clone>(
+        args: I,
+    ) -> anyhow::Result<Self> {
+        let mut opt = Self::parse_from(args);
 
         // Parse the modeline if requested
         if opt.modeline {
