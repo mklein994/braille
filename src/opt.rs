@@ -403,6 +403,31 @@ The first line should be the string "braille", followed by spaced separated opti
         }
     }
 
+    fn validate_bounds(min: f64, max: f64) -> anyhow::Result<()> {
+        if min > max {
+            use clap::{error::ErrorKind, CommandFactory};
+            let mut cmd = Self::command();
+            anyhow::bail!(cmd.error(
+                ErrorKind::ValueValidation,
+                format!(
+                    "min < max failed: {} < {}",
+                    if min == f64::MAX {
+                        "f64::MAX".to_string()
+                    } else {
+                        min.to_string()
+                    },
+                    if max == f64::MIN {
+                        "f64::MIN".to_string()
+                    } else {
+                        max.to_string()
+                    },
+                )
+            ));
+        }
+
+        Ok(())
+    }
+
     /// If no bounds were given, look for them from the input and return the resulting iterator,
     /// otherwise simply return the resulting iterator.
     ///
@@ -412,33 +437,8 @@ The first line should be the string "braille", followed by spaced separated opti
         InputLine<T>: FromStr + InputLineSinglable,
         <InputLine<T> as FromStr>::Err: std::error::Error + Send + Sync + 'static,
     {
-        let validate_bounds = |min: f64, max: f64| {
-            if min > max {
-                use clap::{error::ErrorKind, CommandFactory};
-                let mut cmd = Self::command();
-                anyhow::bail!(cmd.error(
-                    ErrorKind::ValueValidation,
-                    format!(
-                        "min < max failed: {} < {}",
-                        if min == f64::MAX {
-                            "f64::MAX".to_string()
-                        } else {
-                            min.to_string()
-                        },
-                        if max == f64::MIN {
-                            "f64::MIN".to_string()
-                        } else {
-                            max.to_string()
-                        },
-                    )
-                ));
-            }
-
-            Ok(())
-        };
-
         if let (Some(min), Some(max)) = (self.range.min(), self.range.max()) {
-            validate_bounds(min, max)?;
+            Self::validate_bounds(min, max)?;
 
             match self.kind {
                 GraphKind::Bars | GraphKind::BrailleBars => {
@@ -471,7 +471,7 @@ The first line should be the string "braille", followed by spaced separated opti
                 lines.push(Ok(line));
             }
 
-            validate_bounds(min, max)?;
+            Self::validate_bounds(min, max)?;
 
             self.range = GraphRange::new(Some(min), Some(max));
 
