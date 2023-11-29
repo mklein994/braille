@@ -172,8 +172,6 @@ pub struct Opt {
             "range",
             "file",
             "kind",
-            "bars",
-            "braille",
             "size",
         ],
         verbatim_doc_comment
@@ -188,23 +186,30 @@ pub struct Opt {
     /// |---------|------------------|------------------------|
     /// | Braille | `braille` (-b)   | `braille-columns` (-c) |
     /// | Block   | `bars` (-B)      | `columns` (-C)         |
-    #[arg(short, long, value_enum, default_value_t, verbatim_doc_comment)]
-    pub kind: GraphKind,
+    #[arg(
+        short = 'k',
+        long = "kind",
+        group = "kind",
+        value_enum,
+        default_value_t,
+        verbatim_doc_comment
+    )]
+    graph_kind: GraphKind,
 
     /// Shortcut for --kind bars
-    #[arg(short = 'B', conflicts_with = "kind")]
+    #[arg(short = 'B', group = "kind")]
     pub bars: bool,
 
     /// Shortcut for --kind columns
-    #[arg(short = 'C', conflicts_with = "kind")]
+    #[arg(short = 'C', group = "kind")]
     pub columns: bool,
 
     /// Shortcut for --kind braille
-    #[arg(short = 'b', conflicts_with = "kind")]
+    #[arg(short = 'b', group = "kind")]
     pub braille: bool,
 
     /// Shortcut for --kind braille-columns
-    #[arg(short = 'c', conflicts_with = "kind")]
+    #[arg(short = 'c', group = "kind")]
     pub braille_columns: bool,
 
     /// Path to file to read from (defaults to standard input)
@@ -254,7 +259,7 @@ impl From<Opt> for Config {
     fn from(value: Opt) -> Self {
         if let (Some(min), Some(max)) = (value.range.min(), value.range.max()) {
             Self {
-                kind: value.kind,
+                kind: value.kind(),
                 style: value.style,
                 minimum: min,
                 maximum: max,
@@ -340,18 +345,7 @@ impl Opt {
             opt.first_line = None;
         }
 
-        // Handle shortcuts
-        if opt.bars {
-            opt.kind = GraphKind::Bars;
-        } else if opt.braille {
-            opt.kind = GraphKind::BrailleBars;
-        } else if opt.braille_columns {
-            opt.kind = GraphKind::BrailleColumns;
-        } else if opt.columns {
-            opt.kind = GraphKind::Columns;
-        }
-
-        match (opt.kind, opt.per) {
+        match (opt.kind(), opt.per) {
             (GraphKind::Columns | GraphKind::Bars, x) if x > 1 => {
                 anyhow::bail!("Multiple values per line not supported for this graph kind");
             }
@@ -362,7 +356,7 @@ impl Opt {
         if opt.size.is_none() {
             let (width, height) = get_terminal_size()?;
 
-            opt.size = Some(match opt.kind {
+            opt.size = Some(match opt.kind() {
                 GraphKind::Bars | GraphKind::BrailleBars => width,
                 // Leave enough room for the shell prompt
                 GraphKind::Columns | GraphKind::BrailleColumns => {
@@ -445,7 +439,7 @@ The first line should be the string "braille", followed by spaced separated opti
         if let (Some(min), Some(max)) = (self.range.min(), self.range.max()) {
             Self::validate_bounds(min, max)?;
 
-            match self.kind {
+            match self.kind() {
                 GraphKind::Bars | GraphKind::BrailleBars => {
                     Ok(ValueIter::Boundless(input_lines.into_iter()))
                 }
@@ -481,6 +475,22 @@ The first line should be the string "braille", followed by spaced separated opti
             self.range = GraphRange::new(Some(min), Some(max));
 
             Ok(ValueIter::Bounded { lines })
+        }
+    }
+
+    /// Get the kind of graph to use, handling shortcuts
+    #[must_use]
+    pub fn kind(&self) -> GraphKind {
+        if self.bars {
+            GraphKind::Bars
+        } else if self.braille {
+            GraphKind::BrailleBars
+        } else if self.braille_columns {
+            GraphKind::BrailleColumns
+        } else if self.columns {
+            GraphKind::Columns
+        } else {
+            self.graph_kind
         }
     }
 }
