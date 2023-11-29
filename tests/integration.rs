@@ -323,7 +323,7 @@ fn invalid_input_multiple() {
 }
 
 #[test]
-fn braille_column_large_value_at_end() {
+fn braille_columns_odd_number_of_values() {
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/large_value_at_end.txt");
 
     let (stdout, stderr) = util::get_output(["-f", path, "-c", "10"]);
