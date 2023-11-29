@@ -321,3 +321,12 @@ fn invalid_input_multiple() {
     insta::assert_snapshot!(stderr);
     assert!(stdout.is_empty());
 }
+
+#[test]
+fn braille_column_large_value_at_end() {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/large_value_at_end.txt");
+
+    let (stdout, stderr) = util::get_output(["-f", path, "-c", "10"]);
+    insta::assert_snapshot!(stdout);
+    assert!(stderr.is_empty());
+}
