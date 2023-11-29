@@ -21,18 +21,18 @@
 //! ⠀⠀⠀⢸⣶⣤⣀
 //! ```
 
+use super::Brailleish;
+use super::Char as BrailleChar;
 use crate::graph::{BarGraphable, Graphable};
-use crate::input::{InputLine, InputLineSinglable};
 use crate::opt::{Config, GraphStyle, ValueIter};
-
-use super::{BrailleChar, BrailleLike};
+use crate::{InputLine, InputLineSinglable};
 
 #[derive(Debug)]
 pub struct Lines {
     config: Config,
 }
 
-impl BrailleLike<2> for Lines {}
+impl Brailleish<2> for Lines {}
 
 impl Graphable<Option<f64>> for Lines {
     fn new(config: Config) -> Self {

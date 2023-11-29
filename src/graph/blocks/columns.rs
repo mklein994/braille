@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
 use crate::graph::{ColumnGraphable, Graphable};
-use crate::input::InputLine;
 use crate::opt::ValueIter;
 use crate::Config;
+use crate::InputLine;
 
 pub struct Columns {
     config: Config,

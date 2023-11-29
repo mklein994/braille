@@ -1,19 +1,19 @@
 use std::io::LineWriter;
 use std::io::Write;
 
-use super::BrailleLike;
-use crate::input::InputLine;
+use super::Brailleish;
+use super::Char as BrailleChar;
 use crate::opt::ValueIter;
-use crate::BrailleChar;
 use crate::Config;
 use crate::GraphStyle;
+use crate::InputLine;
 use crate::{ColumnGraphable, Graphable};
 
 pub struct Columns {
     config: Config,
 }
 
-impl BrailleLike<4> for Columns {}
+impl Brailleish<4> for Columns {}
 
 impl Graphable<Option<f64>> for Columns {
     fn new(config: Config) -> Self {
@@ -109,7 +109,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
         loop {
             let left = input_lines.next();
             let right = input_lines.next();
-            if right.is_none() {
+            if left.is_none() || right.is_none() {
                 break;
             }
 

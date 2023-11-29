@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
 
-use crate::input::{InputLine, InputLineResult as LineResult, InputLineSinglable, InputLines};
+use crate::{InputLine, InputLineSinglable, InputLines, LineResult};
 
 #[derive(Debug, Copy, Clone, Default)]
 struct GraphRangeBound(Option<f64>);

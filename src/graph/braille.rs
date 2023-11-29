@@ -7,18 +7,18 @@ pub use lines::Lines;
 use crate::GraphStyle;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct BrailleChar {
+pub struct Char {
     inner: u8,
 }
 
-impl BrailleChar {
+impl Char {
     /// Turns an array of dot pairs into a braille character.
     ///
     /// # Example
     ///
     /// ```
     /// use braille::BrailleLines;
-    /// use braille::graph::braille::BrailleLike;
+    /// use braille::graph::braille::Brailleish;
     /// assert_eq!(
     ///     braille::BrailleChar::new([
     ///         [true, true],
@@ -89,13 +89,17 @@ impl BrailleChar {
     }
 }
 
-impl std::fmt::Display for BrailleChar {
+impl std::fmt::Display for Char {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.as_char().fmt(f)
+        if f.alternate() {
+            write!(f, "{:08b}", self.inner)
+        } else {
+            self.as_char().fmt(f)
+        }
     }
 }
 
-pub trait BrailleLike<const DOTS_PER_VALUE: usize> {
+pub trait Brailleish<const DOTS_PER_VALUE: usize> {
     /// Turn a value into its representation of braille dots for that group
     ///
     /// # Example:
@@ -131,13 +135,13 @@ pub trait BrailleLike<const DOTS_PER_VALUE: usize> {
     ///
     /// ```
     /// # use braille::{BrailleLines, GraphStyle};
-    /// use braille::graph::braille::BrailleLike;
+    /// use braille::graph::braille::Brailleish;
     /// //   ┌──── -2 (dot 2)
     /// //  -* **
     /// //      └─  0 (dot 4)
     /// assert_eq!(
     ///     vec![[false, true], [true, true]],
-    ///     <BrailleLines as BrailleLike<2>>::into_dot_groups(2, 4, GraphStyle::default())
+    ///     <BrailleLines as Brailleish<2>>::into_dot_groups(2, 4, GraphStyle::default())
     /// );
     /// ```
     ///
@@ -146,13 +150,13 @@ pub trait BrailleLike<const DOTS_PER_VALUE: usize> {
     ///
     /// ```
     /// # use braille::{BrailleLines, GraphStyle};
-    /// use braille::graph::braille::BrailleLike;
+    /// use braille::graph::braille::Brailleish;
     /// //          ┌── 3 (dot 7)
     /// // -- -* ** *-
     /// //     └─────── 0 (dot 4)
     /// assert_eq!(
     ///     vec![[false, false], [false, true], [true, true], [true, false]],
-    ///     <BrailleLines as BrailleLike<2>>::into_dot_groups(7, 4, GraphStyle::default())
+    ///     <BrailleLines as Brailleish<2>>::into_dot_groups(7, 4, GraphStyle::default())
     /// );
     /// ```
     ///

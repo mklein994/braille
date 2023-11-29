@@ -3,8 +3,8 @@ pub mod braille;
 
 use std::str::FromStr;
 
-use crate::input::InputLine;
 use crate::opt::{Config, Configurable, GraphStyle, ValueIter};
+use crate::InputLine;
 
 pub trait Graphable<T, Conf: Configurable = Config>
 where

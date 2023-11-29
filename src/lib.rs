@@ -6,11 +6,13 @@ mod opt;
 
 use std::str::FromStr;
 
-use input::{InputLine, InputLineSinglable, InputLines};
+use input::{
+    Line as InputLine, LineResult, LineSinglable as InputLineSinglable, Lines as InputLines,
+};
 
 pub use graph::{
     blocks::{Bars as BlockBars, Columns as BlockColumns},
-    braille::{BrailleChar, Columns as BrailleColumns, Lines as BrailleLines},
+    braille::{Char as BrailleChar, Columns as BrailleColumns, Lines as BrailleLines},
 };
 pub use graph::{BarGraphable, ColumnGraphable, Graphable};
 

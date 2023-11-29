@@ -4,9 +4,9 @@ use std::path::Path;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq, PartialOrd)]
-pub struct InputLine<T>(T);
+pub struct Line<T>(T);
 
-impl<T> InputLine<T> {
+impl<T> Line<T> {
     fn parse_value(s: &str) -> Result<Option<f64>, <f64 as FromStr>::Err> {
         if s.is_empty() || s == "null" {
             Ok(None)
@@ -16,13 +16,13 @@ impl<T> InputLine<T> {
     }
 }
 
-pub trait InputLineSinglable {
+pub trait LineSinglable {
     type Iter: Iterator<Item = Option<f64>>;
 
     fn as_single_iter(&self) -> Self::Iter;
 }
 
-impl InputLineSinglable for InputLine<Option<f64>> {
+impl LineSinglable for Line<Option<f64>> {
     type Iter = std::iter::Once<Option<f64>>;
 
     fn as_single_iter(&self) -> Self::Iter {
@@ -30,7 +30,7 @@ impl InputLineSinglable for InputLine<Option<f64>> {
     }
 }
 
-impl<const N: usize> InputLineSinglable for InputLine<[Option<f64>; N]> {
+impl<const N: usize> LineSinglable for Line<[Option<f64>; N]> {
     type Iter = std::array::IntoIter<Option<f64>, N>;
 
     fn as_single_iter(&self) -> Self::Iter {
@@ -38,13 +38,13 @@ impl<const N: usize> InputLineSinglable for InputLine<[Option<f64>; N]> {
     }
 }
 
-impl InputLine<Option<f64>> {
+impl Line<Option<f64>> {
     pub fn into_inner(self) -> Option<f64> {
         self.0
     }
 }
 
-impl FromStr for InputLine<Option<f64>> {
+impl FromStr for Line<Option<f64>> {
     type Err = <f64 as FromStr>::Err;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -52,7 +52,7 @@ impl FromStr for InputLine<Option<f64>> {
     }
 }
 
-impl<const N: usize> FromStr for InputLine<[Option<f64>; N]> {
+impl<const N: usize> FromStr for Line<[Option<f64>; N]> {
     type Err = <f64 as FromStr>::Err;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -67,7 +67,7 @@ impl<const N: usize> FromStr for InputLine<[Option<f64>; N]> {
     }
 }
 
-impl<T> IntoIterator for InputLine<T>
+impl<T> IntoIterator for Line<T>
 where
     T: IntoIterator<Item = Option<f64>>,
 {
@@ -80,29 +80,29 @@ where
     }
 }
 
-pub type InputLineResult<T> = Result<InputLine<T>, <InputLine<T> as FromStr>::Err>;
+pub type LineResult<T> = Result<Line<T>, <Line<T> as FromStr>::Err>;
 
-pub struct InputLines<T>
+pub struct Lines<T>
 where
-    InputLine<T>: FromStr,
+    Line<T>: FromStr,
 {
-    iter: Box<dyn Iterator<Item = InputLineResult<T>>>,
+    iter: Box<dyn Iterator<Item = LineResult<T>>>,
 }
 
-impl<T> Iterator for InputLines<T>
+impl<T> Iterator for Lines<T>
 where
-    InputLine<T>: FromStr,
+    Line<T>: FromStr,
 {
-    type Item = InputLineResult<T>;
+    type Item = LineResult<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
 }
 
-impl<T: 'static> InputLines<T>
+impl<T: 'static> Lines<T>
 where
-    InputLine<T>: FromStr,
+    Line<T>: FromStr,
 {
     pub fn try_from_path(first_line: Option<String>, path: Option<&Path>) -> anyhow::Result<Self> {
         match path {
@@ -141,12 +141,12 @@ mod tests {
         use std::io::Cursor;
 
         let input = "1 2 3\n4 5 6";
-        let expected: Vec<InputLineResult<[Option<f64>; 3]>> = vec![
-            Ok(InputLine([Some(1.), Some(2.), Some(3.)])),
-            Ok(InputLine([Some(4.), Some(5.), Some(6.)])),
+        let expected: Vec<LineResult<[Option<f64>; 3]>> = vec![
+            Ok(Line([Some(1.), Some(2.), Some(3.)])),
+            Ok(Line([Some(4.), Some(5.), Some(6.)])),
         ];
 
-        let iter = InputLines::<[Option<f64>; 3]>::from_buf_reader(None, Cursor::new(input));
+        let iter = Lines::<[Option<f64>; 3]>::from_buf_reader(None, Cursor::new(input));
         let actual: Vec<_> = iter.collect();
         assert_eq!(expected, actual);
     }
@@ -156,16 +156,16 @@ mod tests {
         use std::io::Cursor;
 
         let input = "1\n2\n3\n4\n5\n6";
-        let expected: Vec<InputLineResult<Option<f64>>> = vec![
-            Ok(InputLine(Some(1.))),
-            Ok(InputLine(Some(2.))),
-            Ok(InputLine(Some(3.))),
-            Ok(InputLine(Some(4.))),
-            Ok(InputLine(Some(5.))),
-            Ok(InputLine(Some(6.))),
+        let expected: Vec<LineResult<Option<f64>>> = vec![
+            Ok(Line(Some(1.))),
+            Ok(Line(Some(2.))),
+            Ok(Line(Some(3.))),
+            Ok(Line(Some(4.))),
+            Ok(Line(Some(5.))),
+            Ok(Line(Some(6.))),
         ];
 
-        let iter = InputLines::<Option<f64>>::from_buf_reader(None, Cursor::new(input));
+        let iter = Lines::<Option<f64>>::from_buf_reader(None, Cursor::new(input));
         let actual: Vec<_> = iter.collect();
         assert_eq!(expected, actual);
     }
