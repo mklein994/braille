@@ -81,8 +81,22 @@ $$\frac{\sin(x)}{x}$$
 
 ### Command
 
+```jq
+# curve.jq
+(-1 | acos) as $pi
+| range(-8 * $pi; 8 * $pi)
+| [
+  (. / 5 | cos),
+  (. / 4 | sin)
+] | @tsv
+```
+
 ```console
-jq -nr '(-1 | acos) as $pi | range(-8 * $pi; 8 * $pi) | [(. / 5 | cos), ((. / 4) | sin)] | @tsv' | braille --style auto --per 2 --kind braille-columns 10
+jq -nrf curve.jq | braille \
+    --style auto \
+    --per 2 \
+    --kind braille-columns \
+    10
 ```
 
 ### Output
