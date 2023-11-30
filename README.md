@@ -123,3 +123,5 @@ cargo install --git https://github.com/mklein994/braille.git
 ```
 
 For help on the various options, see `braille --help` or run `cargo doc` on the local clone and browse the API docs.
+
+The `--modeline` option pairs nicely with [jq-repl](https://github.com/mklein994/jq-repl.git).
