@@ -4,7 +4,9 @@ Show a graph on the terminal using [block](https://en.wikipedia.org/wiki/Block_E
 
 ## Example
 
-### Command
+### Fancy Graph
+
+#### Command
 
 ```console
 awk -f fancy_graph.awk | braille -r -1:1 -c 5
@@ -22,7 +24,7 @@ BEGIN {
 
 $$100*\frac{\sin(\frac{x}{4})}{x}$$
 
-### Output
+#### Output
 
 ```plain
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⣧⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -37,7 +39,9 @@ $$100*\frac{\sin(\frac{x}{4})}{x}$$
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ```
 
-### Command
+### Fancy Graph (Small)
+
+#### Command
 
 ```console
 awk -f fancy_graph_small.awk | braille -c 10
@@ -57,7 +61,7 @@ BEGIN {
 
 $$\frac{\sin(x)}{x}$$
 
-### Output
+#### Output
 
 ```plain
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -72,7 +76,9 @@ $$\frac{\sin(x)}{x}$$
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⠀⠀⠀⠸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ```
 
-### Command
+### Curve
+
+#### Command
 
 ```console
 jq -nrf curve.jq | braille \
@@ -92,7 +98,7 @@ jq -nrf curve.jq | braille \
 ] | @tsv
 ```
 
-### Output
+#### Output
 
 ```plain
 ⠀⠀⣰⣿⡄⠀⠀⠀⠀⠀⠀⠠⠉⠑⣀⣾⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀
