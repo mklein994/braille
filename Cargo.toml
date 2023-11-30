@@ -1,7 +1,11 @@
 [package]
 name = "braille"
+description = "Print a graph to the terminal using block or braille characters"
 version = "0.17.1"
 edition = "2021"
+repository = "https://github.com/mklein994/braille.git"
+license = "MIT"
+publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
