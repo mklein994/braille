@@ -24,7 +24,6 @@ BEGIN {
 
 $$100*\frac{\sin(\frac{x}{4})}{x}$$
 
-</summary>
 </details>
 
 ### Output
