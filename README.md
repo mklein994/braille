@@ -81,6 +81,17 @@ $$\frac{\sin(x)}{x}$$
 
 ### Command
 
+```console
+jq -nrf curve.jq | braille \
+    --style auto \
+    --per 2 \
+    --kind braille-columns \
+    10
+```
+
+<details>
+<summary><code>curve.jq</code></summary>
+
 ```jq
 # curve.jq
 (-1 | acos) as $pi
@@ -91,13 +102,7 @@ $$\frac{\sin(x)}{x}$$
 ] | @tsv
 ```
 
-```console
-jq -nrf curve.jq | braille \
-    --style auto \
-    --per 2 \
-    --kind braille-columns \
-    10
-```
+</details>
 
 ### Output
 
