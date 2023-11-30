@@ -41,6 +41,44 @@ $$100*\frac{\sin(\frac{x}{4})}{x}$$
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ```
 
+### Command
+
+```console
+awk -f fancy_graph_small.awk | braille -c 10
+```
+
+<details>
+<summary><code>fancy_graph_small.awk</code></summary>
+
+```awk
+BEGIN {
+    pi = atan2(0, -1);
+    for (i = -8 * pi; i < 8 * pi; i++) {
+        if (i != 0) {
+            print sin(i) / i;
+        }
+    }
+}
+```
+$$\frac{\sin(x)}{x}$$
+
+</details>
+
+### Output
+
+```plain
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⣀⠀⠀⣠⡀⠀⣰⡆⠀⢸⣿⣿⡆⠀⣼⡄⠀⢠⡀⠀⢀⡀⠀⠀
+⠹⠟⠉⠹⠟⠉⠹⡿⠉⠙⣿⠉⠉⠉⢹⣿⠉⠹⡿⠉⠙⠿⠉⠉⠻⠃
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⠀⠀⠀⠸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+```
+
 ## Installation
 
 After [installing `rust`](https://www.rust-lang.org/tools/install):
