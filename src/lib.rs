@@ -45,7 +45,7 @@ fn build_graph<LineType: 'static, Graph, W: Write>(
     writer: LineWriter<W>,
 ) -> anyhow::Result<()>
 where
-    InputLine<LineType>: FromStr + InputLineSinglable,
+    InputLine<LineType>: FromStr + for<'a> InputLineSinglable<'a>,
     <InputLine<LineType> as FromStr>::Err: std::error::Error + Send + Sync,
     Graph: Graphable<LineType>,
 {

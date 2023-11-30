@@ -227,7 +227,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
                 if let Some(new_line) = input_line
                     .transpose()?
                     .and_then(|x| {
-                        if x.as_single_iter().all(|x| x.is_none()) {
+                        if x.as_single_iter().all(Option::is_none) {
                             None
                         } else {
                             let line = x.into_iter().map(|x| scale(x.unwrap())).collect::<Vec<_>>();

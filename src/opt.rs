@@ -433,7 +433,7 @@ The first line should be the string "braille", followed by spaced separated opti
     /// These are both wrapped inside an enum to allow for `impl Iterator<...>` types.
     pub fn get_iter<T>(&mut self, input_lines: InputLines<T>) -> anyhow::Result<ValueIter<T>>
     where
-        InputLine<T>: FromStr + InputLineSinglable,
+        InputLine<T>: FromStr + for<'a> InputLineSinglable<'a>,
         <InputLine<T> as FromStr>::Err: std::error::Error + Send + Sync + 'static,
     {
         if let (Some(min), Some(max)) = (self.range.min(), self.range.max()) {
@@ -459,11 +459,11 @@ The first line should be the string "braille", followed by spaced separated opti
                 let line = line?;
                 for value in line.as_single_iter().flatten() {
                     if !has_min {
-                        min = min.min(value);
+                        min = min.min(*value);
                     }
 
                     if !has_max {
-                        max = max.max(value);
+                        max = max.max(*value);
                     }
                 }
 

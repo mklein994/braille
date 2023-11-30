@@ -16,25 +16,25 @@ impl<T> Line<T> {
     }
 }
 
-pub trait LineSinglable {
-    type Iter: Iterator<Item = Option<f64>>;
+pub trait LineSinglable<'a> {
+    type Iter: Iterator<Item = &'a Option<f64>>;
 
-    fn as_single_iter(&self) -> Self::Iter;
+    fn as_single_iter(&'a self) -> Self::Iter;
 }
 
-impl LineSinglable for Line<Option<f64>> {
-    type Iter = std::iter::Once<Option<f64>>;
+impl<'a> LineSinglable<'a> for Line<Option<f64>> {
+    type Iter = std::iter::Once<&'a Option<f64>>;
 
-    fn as_single_iter(&self) -> Self::Iter {
-        std::iter::once(self.0)
+    fn as_single_iter(&'a self) -> Self::Iter {
+        std::iter::once(&self.0)
     }
 }
 
-impl<const N: usize> LineSinglable for Line<[Option<f64>; N]> {
-    type Iter = std::array::IntoIter<Option<f64>, N>;
+impl<'a, const N: usize> LineSinglable<'a> for Line<[Option<f64>; N]> {
+    type Iter = std::slice::Iter<'a, Option<f64>>;
 
-    fn as_single_iter(&self) -> Self::Iter {
-        self.0.into_iter()
+    fn as_single_iter(&'a self) -> Self::Iter {
+        self.0.iter()
     }
 }
 
