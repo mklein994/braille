@@ -10,10 +10,8 @@ Show a graph on the terminal using [block](https://en.wikipedia.org/wiki/Block_E
 awk -f fancy_graph.awk | braille -r -1:1 -c 5
 ```
 
-<details>
-<summary><code>fancy_graph.awk</code></summary>
-
 ```awk
+# fancy_graph.awk
 BEGIN {
     pi = atan2(0, -1);
     for (i = (-20 * pi); i < (20 * pi); i++) {
@@ -23,8 +21,6 @@ BEGIN {
 ```
 
 $$100*\frac{\sin(\frac{x}{4})}{x}$$
-
-</details>
 
 ### Output
 
@@ -47,10 +43,8 @@ $$100*\frac{\sin(\frac{x}{4})}{x}$$
 awk -f fancy_graph_small.awk | braille -c 10
 ```
 
-<details>
-<summary><code>fancy_graph_small.awk</code></summary>
-
 ```awk
+# fancy_graph_small.awk
 BEGIN {
     pi = atan2(0, -1);
     for (i = -8 * pi; i < 8 * pi; i++) {
@@ -60,9 +54,8 @@ BEGIN {
     }
 }
 ```
-$$\frac{\sin(x)}{x}$$
 
-</details>
+$$\frac{\sin(x)}{x}$$
 
 ### Output
 
@@ -89,9 +82,6 @@ jq -nrf curve.jq | braille \
     10
 ```
 
-<details>
-<summary><code>curve.jq</code></summary>
-
 ```jq
 # curve.jq
 (-1 | acos) as $pi
@@ -101,8 +91,6 @@ jq -nrf curve.jq | braille \
   (. / 4 | sin)
 ] | @tsv
 ```
-
-</details>
 
 ### Output
 
