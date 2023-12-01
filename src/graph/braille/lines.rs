@@ -56,14 +56,7 @@ impl Graphable<Option<f64>> for Lines {
 
         let min = 1; // reserve an empty line for null values
         let max = self.width() * 2; // braille characters are 2 dots wide
-        let slope = f64::from(max - min) / (maximum - minimum);
-        let scale = |value: f64| {
-            assert!(
-                value >= minimum && value <= maximum,
-                "value out of bounds: {value} [{minimum}, {maximum}]"
-            );
-            min + (slope * (value - minimum)).round() as u16
-        };
+        let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
 
         // Clamp where 0 would fit to be inside the output range
         let zero = if minimum > 0. {
@@ -205,14 +198,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
 
         let min = 1; // reserve an empty line for null values
         let max = self.width() * 2; // braille characters are 2 dots wide
-        let slope = f64::from(max - min) / (maximum - minimum);
-        let scale = |value: f64| {
-            assert!(
-                value >= minimum && value <= maximum,
-                "value out of bounds: {value} [{minimum}, {maximum}]"
-            );
-            min + (slope * (value - minimum)).round() as u16
-        };
+        let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
 
         // Each braille character is 4 dots tall
         let mut buffer = [vec![], vec![], vec![], vec![]];

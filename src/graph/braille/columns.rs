@@ -34,14 +34,7 @@ impl Graphable<Option<f64>> for Columns {
 
         let min = 1;
         let max = self.height() * 4;
-        let slope = f64::from(max - min) / (maximum - minimum);
-        let scale = |value: f64| {
-            assert!(
-                value >= minimum && value <= maximum,
-                "value out of bounds: {value} [{minimum}, {maximum}]"
-            );
-            min + (slope * (value - minimum)).round() as u16
-        };
+        let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
 
         // Clamp where 0 would fit to be inside the output range
         let zero = if minimum > 0. {
@@ -99,14 +92,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
 
         let min = 1;
         let max = self.height() * 4;
-        let slope = f64::from(max - min) / (maximum - minimum);
-        let scale = |value: f64| {
-            assert!(
-                value >= minimum && value <= maximum,
-                "value out of bounds: {value} [{minimum}, {maximum}]"
-            );
-            min + (slope * (value - minimum)).round() as u16
-        };
+        let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
 
         let mut input_lines = lines.into_iter();
 

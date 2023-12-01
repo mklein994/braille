@@ -39,10 +39,11 @@ where
         "\u{2588}", // █
     ];
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn calculate_column(value: Option<f64>) -> Vec<&'static str> {
         if let Some(value) = value {
             let stem = (value / 8.).trunc() as usize;
-            let tip = (value % 8.) as usize;
+            let tip = (value % 8.).trunc() as usize;
             let full_block = *Self::BLOCKS.last().unwrap();
             let mut column = vec![full_block; stem];
             if tip > 0 {

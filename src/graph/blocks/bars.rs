@@ -74,10 +74,11 @@ impl Bars {
         "\u{2588}", // █
     ];
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn print_line(value: Option<f64>) -> String {
         if let Some(value) = value {
             let stem = (value / 8.).trunc() as usize;
-            let tip = Self::BLOCKS[(value % 8.) as usize];
+            let tip = Self::BLOCKS[(value % 8.).trunc() as usize];
             let full_block = Self::BLOCKS.last().unwrap();
             let mut line = full_block.repeat(stem);
             line.push_str(tip);

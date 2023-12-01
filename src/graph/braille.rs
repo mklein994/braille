@@ -205,4 +205,15 @@ pub trait Brailleish<const DOTS_PER_VALUE: usize> {
 
         groups
     }
+
+    #[must_use]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    fn scale(value: f64, minimum: f64, maximum: f64, min: u16, max: u16) -> u16 {
+        assert!(
+            value >= minimum && value <= maximum,
+            "value out of bounds: {value} [{minimum}, {maximum}]"
+        );
+        let slope = f64::from(max - min) / (maximum - minimum);
+        min + (slope * (value - minimum)).round() as u16
+    }
 }
