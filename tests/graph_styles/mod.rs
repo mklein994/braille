@@ -13,6 +13,18 @@ fn get_values() -> Vec<f64> {
     values
 }
 
+fn curve1() -> Vec<f64> {
+    get_values().into_iter().map(|x| f64::cos(x / 5.)).collect()
+}
+
+fn curve2() -> Vec<f64> {
+    get_values().into_iter().map(|x| f64::sin(x / 4.)).collect()
+}
+
+fn get_both_curves() -> Vec<(f64, f64)> {
+    std::iter::zip(curve1(), curve2()).collect()
+}
+
 fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
     use std::fmt::Write;
 
@@ -46,19 +58,17 @@ fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
 
     let modeline = ["braille", kind_flag, style_flag, per_flag, "10"].join(" ");
 
-    let mut values = vec![];
-    for x in get_values() {
-        let mut line = vec![];
-        if per >= 1 {
-            line.push(f64::cos(x / 5.).to_string());
-        }
-
-        if per == 2 {
-            line.push(f64::sin(x / 4.).to_string());
-        }
-
-        values.push(line.join("\t"));
-    }
+    let values = if per == 1 {
+        curve1()
+            .into_iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>()
+    } else {
+        get_both_curves()
+            .into_iter()
+            .map(|(left, right)| format!("{left}\t{right}"))
+            .collect::<Vec<_>>()
+    };
 
     let input = values
         .into_iter()
@@ -102,11 +112,11 @@ t!(test_braille_bars, GraphKind::BrailleBars);
 fn check_against_jq() {
     use std::process::{Command, Stdio};
 
-    let rust_values: Vec<f64> = get_values().iter().map(|x| f64::cos(*x / 5.)).collect();
+    let rust_values: Vec<(f64, f64)> = get_both_curves();
     let jq_output = String::from_utf8(
         Command::new("jq")
             .arg("-nrf")
-            .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/curve-1.jq"))
+            .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/curve-2.jq"))
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .output()
@@ -115,10 +125,13 @@ fn check_against_jq() {
     )
     .unwrap();
 
-    let jq_values = jq_output
+    let jq_values: Vec<(f64, f64)> = jq_output
         .lines()
-        .map(str::parse)
-        .collect::<Result<Vec<f64>, _>>()
+        .map(|line| -> Result<_, std::num::ParseFloatError> {
+            let (left, right) = line.split_once('\t').unwrap();
+            Ok((left.parse()?, right.parse()?))
+        })
+        .collect::<Result<_, _>>()
         .unwrap();
 
     assert_eq!(rust_values, jq_values);
