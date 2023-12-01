@@ -68,42 +68,6 @@ where
 mod tests {
     use super::*;
 
-    pub fn get_output<In, I, S>(input: Option<In>, args: I) -> (String, String)
-    where
-        In: AsRef<std::ffi::OsStr>,
-        I: IntoIterator<Item = S>,
-        S: AsRef<std::ffi::OsStr>,
-    {
-        use std::process::{Command, Stdio};
-
-        let bin = concat!(env!("CARGO_MANIFEST_DIR"), "/target/debug/braille");
-        let mut output = Command::new(bin);
-
-        let stdin = if let Some(input) = input {
-            let echo = Command::new("echo")
-                .arg(input)
-                .stdout(Stdio::piped())
-                .spawn()
-                .unwrap();
-            Stdio::from(echo.stdout.unwrap())
-        } else {
-            Stdio::piped()
-        };
-
-        let output = output
-            .args(args)
-            .stdin(stdin)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .output()
-            .unwrap();
-
-        let stdout = String::from_utf8(output.stdout).unwrap();
-        let stderr = String::from_utf8(output.stderr).unwrap();
-
-        (stdout, stderr)
-    }
-
     #[test]
     fn large_value_at_end_full_test() {
         let mut buffer = vec![];
