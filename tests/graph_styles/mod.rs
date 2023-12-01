@@ -71,18 +71,19 @@ fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
 }
 
 macro_rules! t {
+    (#style_test $name:ident, $kind:expr, $per:literal) => {{
+        tt!(#concat!(stringify!($name), "_", stringify!($per), "_auto"), get_input($kind, Auto, $per), ["-m"]);
+        tt!(#concat!(stringify!($name), "_", stringify!($per), "_filled"), get_input($kind, Filled, $per), ["-m"]);
+        tt!(#concat!(stringify!($name), "_", stringify!($per), "_line"), get_input($kind, Line, $per), ["-m"]);
+    }};
+
     ($name:ident, $kind:expr) => {
         #[test]
         fn $name() {
             use GraphStyle::*;
 
-            tt!(#concat!(stringify!($name), "_1_auto"), get_input($kind, Auto, 1), ["-m"]);
-            tt!(#concat!(stringify!($name), "_1_filled"), get_input($kind, Filled, 1), ["-m"]);
-            tt!(#concat!(stringify!($name), "_1_line"), get_input($kind, Line, 1), ["-m"]);
-
-            tt!(#concat!(stringify!($name), "_2_auto"), get_input($kind, Auto, 2), ["-m"]);
-            tt!(#concat!(stringify!($name), "_2_filled"), get_input($kind, Filled, 2), ["-m"]);
-            tt!(#concat!(stringify!($name), "_2_line"), get_input($kind, Line, 2), ["-m"]);
+            t!(#style_test $name, $kind, 1);
+            t!(#style_test $name, $kind, 2);
         }
     };
 
