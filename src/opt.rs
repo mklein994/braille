@@ -1,10 +1,9 @@
-use std::str::FromStr;
-
 use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
 
 use crate::{InputLine, InputLineSinglable, InputLines, LineResult};
 
 #[derive(Debug, Copy, Clone, Default)]
+#[cfg_attr(test, derive(PartialEq))]
 struct GraphRangeBound(Option<f64>);
 
 impl std::fmt::Display for GraphRangeBound {
@@ -14,17 +13,22 @@ impl std::fmt::Display for GraphRangeBound {
 }
 
 #[derive(Debug, Copy, Clone, Default)]
+#[cfg_attr(test, derive(PartialEq))]
 struct GraphRange {
     min: GraphRangeBound,
     max: GraphRangeBound,
 }
 
 impl GraphRange {
-    fn new(min: Option<f64>, max: Option<f64>) -> Self {
-        Self {
+    fn try_new(min: Option<f64>, max: Option<f64>) -> anyhow::Result<Self> {
+        if let (Some(min), Some(max)) = (min, max) {
+            Opt::validate_bounds(min, max)?;
+        }
+
+        Ok(Self {
             min: GraphRangeBound(min),
             max: GraphRangeBound(max),
-        }
+        })
     }
 
     fn min(&self) -> Option<f64> {
@@ -51,7 +55,7 @@ impl std::str::FromStr for GraphRange {
         }
 
         if !s.contains(':') {
-            anyhow::bail!("Invalid range syntax");
+            anyhow::bail!("Range should contain ':'");
         }
 
         let maybe_parse = |value: &str| -> Result<Option<f64>, <f64 as std::str::FromStr>::Err> {
@@ -63,11 +67,11 @@ impl std::str::FromStr for GraphRange {
         };
 
         let (min, max) = {
-            let (min, max) = s.split_once(':').expect("Invalid match range syntax");
+            let (min, max) = s.split_once(':').expect("should split on ':'");
             (maybe_parse(min)?, maybe_parse(max)?)
         };
 
-        Ok(Self::new(min, max))
+        Self::try_new(min, max)
     }
 }
 
@@ -525,24 +529,19 @@ The first line should be the string "braille", followed by spaced separated opti
     /// Verify that min is less than max, bailing with an error if not
     fn validate_bounds(min: f64, max: f64) -> anyhow::Result<()> {
         if min > max {
-            use clap::{error::ErrorKind, CommandFactory};
-            let mut cmd = Self::command();
-            anyhow::bail!(cmd.error(
-                ErrorKind::ValueValidation,
-                format!(
-                    "min < max failed: {} < {}",
-                    if min == f64::MAX {
-                        "f64::MAX".to_string()
-                    } else {
-                        min.to_string()
-                    },
-                    if max == f64::MIN {
-                        "f64::MIN".to_string()
-                    } else {
-                        max.to_string()
-                    },
-                )
-            ));
+            anyhow::bail!(
+                "min < max failed: {} < {}",
+                if min == f64::MAX {
+                    "f64::MAX".to_string()
+                } else {
+                    min.to_string()
+                },
+                if max == f64::MIN {
+                    "f64::MIN".to_string()
+                } else {
+                    max.to_string()
+                },
+            );
         }
 
         Ok(())
@@ -552,12 +551,10 @@ The first line should be the string "braille", followed by spaced separated opti
     /// otherwise simply return the resulting iterator.
     pub fn get_iter<T>(&mut self, input_lines: InputLines<T>) -> anyhow::Result<ValueIter<T>>
     where
-        InputLine<T>: FromStr + for<'a> InputLineSinglable<'a>,
-        <InputLine<T> as FromStr>::Err: std::error::Error + Send + Sync + 'static,
+        InputLine<T>: std::str::FromStr + for<'a> InputLineSinglable<'a>,
+        <InputLine<T> as std::str::FromStr>::Err: std::error::Error + Send + Sync + 'static,
     {
-        if let (Some(min), Some(max)) = (self.range.min(), self.range.max()) {
-            Self::validate_bounds(min, max)?;
-
+        if self.range.min().and(self.range.max()).is_some() {
             match self.kind() {
                 GraphKind::Bars | GraphKind::BrailleBars => {
                     Ok(ValueIter::Boundless(input_lines.into_iter()))
@@ -589,9 +586,7 @@ The first line should be the string "braille", followed by spaced separated opti
                 lines.push(Ok(line));
             }
 
-            Self::validate_bounds(min, max)?;
-
-            self.range = GraphRange::new(Some(min), Some(max));
+            self.range = GraphRange::try_new(Some(min), Some(max))?;
 
             Ok(ValueIter::Bounded { lines })
         }
@@ -616,7 +611,7 @@ The first line should be the string "braille", followed by spaced separated opti
 
 pub enum ValueIter<T>
 where
-    InputLine<T>: FromStr,
+    InputLine<T>: std::str::FromStr,
 {
     Boundless(InputLines<T>),
     Bounded { lines: Vec<LineResult<T>> },
@@ -624,7 +619,7 @@ where
 
 impl<T: 'static> IntoIterator for ValueIter<T>
 where
-    InputLine<T>: FromStr,
+    InputLine<T>: std::str::FromStr,
 {
     type Item = LineResult<T>;
 
@@ -780,5 +775,67 @@ mod tests {
             |i| f64::cos(i / 5.),
             |i| f64::sin(i / 4.)
         );
+    }
+
+    mod graph_range {
+        use super::*;
+
+        macro_rules! terr {
+            ($name:ident, $input:literal) => {
+                #[test]
+                fn $name() {
+                    assert!($input.parse::<GraphRange>().is_err());
+                }
+            };
+        }
+
+        macro_rules! t {
+            ($name:ident, $($args:tt)+) => {
+                #[test]
+                fn $name() {
+                    t!($($args)+);
+                }
+            };
+
+            (max $max:literal, $input:literal) => {
+                assert_eq!(
+                    GraphRange::try_new(None, Some($max)).unwrap(),
+                    $input.parse().unwrap()
+                );
+            };
+
+            (min $min:literal, $input:literal) => {
+                assert_eq!(
+                GraphRange::try_new(Some($min), None).unwrap(),
+                $input.parse().unwrap()
+                )
+            };
+
+            ($min:literal, $max:literal, $input:literal) => {
+                assert_eq!(
+                    GraphRange::try_new(Some($min), Some($max)).unwrap(),
+                    $input.parse().unwrap()
+                );
+            };
+        }
+
+        #[test]
+        fn parse_default_graph_range() {
+            let expected = GraphRange {
+                min: GraphRangeBound(None),
+                max: GraphRangeBound(None),
+            };
+            let actual = ":".parse::<GraphRange>().unwrap();
+            assert_eq!(expected, actual);
+        }
+
+        t!(parse_full_bounds, -4., 5., "-4:5");
+        t!(parse_open_upper_bound, min 3., "3:");
+        t!(parse_open_lower_bound, max 3., ":3");
+
+        terr!(parse_invalid, "hello");
+        terr!(parse_invalid_upper, ":hello");
+        terr!(parse_invalid_lower, "hello:");
+        terr!(parse_backwards, "3:2");
     }
 }
