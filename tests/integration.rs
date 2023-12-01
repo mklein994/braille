@@ -1,7 +1,50 @@
+mod graph_styles;
 mod modeline;
 mod util;
 
 use util::*;
+
+#[macro_export]
+macro_rules! tt {
+    (#$snapshot_name:expr, $stdout:ident, $stderr:ident) => {{
+        insta::assert_snapshot!($snapshot_name, $stdout);
+        assert!($stderr.is_empty(), "stderr is not empty:\n{}", $stderr);
+    }};
+
+    (#$stdout:ident, $stderr:ident) => {{
+        insta::assert_snapshot!($stdout);
+        insta::assert_snapshot!($stderr);
+    }};
+
+    (#$args:expr) => {
+        let (stdout, stderr) = $crate::util::get_output($args);
+        tt!(#stdout, stderr);
+    };
+
+    ($name:ident, $args:expr) => {
+        #[test]
+        fn $name() {
+            tt!(#$args);
+        }
+    };
+
+    (#$input:expr, $args:expr) => {
+        let (stdout, stderr) = $crate::util::get_output_from_str($input, $args);
+        tt!(#stdout, stderr);
+    };
+
+    (#$snapshot_name:expr, $input:expr, $args:expr) => {
+        let (stdout, stderr) = $crate::util::get_output_from_str($input, $args);
+        tt!(#$snapshot_name, stdout, stderr);
+    };
+
+    ($name:ident, $input:expr, $args:expr) => {
+        #[test]
+        fn $name() {
+            tt!(#$input, $args);
+        }
+    };
+}
 
 macro_rules! t {
     (auto $name:ident, $width:literal, $gen:expr) => {

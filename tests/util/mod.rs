@@ -52,6 +52,7 @@ where
 
     (stdout, stderr)
 }
+
 pub fn get_output_from_numbers<I, S>(inputs: &[Option<f64>], args: I) -> (String, String)
 where
     I: IntoIterator<Item = S>,
