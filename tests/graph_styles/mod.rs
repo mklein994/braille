@@ -96,3 +96,29 @@ t!(test_columns, GraphKind::Columns, GraphStyle::default(), 1);
 
 t!(test_braille_columns, GraphKind::BrailleColumns);
 t!(test_braille_bars, GraphKind::BrailleBars);
+
+#[test]
+fn check_against_jq() {
+    use std::process::{Command, Stdio};
+
+    let rust_values: Vec<f64> = get_values().iter().map(|x| f64::cos(*x / 5.)).collect();
+    let jq_output = String::from_utf8(
+        Command::new("jq")
+            .arg("-nrf")
+            .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/curve-1.jq"))
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+
+    let jq_values = jq_output
+        .lines()
+        .map(str::parse)
+        .collect::<Result<Vec<f64>, _>>()
+        .unwrap();
+
+    assert_eq!(rust_values, jq_values);
+}
