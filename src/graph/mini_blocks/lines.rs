@@ -1,0 +1,215 @@
+use std::fmt;
+use std::io::{LineWriter, Write};
+
+use crate::graph::braille::Brailleish;
+use crate::graph::{BarGraphable, Graphable};
+use crate::opt::ValueIter;
+use crate::Config;
+use crate::InputLine;
+use crate::InputLineSinglable;
+
+struct Char {
+    inner: &'static str,
+}
+
+impl Char {
+    pub fn new(dots: [[bool; 2]; 2]) -> Self {
+        Self {
+            inner: match dots {
+                [[false, false], [false, false]] => " ",
+                [[false, false], [false, true]] => "▗",
+                [[false, false], [true, false]] => "▖",
+                [[false, false], [true, true]] => "▄",
+                [[false, true], [false, false]] => "▝",
+                [[false, true], [false, true]] => "▐",
+                [[false, true], [true, false]] => "▞",
+                [[false, true], [true, true]] => "▟",
+                [[true, false], [false, false]] => "▘",
+                [[true, false], [false, true]] => "▚",
+                [[true, false], [true, false]] => "▌",
+                [[true, false], [true, true]] => "▙",
+                [[true, true], [false, false]] => "▀",
+                [[true, true], [false, true]] => "▜",
+                [[true, true], [true, false]] => "▛",
+                [[true, true], [true, true]] => "█",
+            },
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        self.inner
+    }
+}
+
+impl fmt::Display for Char {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+pub struct Lines {
+    config: Config,
+}
+
+impl Lines {
+    pub fn transpose_row(input_row: &[Vec<[bool; 2]>; 2]) -> Vec<[[bool; 2]; 2]> {
+        let longest = input_row.iter().map(Vec::len).max().unwrap();
+
+        let mut output_row = vec![];
+        for column in 0..longest {
+            let mut character = [[false, false]; 2];
+
+            for (row_index, row) in input_row.iter().enumerate() {
+                if let Some(row_column) = row.get(column) {
+                    character[row_index] = *row_column;
+                }
+            }
+
+            if column < longest - 1 || character.into_iter().flatten().any(|x| x) {
+                output_row.push(character);
+            }
+        }
+
+        output_row
+    }
+}
+
+impl BarGraphable<Option<f64>> for Lines {}
+
+impl Graphable<Option<f64>> for Lines {
+    fn new(config: Config) -> Self {
+        Self { config }
+    }
+
+    fn config(&self) -> &Config {
+        &self.config
+    }
+
+    fn print_graph<W: Write>(
+        &self,
+        input_lines: ValueIter<Option<f64>>,
+        mut writer: LineWriter<W>,
+    ) -> anyhow::Result<()> {
+        let mut input_lines = input_lines.into_iter();
+        let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
+        let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
+        let width = <Self as BarGraphable<Option<f64>>>::width(self);
+
+        let min = 1; // reserve an empty line for null values
+        let max = width * 2; // braille characters are 2 dots wide
+        let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
+
+        // Clamp where 0 would fit to be inside the output range
+        let zero = if minimum > 0. {
+            min
+        } else if maximum < 0. {
+            max
+        } else {
+            scale(0.)
+        };
+
+        let style = <Self as Graphable<Option<f64>, Config>>::style(self);
+
+        // Each braille character is 4 dots tall
+        let mut buffer = [vec![], vec![]];
+        let mut has_more_lines = true;
+        while has_more_lines {
+            for buffer_line in &mut buffer {
+                let input_line = input_lines.next();
+                if input_line.is_none() {
+                    has_more_lines = false;
+                }
+
+                if let Some(new_line) = input_line
+                    .transpose()?
+                    .and_then(InputLine::into_inner)
+                    .map(scale)
+                    .map(|value| Self::into_dot_groups(value, zero, style))
+                {
+                    *buffer_line = new_line;
+                }
+            }
+
+            if has_more_lines || buffer.iter().any(|x| !x.is_empty()) {
+                let transposed = Self::transpose_row(&buffer);
+                let braille_line = transposed
+                    .into_iter()
+                    .map(|x| Char::new(x).as_str())
+                    .collect::<String>();
+                writeln!(writer, "{braille_line}")?;
+            }
+
+            buffer.fill(vec![]);
+        }
+
+        Ok(())
+    }
+}
+
+impl crate::graph::braille::Brailleish<2> for Lines {}
+impl<const N: usize> BarGraphable<[Option<f64>; N]> for Lines {}
+
+impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
+    fn new(config: Config) -> Self {
+        Self { config }
+    }
+
+    fn config(&self) -> &Config {
+        &self.config
+    }
+
+    fn print_graph<W: Write>(
+        &self,
+        input_lines: ValueIter<[Option<f64>; N]>,
+        mut writer: LineWriter<W>,
+    ) -> anyhow::Result<()> {
+        let mut input_lines = input_lines.into_iter();
+        let minimum = <Self as Graphable<[Option<f64>; N], Config>>::minimum(self);
+        let maximum = <Self as Graphable<[Option<f64>; N], Config>>::maximum(self);
+        let style = <Self as Graphable<[Option<f64>; N], Config>>::style(self);
+
+        let min = 1;
+        let width = <Self as BarGraphable<[Option<f64>; N]>>::width(self);
+        let max = width * 2;
+        let scale = |value: f64| <Self as Brailleish<2>>::scale(value, minimum, maximum, min, max);
+
+        let mut buffer = [vec![], vec![]];
+        let mut has_more_lines = true;
+        while has_more_lines {
+            for buffer_line in &mut buffer {
+                let input_line = input_lines.next();
+                if input_line.is_none() {
+                    has_more_lines = false;
+                }
+
+                if let Some(new_line) = input_line
+                    .transpose()?
+                    .and_then(|x| {
+                        if x.as_single_iter().all(Option::is_none) {
+                            None
+                        } else {
+                            let line = x.into_iter().map(|x| scale(x.unwrap())).collect::<Vec<_>>();
+                            Some(<[_; N]>::try_from(line).unwrap())
+                        }
+                    })
+                    .map(|x| super::super::braille::Lines::into_dot_array_pairs(x, style))
+                {
+                    *buffer_line = new_line;
+                }
+            }
+
+            if has_more_lines || buffer.iter().any(|x| !x.is_empty()) {
+                let transposed = Self::transpose_row(&buffer);
+                let braille_line = transposed
+                    .into_iter()
+                    .map(|x| Char::new(x).as_str())
+                    .collect::<String>();
+                writeln!(writer, "{braille_line}")?;
+            }
+
+            buffer.fill(vec![]);
+        }
+
+        Ok(())
+    }
+}

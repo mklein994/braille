@@ -13,6 +13,7 @@ use input::{
 pub use graph::{
     blocks::{Bars as BlockBars, Columns as BlockColumns},
     braille::{Char as BrailleChar, Columns as BrailleColumns, Lines as BrailleLines},
+    mini_blocks::Lines as MiniBlockLines,
 };
 pub use graph::{BarGraphable, ColumnGraphable, Graphable};
 
@@ -22,7 +23,14 @@ pub use opt::{GraphKind, GraphStyle, Opt};
 /// Main entry point for the program
 pub fn run<W: Write>(opt: Opt, writer: LineWriter<W>) -> anyhow::Result<()> {
     match (opt.kind(), opt.per) {
-        (GraphKind::Bars, 1) => build_graph::<Option<f64>, BlockBars, W>(opt, writer),
+        (GraphKind::Bars, 1) => {
+            if opt.pre_min().is_some_and(f64::is_sign_positive) {
+                build_graph::<Option<f64>, BlockBars, W>(opt, writer)
+            } else {
+                build_graph::<Option<f64>, MiniBlockLines, W>(opt, writer)
+            }
+        }
+        (GraphKind::Bars, 2) => build_graph::<[Option<f64>; 2], MiniBlockLines, W>(opt, writer),
         (GraphKind::Columns, 1) => build_graph::<Option<f64>, BlockColumns, W>(opt, writer),
         (GraphKind::BrailleBars, 1) => build_graph::<Option<f64>, BrailleLines, W>(opt, writer),
         (GraphKind::BrailleBars, 2) => {

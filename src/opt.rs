@@ -475,7 +475,7 @@ impl Opt {
         }
 
         match (opt.kind(), opt.per) {
-            (GraphKind::Columns | GraphKind::Bars, x) if x > 1 => {
+            (GraphKind::Columns, x) if x > 1 => {
                 anyhow::bail!("Multiple values per line not supported for this graph kind");
             }
             _ => {}
@@ -610,6 +610,16 @@ The first line should be the string "braille", followed by spaced separated opti
         } else {
             self.graph_kind
         }
+    }
+
+    #[must_use]
+    pub fn pre_min(&self) -> Option<f64> {
+        self.range.min()
+    }
+
+    #[must_use]
+    pub fn pre_max(&self) -> Option<f64> {
+        self.range.max()
     }
 }
 

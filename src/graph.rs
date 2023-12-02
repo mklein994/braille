@@ -1,5 +1,6 @@
 pub mod blocks;
 pub mod braille;
+pub mod mini_blocks;
 
 use std::io::{LineWriter, Write};
 use std::str::FromStr;

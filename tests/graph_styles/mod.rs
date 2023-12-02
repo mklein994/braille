@@ -31,8 +31,11 @@ fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
     assert!(
         matches!(
             (kind, style, per),
-            (GraphKind::BrailleBars | GraphKind::BrailleColumns, _, 1 | 2)
-                | (GraphKind::Bars | GraphKind::Columns, GraphStyle::Filled, 1)
+            (
+                GraphKind::Bars | GraphKind::BrailleBars | GraphKind::BrailleColumns,
+                _,
+                1 | 2
+            ) | (GraphKind::Columns, GraphStyle::Filled, 1)
         ),
         "invalid flag combo"
     );
@@ -80,34 +83,6 @@ fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
     input.trim_end().to_string()
 }
 
-macro_rules! t {
-    (#style_test $name:ident, $kind:expr, $per:literal) => {{
-        tt!(#concat!(stringify!($name), "_", stringify!($per), "_auto"), get_input($kind, Auto, $per), ["-m"]);
-        tt!(#concat!(stringify!($name), "_", stringify!($per), "_filled"), get_input($kind, Filled, $per), ["-m"]);
-        tt!(#concat!(stringify!($name), "_", stringify!($per), "_line"), get_input($kind, Line, $per), ["-m"]);
-    }};
-
-    ($name:ident, $kind:expr) => {
-        #[test]
-        fn $name() {
-            use GraphStyle::*;
-
-            t!(#style_test $name, $kind, 1);
-            t!(#style_test $name, $kind, 2);
-        }
-    };
-
-    ($name:ident, $kind:expr, $style:expr, $per:expr) => {
-        tt!($name, get_input($kind, $style, $per), ["-m"]);
-    };
-}
-
-t!(test_bars, GraphKind::Bars, GraphStyle::default(), 1);
-t!(test_columns, GraphKind::Columns, GraphStyle::default(), 1);
-
-t!(test_braille_columns, GraphKind::BrailleColumns);
-t!(test_braille_bars, GraphKind::BrailleBars);
-
 #[test]
 fn check_against_jq() {
     use std::process::{Command, Stdio};
@@ -136,3 +111,31 @@ fn check_against_jq() {
 
     assert_eq!(rust_values, jq_values);
 }
+
+macro_rules! t {
+    (#style_test $name:ident, $kind:expr, $per:literal) => {{
+        tt!(#concat!(stringify!($name), "_", stringify!($per), "_auto"), get_input($kind, Auto, $per), ["-m"]);
+        tt!(#concat!(stringify!($name), "_", stringify!($per), "_filled"), get_input($kind, Filled, $per), ["-m"]);
+        tt!(#concat!(stringify!($name), "_", stringify!($per), "_line"), get_input($kind, Line, $per), ["-m"]);
+    }};
+
+    ($name:ident, $kind:expr) => {
+        #[test]
+        fn $name() {
+            use GraphStyle::*;
+
+            t!(#style_test $name, $kind, 1);
+            t!(#style_test $name, $kind, 2);
+        }
+    };
+
+    ($name:ident, $kind:expr, $style:expr, $per:expr) => {
+        tt!($name, get_input($kind, $style, $per), ["-m"]);
+    };
+}
+
+t!(test_columns, GraphKind::Columns, GraphStyle::default(), 1);
+
+t!(test_bars, GraphKind::Bars);
+t!(test_braille_columns, GraphKind::BrailleColumns);
+t!(test_braille_bars, GraphKind::BrailleBars);

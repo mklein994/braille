@@ -113,7 +113,11 @@ impl Lines {
         line_set: [u16; N],
         style: GraphStyle,
     ) -> Vec<[bool; 2]> {
-        assert_eq!(2, line_set.len(), "Not yet supported");
+        assert_eq!(
+            2,
+            line_set.len(),
+            "Plotting more than 2 series at a time is not supported"
+        );
         let start = line_set[0];
         let end = line_set[1];
 
