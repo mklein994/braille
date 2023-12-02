@@ -1,3 +1,5 @@
+use std::{fmt, str::FromStr};
+
 use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
 
 use crate::{InputLine, InputLineSinglable, InputLines, LineResult};
@@ -6,8 +8,8 @@ use crate::{InputLine, InputLineSinglable, InputLines, LineResult};
 #[cfg_attr(test, derive(PartialEq))]
 struct GraphRangeBound(Option<f64>);
 
-impl std::fmt::Display for GraphRangeBound {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for GraphRangeBound {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.map(|x| x.to_string()).unwrap_or_default().fmt(f)
     }
 }
@@ -40,13 +42,13 @@ impl GraphRange {
     }
 }
 
-impl std::fmt::Display for GraphRange {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for GraphRange {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}", self.min, self.max)
     }
 }
 
-impl std::str::FromStr for GraphRange {
+impl FromStr for GraphRange {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -58,7 +60,7 @@ impl std::str::FromStr for GraphRange {
             anyhow::bail!("Range should contain ':'");
         }
 
-        let maybe_parse = |value: &str| -> Result<Option<f64>, <f64 as std::str::FromStr>::Err> {
+        let maybe_parse = |value: &str| -> Result<Option<f64>, <f64 as FromStr>::Err> {
             if value.is_empty() {
                 Ok(None)
             } else {
@@ -444,9 +446,11 @@ impl Opt {
     ///
     /// Call this instead of `Opt::parse()`, since it makes some adjustments not supported by
     /// [`clap`].
-    pub fn try_new<I: IntoIterator<Item = S>, S: Into<std::ffi::OsString> + Clone>(
-        args: I,
-    ) -> anyhow::Result<Self> {
+    pub fn try_new<I, S>(args: I) -> anyhow::Result<Self>
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<std::ffi::OsString> + Clone,
+    {
         let mut opt = Self::parse_from(args);
 
         // Parse the modeline if requested
@@ -551,8 +555,8 @@ The first line should be the string "braille", followed by spaced separated opti
     /// otherwise simply return the resulting iterator.
     pub fn get_iter<T>(&mut self, input_lines: InputLines<T>) -> anyhow::Result<ValueIter<T>>
     where
-        InputLine<T>: std::str::FromStr + for<'a> InputLineSinglable<'a>,
-        <InputLine<T> as std::str::FromStr>::Err: std::error::Error + Send + Sync + 'static,
+        InputLine<T>: FromStr + for<'a> InputLineSinglable<'a>,
+        <InputLine<T> as FromStr>::Err: std::error::Error + Send + Sync + 'static,
     {
         if self.range.min().and(self.range.max()).is_some() {
             match self.kind() {
@@ -611,7 +615,7 @@ The first line should be the string "braille", followed by spaced separated opti
 
 pub enum ValueIter<T>
 where
-    InputLine<T>: std::str::FromStr,
+    InputLine<T>: FromStr,
 {
     Boundless(InputLines<T>),
     Bounded { lines: Vec<LineResult<T>> },
@@ -619,7 +623,7 @@ where
 
 impl<T: 'static> IntoIterator for ValueIter<T>
 where
-    InputLine<T>: std::str::FromStr,
+    InputLine<T>: FromStr,
 {
     type Item = LineResult<T>;
 
