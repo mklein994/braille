@@ -218,6 +218,7 @@ impl Columns {
 mod tests {
     use super::*;
 
+    #[cfg(test)]
     fn as_dot_pairs(raw: char) -> [[bool; 2]; 4] {
         let bits = u32::from(raw) - 0x2800;
         [
