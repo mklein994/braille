@@ -25,6 +25,7 @@ use std::io::{LineWriter, Write};
 
 use super::Brailleish;
 use super::Char as BrailleChar;
+use crate::graph::Transposable;
 use crate::graph::{BarGraphable, Graphable};
 use crate::opt::{Config, GraphStyle, ValueIter};
 use crate::{InputLine, InputLineSinglable};
@@ -157,30 +158,9 @@ impl Lines {
         }
         row
     }
-
-    /// Turn a list of braille dot pairs into a list of braille dot blocks
-    #[must_use]
-    pub fn transpose_row(input_row: &[Vec<[bool; 2]>; 4]) -> Vec<[[bool; 2]; 4]> {
-        let longest = input_row.iter().map(Vec::len).max().unwrap();
-
-        let mut output_row = vec![];
-        for column in 0..longest {
-            let mut braille_character = [[false, false]; 4];
-
-            for (row_index, row) in input_row.iter().enumerate() {
-                if let Some(row_column) = row.get(column) {
-                    braille_character[row_index] = *row_column;
-                }
-            }
-
-            if column < longest - 1 || braille_character.into_iter().flatten().any(|x| x) {
-                output_row.push(braille_character);
-            }
-        }
-
-        output_row
-    }
 }
+
+impl Transposable for Lines {}
 
 impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
     fn new(config: Config) -> Self {
@@ -294,7 +274,7 @@ mod tests {
                 [ true, false],
             ],
         ];
-        let actual = Lines::transpose_row(&input);
+        let actual = Lines::transpose_row::<2, 4>(&input);
         for (ex, act) in expected.iter().zip(actual.iter()) {
             eprintln!("{ex:?}");
             eprintln!("{act:?}");
@@ -341,6 +321,6 @@ mod tests {
             ],
         ];
 
-        assert_eq!(expected, Lines::transpose_row(&input));
+        assert_eq!(expected, Lines::transpose_row::<2, 4>(&input));
     }
 }

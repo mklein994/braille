@@ -2,7 +2,7 @@ use std::fmt;
 use std::io::{LineWriter, Write};
 
 use crate::graph::braille::Brailleish;
-use crate::graph::{BarGraphable, Graphable};
+use crate::graph::{BarGraphable, Graphable, Transposable};
 use crate::opt::ValueIter;
 use crate::Config;
 use crate::InputLine;
@@ -51,30 +51,8 @@ pub struct Lines {
     config: Config,
 }
 
-impl Lines {
-    pub fn transpose_row(input_row: &[Vec<[bool; 2]>; 2]) -> Vec<[[bool; 2]; 2]> {
-        let longest = input_row.iter().map(Vec::len).max().unwrap();
-
-        let mut output_row = vec![];
-        for column in 0..longest {
-            let mut character = [[false, false]; 2];
-
-            for (row_index, row) in input_row.iter().enumerate() {
-                if let Some(row_column) = row.get(column) {
-                    character[row_index] = *row_column;
-                }
-            }
-
-            if column < longest - 1 || character.into_iter().flatten().any(|x| x) {
-                output_row.push(character);
-            }
-        }
-
-        output_row
-    }
-}
-
 impl BarGraphable<Option<f64>> for Lines {}
+impl Transposable for Lines {}
 
 impl Graphable<Option<f64>> for Lines {
     fn new(config: Config) -> Self {
