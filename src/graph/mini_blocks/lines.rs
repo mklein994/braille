@@ -2,7 +2,7 @@ use std::fmt;
 use std::io::{LineWriter, Write};
 
 use crate::graph::braille::Brailleish;
-use crate::graph::{BarGraphable, Graphable, Transposable};
+use crate::graph::{BarGraphable, DotArrayable, Graphable, Transposable};
 use crate::opt::ValueIter;
 use crate::Config;
 use crate::InputLine;
@@ -124,7 +124,9 @@ impl Graphable<Option<f64>> for Lines {
     }
 }
 
-impl crate::graph::braille::Brailleish<2> for Lines {}
+impl Brailleish<2> for Lines {}
+impl DotArrayable for Lines {}
+
 impl<const N: usize> BarGraphable<[Option<f64>; N]> for Lines {}
 
 impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
@@ -170,7 +172,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
                             Some(<[_; N]>::try_from(line).unwrap())
                         }
                     })
-                    .map(|x| super::super::braille::Lines::into_dot_array_pairs(x, style))
+                    .map(|x| Self::into_dot_array_groups(x, style))
                 {
                     *buffer_line = new_line;
                 }

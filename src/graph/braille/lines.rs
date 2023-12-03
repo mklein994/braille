@@ -25,9 +25,10 @@ use std::io::{LineWriter, Write};
 
 use super::Brailleish;
 use super::Char as BrailleChar;
+use crate::graph::DotArrayable;
 use crate::graph::Transposable;
 use crate::graph::{BarGraphable, Graphable};
-use crate::opt::{Config, GraphStyle, ValueIter};
+use crate::opt::{Config, ValueIter};
 use crate::{InputLine, InputLineSinglable};
 
 #[derive(Debug)]
@@ -107,60 +108,8 @@ impl Graphable<Option<f64>> for Lines {
 }
 
 impl BarGraphable<Option<f64>> for Lines {}
-
-impl Lines {
-    #[must_use]
-    pub fn into_dot_array_pairs<const N: usize>(
-        line_set: [u16; N],
-        style: GraphStyle,
-    ) -> Vec<[bool; 2]> {
-        assert_eq!(
-            2,
-            line_set.len(),
-            "Plotting more than 2 series at a time is not supported"
-        );
-        let start = line_set[0];
-        let end = line_set[1];
-
-        let filled = match (start, end, style) {
-            (_, _, GraphStyle::Line) => false,
-            (_, _, GraphStyle::Filled) => true,
-            (start, end, GraphStyle::Auto) => start <= end,
-        };
-
-        let (start, end) = if start <= end {
-            (start, end)
-        } else {
-            (end, start)
-        };
-
-        let prefix_length = usize::from(start - 1);
-        let mut iter = vec![false; prefix_length];
-
-        let stem_length = usize::from(start.abs_diff(end));
-        for i in 0..=stem_length {
-            if i == 0 || i == stem_length {
-                iter.push(true);
-            } else {
-                iter.push(filled);
-            }
-        }
-
-        let chunks = iter.chunks_exact(2);
-        let mut tip = chunks.remainder().to_vec();
-        let mut row: Vec<[bool; 2]> = chunks
-            .into_iter()
-            .map(|chunk| chunk.try_into().unwrap())
-            .collect();
-        if !tip.is_empty() {
-            tip.resize(2, false);
-            row.push(tip.try_into().unwrap());
-        }
-        row
-    }
-}
-
 impl Transposable for Lines {}
+impl DotArrayable for Lines {}
 
 impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
     fn new(config: Config) -> Self {
@@ -205,7 +154,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
                         }
                     })
                     .map(|x| {
-                        Self::into_dot_array_pairs(
+                        Self::into_dot_array_groups(
                             x,
                             <Self as Graphable<Option<f64>, Config>>::style(self),
                         )
@@ -234,6 +183,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::opt::GraphStyle;
 
     #[test]
     fn test_into_dot_pairs() {
