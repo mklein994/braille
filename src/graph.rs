@@ -31,9 +31,7 @@ where
         &self,
         lines: ValueIter<T>,
         writer: LineWriter<W>,
-    ) -> anyhow::Result<()>
-    where
-        InputLine<T>: FromStr;
+    ) -> anyhow::Result<()>;
 }
 
 pub trait BarGraphable<T>: Graphable<T>
