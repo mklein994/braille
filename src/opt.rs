@@ -653,15 +653,19 @@ where
 #[derive(Debug, Default, Clone, Copy, ValueEnum)]
 pub enum GraphKind {
     /// █▉▊▋▌▍▎▏ Bar graph with block characters
+    #[value(alias = "B")]
     Bars,
 
     /// ▁▂▃▄▅▆▇█ Column graph with block characters
+    #[value(alias = "C")]
     Columns,
 
     /// ▙ Bar graph using mini block characters
+    #[value(alias = "mb")]
     MiniBars,
 
     /// ▟ Column graph using mini block characters
+    #[value(alias = "mc")]
     MiniColumns,
 
     /// ⠙⣇ Bar graph with braille characters
@@ -679,7 +683,7 @@ pub enum GraphKind {
     ///        y →
     /// ```
     #[default]
-    #[value(name = "braille")]
+    #[value(name = "braille", alias = "b")]
     BrailleBars,
 
     /// ⡶⠚ Column graph with braille characters
@@ -696,6 +700,7 @@ pub enum GraphKind {
     ///
     ///         x →
     /// ```
+    #[value(alias = "c")]
     BrailleColumns,
 }
 
