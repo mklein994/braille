@@ -1,0 +1,6 @@
+---
+source: tests/modeline/mod.rs
+expression: stdout
+---
+⣠⣾
+

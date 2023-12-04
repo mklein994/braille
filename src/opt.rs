@@ -509,12 +509,13 @@ impl Opt {
         if line.starts_with('#') {
             Ok(Some(vec![]))
         } else if line.starts_with("braille") {
-            Ok(Some(
-                line.trim_start_matches("braille")
-                    .split_whitespace()
-                    .take_while(|x| !x.starts_with('#'))
-                    .collect(),
-            ))
+            let modeline = line
+                .split_once('#')
+                .map_or(line, |(s, _)| s)
+                .trim_start_matches("braille")
+                .split_whitespace()
+                .collect();
+            Ok(Some(modeline))
         } else if !line.is_empty() && line.parse::<f64>().is_err() {
             use clap::error::{ContextValue, ErrorKind};
             Err(cmd.error(

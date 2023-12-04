@@ -44,3 +44,12 @@ t_modeline!(invalid test_invalid_modeline_arg, r"braille --foo
 2
 3
 ");
+
+t_modeline!(
+    modeline_has_comment_after_arg,
+    r"braille 1 -c#hello
+1
+2
+3
+4"
+);
