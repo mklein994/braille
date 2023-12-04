@@ -31,14 +31,17 @@ fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
     assert!(
         matches!(
             (kind, style, per),
-            (
-                GraphKind::Bars
-                    | GraphKind::Columns
-                    | GraphKind::BrailleBars
-                    | GraphKind::BrailleColumns,
-                _,
-                1 | 2
-            )
+            (GraphKind::Bars | GraphKind::Columns, GraphStyle::Filled, 1)
+                | (
+                    GraphKind::Bars
+                        | GraphKind::Columns
+                        | GraphKind::BrailleBars
+                        | GraphKind::BrailleColumns
+                        | GraphKind::MiniBars
+                        | GraphKind::MiniColumns,
+                    _,
+                    1 | 2
+                )
         ),
         "invalid flag combo"
     );
@@ -48,6 +51,8 @@ fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
         GraphKind::Columns => "-C",
         GraphKind::BrailleBars => "-b",
         GraphKind::BrailleColumns => "-c",
+        GraphKind::MiniBars => "--kind mini-bars",
+        GraphKind::MiniColumns => "--kind mini-columns",
     };
 
     let style_flag = match style {
@@ -137,9 +142,10 @@ macro_rules! t {
     };
 }
 
-// t!(test_columns, GraphKind::Columns, GraphStyle::default(), 1);
+t!(test_bars, GraphKind::Bars, GraphStyle::default(), 1);
+t!(test_columns, GraphKind::Columns, GraphStyle::default(), 1);
 
-t!(test_columns, GraphKind::Columns);
-t!(test_bars, GraphKind::Bars);
+t!(test_mini_columns, GraphKind::MiniColumns);
+t!(test_mini_bars, GraphKind::MiniBars);
 t!(test_braille_columns, GraphKind::BrailleColumns);
 t!(test_braille_bars, GraphKind::BrailleBars);

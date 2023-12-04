@@ -474,14 +474,21 @@ impl Opt {
             opt.first_line = None;
         }
 
+        match (opt.kind(), opt.per) {
+            (GraphKind::Bars | GraphKind::Columns, x) if x > 1 => {
+                anyhow::bail!("Multiple values per line not supported for this graph kind");
+            }
+            _ => {}
+        };
+
         // If the graph size isn't already set, try detecting it from the environment
         if opt.size.is_none() {
             let (width, height) = get_terminal_size()?;
 
             opt.size = Some(match opt.kind() {
-                GraphKind::Bars | GraphKind::BrailleBars => width,
+                GraphKind::Bars | GraphKind::BrailleBars | GraphKind::MiniBars => width,
                 // Leave enough room for the shell prompt
-                GraphKind::Columns | GraphKind::BrailleColumns => {
+                GraphKind::Columns | GraphKind::BrailleColumns | GraphKind::MiniColumns => {
                     if opt.use_full_default_height {
                         height
                     } else {
@@ -553,12 +560,14 @@ The first line should be the string "braille", followed by spaced separated opti
     {
         if self.range.min().and(self.range.max()).is_some() {
             match self.kind() {
-                GraphKind::Bars | GraphKind::BrailleBars => {
+                GraphKind::Bars | GraphKind::BrailleBars | GraphKind::MiniBars => {
                     Ok(ValueIter::Boundless(input_lines.into_iter()))
                 }
-                GraphKind::Columns | GraphKind::BrailleColumns => Ok(ValueIter::Bounded {
-                    lines: input_lines.into_iter().collect(),
-                }),
+                GraphKind::Columns | GraphKind::BrailleColumns | GraphKind::MiniColumns => {
+                    Ok(ValueIter::Bounded {
+                        lines: input_lines.into_iter().collect(),
+                    })
+                }
             }
         } else {
             let mut lines = vec![];
@@ -647,6 +656,12 @@ pub enum GraphKind {
 
     /// ▁▂▃▄▅▆▇█ Column graph with block characters
     Columns,
+
+    /// ▙ Bar graph using mini block characters
+    MiniBars,
+
+    /// ▟ Column graph using mini block characters
+    MiniColumns,
 
     /// ⠙⣇ Bar graph with braille characters
     ///
