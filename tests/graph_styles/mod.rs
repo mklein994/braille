@@ -32,10 +32,13 @@ fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
         matches!(
             (kind, style, per),
             (
-                GraphKind::Bars | GraphKind::BrailleBars | GraphKind::BrailleColumns,
+                GraphKind::Bars
+                    | GraphKind::Columns
+                    | GraphKind::BrailleBars
+                    | GraphKind::BrailleColumns,
                 _,
                 1 | 2
-            ) | (GraphKind::Columns, GraphStyle::Filled, 1)
+            )
         ),
         "invalid flag combo"
     );
@@ -134,8 +137,9 @@ macro_rules! t {
     };
 }
 
-t!(test_columns, GraphKind::Columns, GraphStyle::default(), 1);
+// t!(test_columns, GraphKind::Columns, GraphStyle::default(), 1);
 
+t!(test_columns, GraphKind::Columns);
 t!(test_bars, GraphKind::Bars);
 t!(test_braille_columns, GraphKind::BrailleColumns);
 t!(test_braille_bars, GraphKind::BrailleBars);

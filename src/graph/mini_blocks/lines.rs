@@ -1,51 +1,12 @@
-use std::fmt;
 use std::io::{LineWriter, Write};
 
+use super::Char;
 use crate::graph::braille::Brailleish;
 use crate::graph::{BarGraphable, DotArrayable, Graphable, Transposable};
 use crate::opt::ValueIter;
 use crate::Config;
 use crate::InputLine;
 use crate::InputLineSinglable;
-
-struct Char {
-    inner: &'static str,
-}
-
-impl Char {
-    pub fn new(dots: [[bool; 2]; 2]) -> Self {
-        Self {
-            inner: match dots {
-                [[false, false], [false, false]] => " ",
-                [[false, false], [false, true]] => "▗",
-                [[false, false], [true, false]] => "▖",
-                [[false, false], [true, true]] => "▄",
-                [[false, true], [false, false]] => "▝",
-                [[false, true], [false, true]] => "▐",
-                [[false, true], [true, false]] => "▞",
-                [[false, true], [true, true]] => "▟",
-                [[true, false], [false, false]] => "▘",
-                [[true, false], [false, true]] => "▚",
-                [[true, false], [true, false]] => "▌",
-                [[true, false], [true, true]] => "▙",
-                [[true, true], [false, false]] => "▀",
-                [[true, true], [false, true]] => "▜",
-                [[true, true], [true, false]] => "▛",
-                [[true, true], [true, true]] => "█",
-            },
-        }
-    }
-
-    pub fn as_str(&self) -> &'static str {
-        self.inner
-    }
-}
-
-impl fmt::Display for Char {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.inner.fmt(f)
-    }
-}
 
 pub struct Lines {
     config: Config,

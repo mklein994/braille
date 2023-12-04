@@ -474,13 +474,6 @@ impl Opt {
             opt.first_line = None;
         }
 
-        match (opt.kind(), opt.per) {
-            (GraphKind::Columns, x) if x > 1 => {
-                anyhow::bail!("Multiple values per line not supported for this graph kind");
-            }
-            _ => {}
-        }
-
         // If the graph size isn't already set, try detecting it from the environment
         if opt.size.is_none() {
             let (width, height) = get_terminal_size()?;
