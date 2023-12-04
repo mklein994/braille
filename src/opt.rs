@@ -485,17 +485,19 @@ impl Opt {
         if opt.size.is_none() {
             let (width, height) = get_terminal_size()?;
 
-            opt.size = Some(match opt.kind() {
-                GraphKind::Bars | GraphKind::BrailleBars | GraphKind::MiniBars => width,
+            let size = match opt.kind().orientation() {
+                Orientation::Horizontal => width,
                 // Leave enough room for the shell prompt
-                GraphKind::Columns | GraphKind::BrailleColumns | GraphKind::MiniColumns => {
+                Orientation::Vertical => {
                     if opt.use_full_default_height {
                         height
                     } else {
                         height - 1
                     }
                 }
-            });
+            };
+
+            opt.size = Some(size);
         }
 
         Ok(opt)
@@ -702,6 +704,26 @@ pub enum GraphKind {
     /// ```
     #[value(alias = "c")]
     BrailleColumns,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Orientation {
+    Horizontal,
+    Vertical,
+}
+
+impl GraphKind {
+    #[must_use]
+    pub fn orientation(self) -> Orientation {
+        match self {
+            GraphKind::Bars | GraphKind::MiniBars | GraphKind::BrailleBars => {
+                Orientation::Horizontal
+            }
+            GraphKind::Columns | GraphKind::MiniColumns | GraphKind::BrailleColumns => {
+                Orientation::Vertical
+            }
+        }
+    }
 }
 
 #[cfg(test)]

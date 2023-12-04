@@ -177,10 +177,10 @@ pub trait Brailleish<const DOTS_PER_VALUE: usize> {
         let prefix_length = usize::from(value.min(zero) - 1);
         let mut iter = vec![false; prefix_length];
 
-        let filled = match (value, zero, style) {
-            (v, z, GraphStyle::Auto) => v >= z,
-            (_, _, GraphStyle::Filled) => true,
-            (_, _, GraphStyle::Line) => false,
+        let filled = match style {
+            GraphStyle::Auto => value >= zero,
+            GraphStyle::Filled => true,
+            GraphStyle::Line => false,
         };
 
         let stem_length = usize::from(value.abs_diff(zero));
@@ -200,7 +200,7 @@ pub trait Brailleish<const DOTS_PER_VALUE: usize> {
             .collect();
         if !tip.is_empty() {
             tip.resize(DOTS_PER_VALUE, false);
-            groups.push(tip.try_into().unwrap());
+            groups.push(<[_; DOTS_PER_VALUE]>::try_from(tip).unwrap());
         }
 
         groups
