@@ -6,17 +6,15 @@ use std::io::prelude::*;
 use std::io::LineWriter;
 use std::str::FromStr;
 
-use input::{
-    Line as InputLine, LineResult, LineSinglable as InputLineSinglable, Lines as InputLines,
-};
-
 pub use graph::{
     blocks::{Bars as BlockBars, Columns as BlockColumns},
-    braille::{Char as BrailleChar, Columns as BrailleColumns, Lines as BrailleLines},
+    braille::{Columns as BrailleColumns, Lines as BrailleLines},
     mini_blocks::{Columns as MiniBlockColumns, Lines as MiniBlockLines},
 };
 pub use graph::{BarGraphable, ColumnGraphable, Graphable};
-
+use input::{
+    Line as InputLine, LineResult, LineSinglable as InputLineSinglable, Lines as InputLines,
+};
 use opt::{Config, FirstLine};
 pub use opt::{GraphKind, GraphStyle, Opt};
 

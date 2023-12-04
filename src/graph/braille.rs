@@ -17,10 +17,11 @@ impl Char {
     /// # Example
     ///
     /// ```
+    /// # use braille::graph::braille::Char;
     /// use braille::BrailleLines;
     /// use braille::graph::braille::Brailleish;
     /// assert_eq!(
-    ///     braille::BrailleChar::new([
+    ///     Char::new([
     ///         [true, true],
     ///         [false, true],
     ///         [true, false],
