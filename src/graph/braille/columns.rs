@@ -12,13 +12,15 @@ pub struct Columns {
     config: Config,
 }
 
+impl From<Config> for Columns {
+    fn from(config: Config) -> Self {
+        Self { config }
+    }
+}
+
 impl Brailleish<4> for Columns {}
 
 impl Graphable<Option<f64>> for Columns {
-    fn new(config: Config) -> Self {
-        Self { config }
-    }
-
     fn config(&self) -> &Config {
         &self.config
     }
@@ -73,10 +75,6 @@ impl Graphable<Option<f64>> for Columns {
 }
 
 impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
-    fn new(config: Config) -> Self {
-        Self { config }
-    }
-
     fn config(&self) -> &Config {
         &self.config
     }

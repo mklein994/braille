@@ -10,10 +10,9 @@ use crate::InputLine;
 
 pub trait Graphable<T, Conf: Configurable = Config>
 where
+    Self: From<Conf>,
     InputLine<T>: FromStr,
 {
-    fn new(config: Conf) -> Self;
-
     fn config(&self) -> &Conf;
 
     fn minimum(&self) -> f64 {

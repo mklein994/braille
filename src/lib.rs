@@ -64,7 +64,7 @@ where
     let values = opt.get_iter(lines)?;
     let config = Config::from(opt);
 
-    Graph::new(config).print_graph::<W>(values, writer)?;
+    Graph::from(config).print_graph::<W>(values, writer)?;
 
     Ok(())
 }

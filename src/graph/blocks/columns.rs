@@ -10,6 +10,12 @@ pub struct Columns {
     config: Config,
 }
 
+impl From<Config> for Columns {
+    fn from(config: Config) -> Self {
+        Self { config }
+    }
+}
+
 impl Columns
 where
     Self: ColumnGraphable<Option<f64>>,
@@ -61,10 +67,6 @@ impl Graphable<Option<f64>> for Columns
 where
     InputLine<Option<f64>>: FromStr,
 {
-    fn new(config: Config) -> Self {
-        Self { config }
-    }
-
     fn config(&self) -> &Config {
         &self.config
     }

@@ -8,11 +8,13 @@ pub struct Bars {
     config: Config,
 }
 
-impl Graphable<Option<f64>> for Bars {
-    fn new(config: Config) -> Self {
+impl From<Config> for Bars {
+    fn from(config: Config) -> Self {
         Self { config }
     }
+}
 
+impl Graphable<Option<f64>> for Bars {
     fn config(&self) -> &Config {
         &self.config
     }

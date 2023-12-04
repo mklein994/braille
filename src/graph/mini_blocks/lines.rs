@@ -16,10 +16,6 @@ impl BarGraphable<Option<f64>> for Lines {}
 impl Transposable for Lines {}
 
 impl Graphable<Option<f64>> for Lines {
-    fn new(config: Config) -> Self {
-        Self { config }
-    }
-
     fn config(&self) -> &Config {
         &self.config
     }
@@ -89,12 +85,13 @@ impl Brailleish<2> for Lines {}
 impl DotArrayable for Lines {}
 
 impl<const N: usize> BarGraphable<[Option<f64>; N]> for Lines {}
-
-impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
-    fn new(config: Config) -> Self {
+impl From<Config> for Lines {
+    fn from(config: Config) -> Self {
         Self { config }
     }
+}
 
+impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
     fn config(&self) -> &Config {
         &self.config
     }

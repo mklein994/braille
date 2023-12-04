@@ -36,13 +36,15 @@ pub struct Lines {
     config: Config,
 }
 
+impl From<Config> for Lines {
+    fn from(config: Config) -> Self {
+        Self { config }
+    }
+}
+
 impl Brailleish<2> for Lines {}
 
 impl Graphable<Option<f64>> for Lines {
-    fn new(config: Config) -> Self {
-        Self { config }
-    }
-
     fn config(&self) -> &Config {
         &self.config
     }
@@ -112,10 +114,6 @@ impl Transposable for Lines {}
 impl DotArrayable for Lines {}
 
 impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
-    fn new(config: Config) -> Self {
-        Self { config }
-    }
-
     fn config(&self) -> &Config {
         &self.config
     }
