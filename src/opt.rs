@@ -515,7 +515,7 @@ impl Opt {
                 .split_once('#')
                 .map_or(line, |(s, _)| s)
                 .trim_start_matches("braille")
-                .split_whitespace()
+                .split_ascii_whitespace()
                 .collect();
             Ok(Some(modeline))
         } else if !line.is_empty() && line.parse::<f64>().is_err() {

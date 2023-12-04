@@ -54,10 +54,10 @@ where
     }
 }
 
-pub trait Transposable {
-    /// Turn a row of dot sets into a list of braille dot blocks
+pub trait RowBuildable {
+    /// Turn M rows of dot sets N wide each into a list of `NxM` dot blocks
     #[must_use]
-    fn transpose_row<const N: usize, const M: usize>(
+    fn assemble_row<const N: usize, const M: usize>(
         input_row: &[Vec<[bool; N]>; M],
     ) -> Vec<[[bool; N]; M]> {
         let longest = input_row.iter().map(Vec::len).max().unwrap();
@@ -95,10 +95,10 @@ pub trait DotArrayable {
         let start = line_set[0];
         let end = line_set[1];
 
-        let filled = match (start, end, style) {
-            (_, _, GraphStyle::Line) => false,
-            (_, _, GraphStyle::Filled) => true,
-            (start, end, GraphStyle::Auto) => start <= end,
+        let filled = match style {
+            GraphStyle::Auto => start <= end,
+            GraphStyle::Filled => true,
+            GraphStyle::Line => false,
         };
 
         let (start, end) = if start <= end {
@@ -138,9 +138,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn try_transpose_braille() {
+    fn try_build_braille_row() {
         struct Foo;
-        impl Transposable for Foo {}
+        impl RowBuildable for Foo {}
 
         #[rustfmt::skip]
         let input_row = [
@@ -160,7 +160,7 @@ mod tests {
             ],
         ];
 
-        let actual = Foo::transpose_row(&input_row);
+        let actual = Foo::assemble_row(&input_row);
 
         assert_eq!(expected, actual);
     }

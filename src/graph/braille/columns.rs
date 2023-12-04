@@ -20,6 +20,7 @@ impl From<Config> for Columns {
 
 impl Brailleish<4> for Columns {}
 
+impl ColumnGraphable<Option<f64>> for Columns {}
 impl Graphable<Option<f64>> for Columns {
     fn config(&self) -> &Config {
         &self.config
@@ -33,10 +34,11 @@ impl Graphable<Option<f64>> for Columns {
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
         let style = <Self as Graphable<Option<f64>, Config>>::style(self);
+        let height = <Self as ColumnGraphable<Option<f64>>>::height(self);
 
         let min = 1;
-        let max = self.height() * 4;
-        let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
+        let max = height * 4;
+        let scale = |value| Self::scale(value, minimum, maximum, min, max);
 
         // Clamp where 0 would fit to be inside the output range
         let zero = if minimum > 0. {
@@ -68,12 +70,13 @@ impl Graphable<Option<f64>> for Columns {
             column_quads.push(column);
         }
 
-        Self::into_braille_rows(writer, &column_quads, usize::from(self.height()))?;
+        Self::into_braille_rows(writer, &column_quads, usize::from(height))?;
 
         Ok(())
     }
 }
 
+impl<const N: usize> ColumnGraphable<[Option<f64>; N]> for Columns {}
 impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
     fn config(&self) -> &Config {
         &self.config
@@ -87,9 +90,10 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
         let style = <Self as Graphable<Option<f64>, Config>>::style(self);
+        let height = <Self as ColumnGraphable<[Option<f64>; N]>>::height(self);
 
         let min = 1;
-        let max = self.height() * 4;
+        let max = height * 4;
         let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
 
         let mut input_lines = lines.into_iter();
@@ -120,13 +124,11 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
             column_quads.push(column);
         }
 
-        Self::into_braille_rows(writer, &column_quads, usize::from(self.height()))?;
+        Self::into_braille_rows(writer, &column_quads, usize::from(height))?;
 
         Ok(())
     }
 }
-
-impl ColumnGraphable<Option<f64>> for Columns {}
 
 impl Columns {
     fn into_braille_rows<W: Write>(
@@ -173,10 +175,10 @@ impl Columns {
         assert_eq!(2, line_set.len(), "Not yet supported");
         let start = line_set[0];
         let end = line_set[1];
-        let filled = match (start, end, style) {
-            (start, end, GraphStyle::Auto) => start <= end,
-            (_, _, GraphStyle::Line) => false,
-            (_, _, GraphStyle::Filled) => true,
+        let filled = match style {
+            GraphStyle::Auto => start <= end,
+            GraphStyle::Line => false,
+            GraphStyle::Filled => true,
         };
 
         let (start, end) = if start <= end {
@@ -228,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn transpose_n3_4_2() {
+    fn assemble_rows_n3_4_2() {
         //  4  -- -- -- -*
         //  3  -- -- -- **
         //  2  -- -- -* **

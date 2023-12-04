@@ -78,6 +78,7 @@ impl Char {
     }
 
     #[must_use]
+    #[cfg(test)]
     pub fn as_dot_pairs(self) -> [[bool; 2]; 4] {
         let dots = self.inner;
         [

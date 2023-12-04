@@ -17,10 +17,9 @@ impl From<Config> for Columns {
     }
 }
 
-impl ColumnGraphable<Option<f64>> for Columns {}
-
 impl Brailleish<2> for Columns {}
 
+impl ColumnGraphable<Option<f64>> for Columns {}
 impl Graphable<Option<f64>> for Columns {
     fn config(&self) -> &Config {
         &self.config
@@ -34,9 +33,10 @@ impl Graphable<Option<f64>> for Columns {
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
         let style = <Self as Graphable<Option<f64>, Config>>::style(self);
+        let height = <Self as ColumnGraphable<Option<f64>>>::height(self);
 
         let min = 1;
-        let max = self.height() * 2;
+        let max = height * 2;
         let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
 
         // Clamp where 0 would fit to be inside the output range
@@ -69,12 +69,13 @@ impl Graphable<Option<f64>> for Columns {
             column_quads.push(column);
         }
 
-        Self::into_braille_rows(writer, &column_quads, usize::from(self.height()))?;
+        Self::into_braille_rows(writer, &column_quads, usize::from(height))?;
 
         Ok(())
     }
 }
 
+impl<const N: usize> ColumnGraphable<[Option<f64>; N]> for Columns {}
 impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
     fn config(&self) -> &Config {
         &self.config
@@ -88,9 +89,10 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
         let style = <Self as Graphable<Option<f64>, Config>>::style(self);
+        let height = <Self as ColumnGraphable<Option<f64>>>::height(self);
 
         let min = 1;
-        let max = self.height() * 2;
+        let max = height * 2;
         let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
 
         let mut input_lines = lines.into_iter();
@@ -121,7 +123,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
             column_pairs.push(column);
         }
 
-        Self::into_braille_rows(writer, &column_pairs, usize::from(self.height()))?;
+        Self::into_braille_rows(writer, &column_pairs, usize::from(height))?;
 
         Ok(())
     }
@@ -135,24 +137,24 @@ impl Columns {
     ) -> std::io::Result<()> {
         for row_index in (0..height).rev() {
             for col in column_pairs {
-                let mut raw_braille_char = [[false; 2]; 2];
-                for (character_row, pair) in raw_braille_char.iter_mut().rev().enumerate() {
+                let mut raw_block = [[false; 2]; 2];
+                for (block_row, pair) in raw_block.iter_mut().rev().enumerate() {
                     let left = col
                         .first()
                         .and_then(|c| c.get(row_index))
-                        .and_then(|c| c.get(character_row))
+                        .and_then(|c| c.get(block_row))
                         .copied()
                         .unwrap_or_default();
                     let right = col
                         .last()
                         .and_then(|c| c.get(row_index))
-                        .and_then(|c| c.get(character_row))
+                        .and_then(|c| c.get(block_row))
                         .copied()
                         .unwrap_or_default();
                     *pair = [left, right];
                 }
 
-                write!(line_writer, "{}", Char::new(raw_braille_char))?;
+                write!(line_writer, "{}", Char::new(raw_block))?;
             }
 
             writeln!(line_writer)?;
@@ -168,10 +170,10 @@ impl Columns {
         assert_eq!(2, line_set.len(), "Not yet supported");
         let start = line_set[0];
         let end = line_set[1];
-        let filled = match (start, end, style) {
-            (start, end, GraphStyle::Auto) => start <= end,
-            (_, _, GraphStyle::Line) => false,
-            (_, _, GraphStyle::Filled) => true,
+        let filled = match style {
+            GraphStyle::Auto => start <= end,
+            GraphStyle::Line => false,
+            GraphStyle::Filled => true,
         };
 
         let (start, end) = if start <= end {

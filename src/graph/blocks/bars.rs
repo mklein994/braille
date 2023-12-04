@@ -14,6 +14,7 @@ impl From<Config> for Bars {
     }
 }
 
+impl BarGraphable<Option<f64>> for Bars {}
 impl Graphable<Option<f64>> for Bars {
     fn config(&self) -> &Config {
         &self.config
@@ -35,11 +36,12 @@ impl Graphable<Option<f64>> for Bars {
         input_lines: ValueIter<Option<f64>>,
         mut writer: LineWriter<W>,
     ) -> anyhow::Result<()> {
-        let minimum = self.minimum();
-        let maximum = self.maximum();
+        let minimum = <Self as Graphable<Option<f64>>>::minimum(self);
+        let maximum = <Self as Graphable<Option<f64>>>::maximum(self);
+        let width = <Self as BarGraphable<Option<f64>>>::width(self);
 
         let min = 1.; // reserve an empty line for null values
-        let max = f64::from(self.width() * 8); // braille characters are 2 dots wide
+        let max = f64::from(width * 8); // braille characters are 2 dots wide
         let slope = (max - min) / (maximum - minimum);
         let scale = |value: f64| {
             assert!(
@@ -60,8 +62,6 @@ impl Graphable<Option<f64>> for Bars {
         Ok(())
     }
 }
-
-impl BarGraphable<Option<f64>> for Bars {}
 
 impl Bars {
     const BLOCKS: [&'static str; 9] = [

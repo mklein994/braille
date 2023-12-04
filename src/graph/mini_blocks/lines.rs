@@ -2,7 +2,7 @@ use std::io::{LineWriter, Write};
 
 use super::Char;
 use crate::graph::braille::Brailleish;
-use crate::graph::{BarGraphable, DotArrayable, Graphable, Transposable};
+use crate::graph::{BarGraphable, DotArrayable, Graphable, RowBuildable};
 use crate::opt::ValueIter;
 use crate::Config;
 use crate::InputLine;
@@ -12,10 +12,19 @@ pub struct Lines {
     config: Config,
 }
 
-impl BarGraphable<Option<f64>> for Lines {}
-impl Transposable for Lines {}
+impl From<Config> for Lines {
+    fn from(config: Config) -> Self {
+        Self { config }
+    }
+}
 
-impl Graphable<Option<f64>> for Lines {
+impl RowBuildable for Lines {}
+
+impl BarGraphable<Option<f64>> for Lines {}
+impl Graphable<Option<f64>> for Lines
+where
+    Self: BarGraphable<Option<f64>>,
+{
     fn config(&self) -> &Config {
         &self.config
     }
@@ -28,6 +37,7 @@ impl Graphable<Option<f64>> for Lines {
         let mut input_lines = input_lines.into_iter();
         let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
         let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
+        let style = <Self as Graphable<Option<f64>, Config>>::style(self);
         let width = <Self as BarGraphable<Option<f64>>>::width(self);
 
         let min = 1; // reserve an empty line for null values
@@ -42,8 +52,6 @@ impl Graphable<Option<f64>> for Lines {
         } else {
             scale(0.)
         };
-
-        let style = <Self as Graphable<Option<f64>, Config>>::style(self);
 
         // Each braille character is 4 dots tall
         let mut buffer = [vec![], vec![]];
@@ -66,7 +74,7 @@ impl Graphable<Option<f64>> for Lines {
             }
 
             if has_more_lines || buffer.iter().any(|x| !x.is_empty()) {
-                let transposed = Self::transpose_row(&buffer);
+                let transposed = Self::assemble_row(&buffer);
                 let braille_line = transposed
                     .into_iter()
                     .map(|x| Char::new(x).as_str())
@@ -85,12 +93,6 @@ impl Brailleish<2> for Lines {}
 impl DotArrayable for Lines {}
 
 impl<const N: usize> BarGraphable<[Option<f64>; N]> for Lines {}
-impl From<Config> for Lines {
-    fn from(config: Config) -> Self {
-        Self { config }
-    }
-}
-
 impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
     fn config(&self) -> &Config {
         &self.config
@@ -104,12 +106,12 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
         let mut input_lines = input_lines.into_iter();
         let minimum = <Self as Graphable<[Option<f64>; N], Config>>::minimum(self);
         let maximum = <Self as Graphable<[Option<f64>; N], Config>>::maximum(self);
+        let width = <Self as BarGraphable<[Option<f64>; N]>>::width(self);
         let style = <Self as Graphable<[Option<f64>; N], Config>>::style(self);
 
         let min = 1;
-        let width = <Self as BarGraphable<[Option<f64>; N]>>::width(self);
         let max = width * 2;
-        let scale = |value: f64| <Self as Brailleish<2>>::scale(value, minimum, maximum, min, max);
+        let scale = |value| Self::scale(value, minimum, maximum, min, max);
 
         let mut buffer = [vec![], vec![]];
         let mut has_more_lines = true;
@@ -137,7 +139,7 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Lines {
             }
 
             if has_more_lines || buffer.iter().any(|x| !x.is_empty()) {
-                let transposed = Self::transpose_row(&buffer);
+                let transposed = Self::assemble_row(&buffer);
                 let braille_line = transposed
                     .into_iter()
                     .map(|x| Char::new(x).as_str())
