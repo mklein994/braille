@@ -4,7 +4,6 @@ mod opt;
 
 use std::io::prelude::*;
 use std::io::LineWriter;
-use std::str::FromStr;
 
 pub use graph::{
     blocks::{Bars as BlockBars, Columns as BlockColumns},
@@ -43,14 +42,13 @@ pub fn run<W: Write>(opt: Opt, writer: LineWriter<W>) -> anyhow::Result<()> {
     }
 }
 
-fn build_graph<LineType: 'static, Graph, W: Write>(
-    mut opt: Opt,
-    writer: LineWriter<W>,
-) -> anyhow::Result<()>
+fn build_graph<LineType, Graph, W>(mut opt: Opt, writer: LineWriter<W>) -> anyhow::Result<()>
 where
-    InputLine<LineType>: FromStr + for<'a> InputLineSinglable<'a>,
-    <InputLine<LineType> as FromStr>::Err: std::error::Error + Send + Sync,
+    LineType: 'static,
     Graph: Graphable<LineType>,
+    InputLine<LineType>: std::str::FromStr + for<'a> InputLineSinglable<'a>,
+    <InputLine<LineType> as std::str::FromStr>::Err: std::error::Error + Send + Sync,
+    W: Write,
 {
     let first_value = match opt.first_line {
         Some(FirstLine::Value(ref value)) => Some(value.trim().to_string()),

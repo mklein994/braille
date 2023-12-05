@@ -7,11 +7,15 @@ use std::str::FromStr;
 pub struct Line<T>(T);
 
 impl<T> Line<T> {
-    fn parse_value(s: &str) -> Result<Option<f64>, <f64 as FromStr>::Err> {
+    fn parse_value(s: &str) -> Result<Option<f64>, LineParseError> {
         if s.is_empty() || s == "null" {
             Ok(None)
         } else {
-            Some(s.parse()).transpose()
+            Some(s.parse().map_err(|err| LineParseError::ParseFloat {
+                inner: err,
+                value: s.to_string(),
+            }))
+            .transpose()
         }
     }
 }
@@ -45,25 +49,54 @@ impl Line<Option<f64>> {
 }
 
 impl FromStr for Line<Option<f64>> {
-    type Err = <f64 as FromStr>::Err;
+    type Err = LineParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self(Self::parse_value(s)?))
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub enum LineParseError {
+    ParseFloat {
+        inner: std::num::ParseFloatError,
+        value: String,
+    },
+    WrongNumValues {
+        expected: usize,
+        actual: usize,
+    },
+}
+
+impl std::fmt::Display for LineParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LineParseError::ParseFloat { inner, value } => {
+                write!(f, "Failed to parse {value:?}: {inner}")
+            }
+            LineParseError::WrongNumValues { expected, actual } => {
+                write!(f, "Expected line with {expected} values, found {actual}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for LineParseError {}
+
 impl<const N: usize> FromStr for Line<[Option<f64>; N]> {
-    type Err = <f64 as FromStr>::Err;
+    type Err = LineParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let line: Vec<_> = s
             .splitn(N, |c: char| c.is_ascii_whitespace())
             .map(Self::parse_value)
             .collect::<Result<_, _>>()?;
-        let len = line.len();
-        Ok(Self(line.try_into().unwrap_or_else(|_| {
-            panic!("Expected line with {N} values, found {len}")
-        })))
+        Ok(Self(<[_; N]>::try_from(line).map_err(|line_values| {
+            LineParseError::WrongNumValues {
+                expected: N,
+                actual: line_values.len(),
+            }
+        })?))
     }
 }
 

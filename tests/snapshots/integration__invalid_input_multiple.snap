@@ -2,5 +2,5 @@
 source: tests/integration.rs
 expression: stderr
 ---
-Error: invalid float literal
+Error: Failed to parse "hello": invalid float literal
 
