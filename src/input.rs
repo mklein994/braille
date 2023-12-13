@@ -42,6 +42,14 @@ impl<'a, const N: usize> LineSinglable<'a> for Line<[Option<f64>; N]> {
     }
 }
 
+impl<'a> LineSinglable<'a> for Line<Vec<Option<f64>>> {
+    type Iter = std::slice::Iter<'a, Option<f64>>;
+
+    fn as_single_iter(&'a self) -> Self::Iter {
+        self.0.iter()
+    }
+}
+
 impl Line<Option<f64>> {
     pub fn into_inner(self) -> Option<f64> {
         self.0
@@ -97,6 +105,18 @@ impl<const N: usize> FromStr for Line<[Option<f64>; N]> {
                 actual: line_values.len(),
             }
         })?))
+    }
+}
+
+impl FromStr for Line<Vec<Option<f64>>> {
+    type Err = LineParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let line: Vec<_> = s
+            .split(|c: char| c.is_ascii_whitespace())
+            .map(Self::parse_value)
+            .collect::<Result<_, _>>()?;
+        Ok(Self(line))
     }
 }
 

@@ -1,4 +1,5 @@
 pub mod graph;
+mod grid;
 mod input;
 mod opt;
 
@@ -19,26 +20,38 @@ pub use opt::{GraphKind, GraphStyle, Opt};
 
 /// Main entry point for the program
 pub fn run<W: Write>(opt: Opt, writer: LineWriter<W>) -> anyhow::Result<()> {
-    match (opt.kind(), opt.per) {
-        (GraphKind::Bars, 1) => build_graph::<Option<f64>, BlockBars, W>(opt, writer),
-        (GraphKind::MiniBars, 1) => build_graph::<Option<f64>, MiniBlockLines, W>(opt, writer),
-        (GraphKind::MiniBars, 2) => build_graph::<[Option<f64>; 2], MiniBlockLines, W>(opt, writer),
-        (GraphKind::Columns, 1) => build_graph::<Option<f64>, BlockColumns, W>(opt, writer),
-        (GraphKind::MiniColumns, 1) => build_graph::<Option<f64>, MiniBlockColumns, W>(opt, writer),
-        (GraphKind::MiniColumns, 2) => {
-            build_graph::<[Option<f64>; 2], MiniBlockColumns, W>(opt, writer)
+    if opt.grid.is_some() {
+        grid::print_graph(opt, writer)
+    } else {
+        match (opt.kind(), opt.per) {
+            (GraphKind::Bars, 1) => build_graph::<Option<f64>, BlockBars, W>(opt, writer),
+            (GraphKind::MiniBars, 1) => build_graph::<Option<f64>, MiniBlockLines, W>(opt, writer),
+            (GraphKind::MiniBars, 2) => {
+                build_graph::<[Option<f64>; 2], MiniBlockLines, W>(opt, writer)
+            }
+            // (GraphKind::MiniBars, n) => build_graph::<Vec<Option<f64>>, MiniBlockLines, W>(opt, writer),
+            (GraphKind::Columns, 1) => build_graph::<Option<f64>, BlockColumns, W>(opt, writer),
+            (GraphKind::MiniColumns, 1) => {
+                build_graph::<Option<f64>, MiniBlockColumns, W>(opt, writer)
+            }
+            (GraphKind::MiniColumns, 2) => {
+                build_graph::<[Option<f64>; 2], MiniBlockColumns, W>(opt, writer)
+            }
+            (GraphKind::BrailleBars, 1) => build_graph::<Option<f64>, BrailleLines, W>(opt, writer),
+            (GraphKind::BrailleBars, 2) => {
+                build_graph::<[Option<f64>; 2], BrailleLines, W>(opt, writer)
+            }
+            (GraphKind::BrailleColumns, 1) => {
+                build_graph::<Option<f64>, BrailleColumns, W>(opt, writer)
+            }
+            (GraphKind::BrailleColumns, 2) => {
+                build_graph::<[Option<f64>; 2], BrailleColumns, W>(opt, writer)
+            }
+            (GraphKind::BrailleColumns, _) => {
+                build_graph::<Vec<Option<f64>>, BrailleColumns, W>(opt, writer)
+            }
+            _ => todo!(),
         }
-        (GraphKind::BrailleBars, 1) => build_graph::<Option<f64>, BrailleLines, W>(opt, writer),
-        (GraphKind::BrailleBars, 2) => {
-            build_graph::<[Option<f64>; 2], BrailleLines, W>(opt, writer)
-        }
-        (GraphKind::BrailleColumns, 1) => {
-            build_graph::<Option<f64>, BrailleColumns, W>(opt, writer)
-        }
-        (GraphKind::BrailleColumns, 2) => {
-            build_graph::<[Option<f64>; 2], BrailleColumns, W>(opt, writer)
-        }
-        _ => todo!(),
     }
 }
 

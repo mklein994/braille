@@ -6,9 +6,42 @@ pub use lines::Lines;
 
 use crate::GraphStyle;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Char {
     inner: u8,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+struct RawChar {
+    inner: [[bool; 2]; 4],
+}
+
+impl From<Char> for RawChar {
+    fn from(value: Char) -> Self {
+        Self {
+            inner: value.as_dot_pairs(),
+        }
+    }
+}
+
+impl From<RawChar> for Char {
+    fn from(value: RawChar) -> Self {
+        Char::new(value.inner)
+    }
+}
+
+impl std::ops::Index<RowCol> for RawChar {
+    type Output = bool;
+
+    fn index(&self, index: RowCol) -> &Self::Output {
+        &self.inner[index.row][index.col]
+    }
+}
+
+impl std::ops::IndexMut<RowCol> for RawChar {
+    fn index_mut(&mut self, index: RowCol) -> &mut Self::Output {
+        &mut self.inner[index.row][index.col]
+    }
 }
 
 impl Char {
@@ -79,8 +112,7 @@ impl Char {
     }
 
     #[must_use]
-    #[cfg(test)]
-    pub fn as_dot_pairs(self) -> [[bool; 2]; 4] {
+    pub fn as_dot_pairs(&self) -> [[bool; 2]; 4] {
         let dots = self.inner;
         [
             [dots & 2_u8.pow(0) != 0, dots & 2_u8.pow(3) != 0],
@@ -88,6 +120,162 @@ impl Char {
             [dots & 2_u8.pow(2) != 0, dots & 2_u8.pow(5) != 0],
             [dots & 2_u8.pow(6) != 0, dots & 2_u8.pow(7) != 0],
         ]
+    }
+
+    #[must_use]
+    pub fn as_dot_quads(&self) -> [[bool; 4]; 2] {
+        let dots = self.inner;
+        [
+            [
+                dots & 2_u8.pow(0) != 0,
+                dots & 2_u8.pow(1) != 0,
+                dots & 2_u8.pow(2) != 0,
+                dots & 2_u8.pow(6) != 0,
+            ],
+            [
+                dots & 2_u8.pow(3) != 0,
+                dots & 2_u8.pow(4) != 0,
+                dots & 2_u8.pow(5) != 0,
+                dots & 2_u8.pow(7) != 0,
+            ],
+        ]
+    }
+}
+
+// impl std::ops::Index<(usize, usize)> for Char {
+//     type Output = bool;
+//
+//     fn index(&self, index: (usize, usize)) -> &Self::Output {
+//         match index {
+//             (0, 0) => &(self.inner & 2_u8.pow(0) != 0),
+//             (0, 1) => &(self.inner & 2_u8.pow(0) != 0),
+//             (0, 2) => &(self.inner & 2_u8.pow(0) != 0),
+//             (0, 3) => &(self.inner & 2_u8.pow(0) != 0),
+//             (1, 0) => &(self.inner & 2_u8.pow(0) != 0),
+//             (1, 1) => &(self.inner & 2_u8.pow(0) != 0),
+//             (1, 2) => &(self.inner & 2_u8.pow(0) != 0),
+//             (1, 3) => &(self.inner & 2_u8.pow(0) != 0),
+//             _ => panic!("Index out of bounds"),
+//         }
+//     }
+// }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct RowCol {
+    row: usize,
+    col: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Coord {
+    x: usize,
+    y: usize,
+}
+
+// impl std::ops::Index<RowCol> for Char {
+//     type Output = bool;
+//
+//     fn index(&self, index: RowCol) -> &Self::Output {
+//         let RowCol { row, col } = index;
+//         match (row, col) {
+//             (0, 0) => &(self.inner & 2_u8.pow(0) != 0),
+//             (0, 1) => &(self.inner & 2_u8.pow(0) != 0),
+//             (0, 2) => &(self.inner & 2_u8.pow(0) != 0),
+//             (0, 3) => &(self.inner & 2_u8.pow(0) != 0),
+//             (1, 0) => &(self.inner & 2_u8.pow(0) != 0),
+//             (1, 1) => &(self.inner & 2_u8.pow(0) != 0),
+//             (1, 2) => &(self.inner & 2_u8.pow(0) != 0),
+//             (1, 3) => &(self.inner & 2_u8.pow(0) != 0),
+//             _ => panic!("Index out of bounds"),
+//         }
+//     }
+// }
+
+// impl std::ops::Index<Coord> for Char {
+//     type Output = bool;
+//
+//     fn index(&self, index: Coord) -> &Self::Output {
+//         self.index(RowCol {
+//             row: index.y,
+//             col: index.x,
+//         })
+//     }
+// }
+
+impl From<[[bool; 2]; 4]> for Char {
+    fn from(value: [[bool; 2]; 4]) -> Self {
+        Self::new(value)
+    }
+}
+
+impl TryFrom<char> for Char {
+    type Error = anyhow::Error;
+
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        let num = u32::from(value);
+
+        anyhow::ensure!(
+            (0x2800..=0x28ff).contains(&num),
+            "Char is not a valid braille character"
+        );
+
+        Ok(Self {
+            inner: (num - 0x2800).try_into().unwrap(),
+        })
+    }
+}
+
+impl From<u8> for Char {
+    fn from(value: u8) -> Self {
+        Self { inner: value }
+    }
+}
+
+impl std::ops::BitOr for Char {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self {
+            inner: self.inner.bitor(rhs.inner),
+        }
+    }
+}
+
+impl std::ops::BitAnd for Char {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Self {
+            inner: self.inner.bitand(rhs.inner),
+        }
+    }
+}
+
+impl std::ops::BitXor for Char {
+    type Output = Self;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self {
+            inner: self.inner.bitxor(rhs.inner),
+        }
+    }
+}
+
+impl std::ops::BitOrAssign for Char {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.inner.bitor_assign(rhs.inner);
+    }
+}
+
+impl std::ops::BitAndAssign for Char {
+    fn bitand_assign(&mut self, rhs: Self) {
+        self.inner.bitand_assign(rhs.inner);
+    }
+}
+
+impl std::ops::BitXorAssign for Char {
+    fn bitxor_assign(&mut self, rhs: Self) {
+        self.inner.bitxor_assign(rhs.inner);
     }
 }
 
@@ -98,6 +286,24 @@ impl std::fmt::Display for Char {
         } else {
             self.as_char().fmt(f)
         }
+    }
+}
+
+struct Chars {
+    inner: Vec<Vec<Char>>,
+}
+
+impl std::fmt::Display for Chars {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for row in &self.inner {
+            for column in row {
+                write!(f, "{column}")?;
+            }
+
+            writeln!(f)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -217,5 +423,34 @@ pub trait Brailleish<const DOTS_PER_VALUE: usize> {
         );
         let slope = f64::from(max - min) / (maximum - minimum);
         min + (slope * (value - minimum)).round() as u16
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_chars_list() {
+        let input = "\
+⠀⡈⡔⠉⠄⠀⠀⠐⠁⠀⠀⠠⠉⠑⣑⠊⠡⠀⠀⠀⠌⡀⠀⠀⠀⠀
+⠀⠠⠀⠀⠈⠀⠀⡀⠈⠀⠠⠁⠀⠈⡠⡀⠀⢁⠀⠀⠀⠀⠀⠀⠀⠀
+⠠⠄⠈⠀⠀⠁⠀⠀⠀⡀⠂⠀⠀⣀⠀⠂⠀⠀⡀⠈⠀⠠⠀⠀⠀⠀
+⢂⠀⠀⠀⠀⠈⢀⠀⠀⠐⠀⠀⠀⡀⠀⢈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠄
+⡐⠀⠀⠂⠀⠀⠂⠀⠀⠂⠀⠀⠀⠀⠀⠀⠁⠀⠈⠂⠀⠀⠀⠀⠠⠀
+⠀⠂⠀⠀⠀⠀⠠⠀⠐⠐⠀⠀⠘⠀⠀⠀⠈⡀⠀⠂⠀⠀⠁⠀⠄⠆
+⠀⠐⠀⠠⠀⠀⠂⠄⠁⠀⠀⠀⠂⠀⠀⠀⠂⢀⠠⠠⠀⠀⠀⠠⠠⠀
+⠀⠀⠂⠀⠀⠀⠀⣈⠀⠀⠄⠐⠄⠀⠀⠀⠀⠀⡀⠀⠄⠀⠐⠄⢄⠀
+⠀⠀⠈⡀⠄⠐⠠⠀⠄⠀⠀⠂⠀⠀⠀⠀⠐⠀⠤⠀⠠⠀⡐⠠⠀⠀
+⠀⠀⠀⠐⢄⡤⠁⠀⠐⣀⠜⡐⠀⠀⠀⠀⠀⢄⠀⠡⣀⠶⡠⢃⠂⠀";
+
+        let char_list = input
+            .lines()
+            .map(|line| line.chars().map(|c| Char::try_from(c).unwrap()).collect())
+            .collect();
+
+        let chars = Chars { inner: char_list };
+
+        insta::assert_display_snapshot!(chars);
     }
 }

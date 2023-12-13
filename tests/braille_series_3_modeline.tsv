@@ -1,0 +1,1 @@
+"braille -c -sl -p2 10", (range(-8 * math::pi; 8 * math::pi) | [(. / 5 | cos), (. / 4 | sin), (. / 2 | sin)] | @tsv)

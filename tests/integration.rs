@@ -373,3 +373,16 @@ fn braille_columns_odd_number_of_values() {
     insta::assert_snapshot!(stdout);
     assert!(stderr.is_empty());
 }
+
+#[test]
+fn braille_3_values_per_line() {
+    let (stdout, stderr) = util::get_output_from_str(
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/braille_series_3_modeline.txt"
+        )),
+        ["-m"],
+    );
+    insta::assert_snapshot!(stdout);
+    insta::assert_snapshot!(stderr);
+}

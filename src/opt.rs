@@ -16,7 +16,7 @@ impl fmt::Display for GraphRangeBound {
 
 #[derive(Debug, Copy, Clone, Default)]
 #[cfg_attr(test, derive(PartialEq))]
-struct GraphRange {
+pub struct GraphRange {
     min: GraphRangeBound,
     max: GraphRangeBound,
 }
@@ -33,11 +33,11 @@ impl GraphRange {
         })
     }
 
-    fn min(&self) -> Option<f64> {
+    pub fn min(&self) -> Option<f64> {
         self.min.0
     }
 
-    fn max(&self) -> Option<f64> {
+    pub fn max(&self) -> Option<f64> {
         self.max.0
     }
 }
@@ -245,13 +245,33 @@ pub struct Opt {
     /// Number of values per line of input
     ///
     /// When the graph kind supports it, each value represents a separate series.
-    #[arg(short, long, default_value_t = 1, value_parser(clap::value_parser!(u8).range(1..=2)))]
+    #[arg(short, long, default_value_t = 1, value_parser(clap::value_parser!(u8).range(1..)))]
     pub per: u8,
 
     /// How the space between multiple series should be handled
     #[arg(short, long, value_enum, default_value_t)]
     pub style: GraphStyle,
 
+    #[arg(short, num_args(0..=2))]
+    pub grid: Option<Vec<usize>>,
+
+    // #[arg(short = 'G', long, num_args(0..=2), allow_hyphen_values = true)]
+    // pub grid_bounds: Option<Vec<GraphRange>>,
+    /// Shorthand for setting -x and -y to the same value
+    ///
+    /// e.g. -G -1:1 is the same as -x -1:1 -y -1:1
+    #[arg(short = 'G', long, allow_hyphen_values = true)]
+    pub grid_bounds: Option<GraphRange>,
+
+    #[arg(short, long, allow_hyphen_values = true)]
+    pub x_bounds: Option<GraphRange>,
+
+    #[arg(short, long, allow_hyphen_values = true)]
+    pub y_bounds: Option<GraphRange>,
+
+    // /// Interpret values as bits in a grid
+    // #[command(subcommand)]
+    // pub commands: Option<GridCommands>,
     /// Interpret arguments from the very first line of the input
     ///
     /// If this is passed, then the first line from standard input should match the following:
@@ -359,6 +379,26 @@ pub struct Opt {
     pub first_line: Option<FirstLine>,
 }
 
+// #[derive(Debug, Subcommand)]
+// pub enum GridCommands {
+//     Coord {
+//         #[arg(allow_hyphen_values = true)]
+//         xmin: f64,
+//
+//         #[arg(allow_hyphen_values = true)]
+//         xmax: f64,
+//
+//         #[arg(allow_hyphen_values = true)]
+//         ymin: f64,
+//
+//         #[arg(allow_hyphen_values = true)]
+//         ymax: f64,
+//
+//         width: Option<usize>,
+//         height: Option<usize>,
+//     },
+// }
+
 #[derive(Debug)]
 pub enum FirstLine {
     ModeLine,
@@ -421,7 +461,7 @@ impl Configurable for Config {
 }
 
 /// Determine the terminal size from the terminal itself if possible, with fallbacks
-fn get_terminal_size() -> anyhow::Result<(u16, u16)> {
+pub fn get_terminal_size() -> anyhow::Result<(u16, u16)> {
     use terminal_size::{Height, Width};
 
     if let Some((Width(width), Height(height))) = terminal_size::terminal_size() {
