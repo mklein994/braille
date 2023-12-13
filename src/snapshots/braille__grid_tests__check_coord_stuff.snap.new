@@ -1,0 +1,8 @@
+---
+source: src/lib.rs
+assertion_line: 464
+expression: actual_img
+---
+⠀⠀⡠⠊
+⡠⠊⠀⠀
+

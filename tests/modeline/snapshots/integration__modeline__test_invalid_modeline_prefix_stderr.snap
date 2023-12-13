@@ -6,7 +6,7 @@ Error: error: Invalid modeline: "braile -r -3:4 4"
 
 The first line should be the string "braille", followed by spaced separated options
 
-Usage: braille [OPTIONS] [SIZE]
+Usage: braille [OPTIONS] [SIZE] [COMMAND]
 
 For more information, try '--help'.
 

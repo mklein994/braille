@@ -87,9 +87,9 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
         lines: ValueIter<[Option<f64>; N]>,
         writer: LineWriter<W>,
     ) -> anyhow::Result<()> {
-        let minimum = <Self as Graphable<Option<f64>, Config>>::minimum(self);
-        let maximum = <Self as Graphable<Option<f64>, Config>>::maximum(self);
-        let style = <Self as Graphable<Option<f64>, Config>>::style(self);
+        let minimum = <Self as Graphable<[Option<f64>; N], Config>>::minimum(self);
+        let maximum = <Self as Graphable<[Option<f64>; N], Config>>::maximum(self);
+        let style = <Self as Graphable<[Option<f64>; N], Config>>::style(self);
         let height = <Self as ColumnGraphable<[Option<f64>; N]>>::height(self);
 
         let min = 1;
@@ -118,6 +118,70 @@ impl<const N: usize> Graphable<[Option<f64>; N]> for Columns {
                         .unwrap()
                 }) {
                     column[i] = Self::into_dot_quads_from_array::<N>(value, style);
+                }
+            }
+
+            column_quads.push(column);
+        }
+
+        Self::into_braille_rows(writer, &column_quads, usize::from(height))?;
+
+        Ok(())
+    }
+}
+
+impl ColumnGraphable<Vec<Option<f64>>> for Columns {}
+impl Graphable<Vec<Option<f64>>> for Columns {
+    fn config(&self) -> &Config {
+        &self.config
+    }
+
+    fn print_graph<W: Write>(
+        &self,
+        lines: ValueIter<Vec<Option<f64>>>,
+        writer: LineWriter<W>,
+    ) -> anyhow::Result<()> {
+        let minimum = <Self as Graphable<Vec<Option<f64>>, Config>>::minimum(self);
+        let maximum = <Self as Graphable<Vec<Option<f64>>, Config>>::maximum(self);
+        let style = <Self as Graphable<Vec<Option<f64>>, Config>>::style(self);
+        let height = <Self as ColumnGraphable<Vec<Option<f64>>>>::height(self);
+        // assert!(
+        //     matches!(style, GraphStyle::Line),
+        //     "Only line style is supported for graphs with more than 2 series"
+        // );
+
+        let min = 1;
+        let max = height * 4;
+        let scale = |value: f64| Self::scale(value, minimum, maximum, min, max);
+
+        let zero = if minimum > 0. {
+            min
+        } else if maximum < 0. {
+            max
+        } else {
+            scale(0.)
+        };
+
+        let mut input_lines = lines.into_iter();
+
+        let mut column_quads = vec![];
+
+        loop {
+            let left = input_lines.next();
+            let right = input_lines.next();
+            if left.is_none() {
+                break;
+            }
+
+            let mut column = [vec![], vec![]];
+            for (i, side) in [left, right].into_iter().enumerate() {
+                if let Some(value) = side.transpose()?.map(|input_line_value| {
+                    input_line_value
+                        .into_iter()
+                        .filter_map(|x| x.map(scale))
+                        .collect::<Vec<_>>()
+                }) {
+                    column[i] = Self::into_dot_quads_from_array_multiple(&value, zero, style);
                 }
             }
 
@@ -196,6 +260,71 @@ impl Columns {
                 iter.push(true);
             } else {
                 iter.push(filled);
+            }
+        }
+
+        let chunks = iter.chunks_exact(4);
+        let mut tip = chunks.remainder().to_vec();
+        let mut column: Vec<[bool; 4]> = chunks
+            .into_iter()
+            .map(|chunk| chunk.try_into().unwrap())
+            .collect();
+        if !tip.is_empty() {
+            tip.resize(4, false);
+            column.push(tip.try_into().unwrap());
+        }
+
+        column
+    }
+
+    fn into_dot_quads_from_array_multiple(
+        line_set: &[u16],
+        zero: u16,
+        style: GraphStyle,
+    ) -> Vec<[bool; 4]> {
+        if line_set.is_empty() {
+            return vec![];
+        }
+
+        let line_set = line_set.to_vec();
+        let end = *line_set.iter().max().unwrap();
+
+        let line_chunks = line_set.chunks_exact(2);
+        let remainder = line_chunks.remainder().to_vec();
+
+        let mut iter = vec![false; end.into()];
+
+        for chunk in line_chunks {
+            let start = chunk[0];
+            let end = chunk[1];
+
+            let (start, end) = if start <= end {
+                (start, end)
+            } else {
+                (end, start)
+            };
+
+            for i in 0..end {
+                let index = usize::from(i);
+                if i == start - 1 || i == end - 1 {
+                    iter[index] = true;
+                }
+
+                if i >= zero {
+                    iter[index] |= matches!(style, GraphStyle::Auto);
+                }
+
+                if i >= start && i < end {
+                    iter[index] |= matches!(style, GraphStyle::Filled);
+                }
+            }
+        }
+
+        for value in remainder {
+            iter[usize::from(value) - 1] = true;
+
+            for i in zero..value {
+                iter[usize::from(i)] |= matches!(style, GraphStyle::Auto);
             }
         }
 

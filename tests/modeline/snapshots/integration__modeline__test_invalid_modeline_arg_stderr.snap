@@ -6,7 +6,7 @@ error: unexpected argument '--foo' found
 
   tip: to pass '--foo' as a value, use '-- --foo'
 
-Usage: braille [OPTIONS] [SIZE]
+Usage: braille [OPTIONS] [SIZE] [COMMAND]
 
 For more information, try '--help'.
 
