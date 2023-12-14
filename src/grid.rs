@@ -265,10 +265,10 @@ mod grid_tests {
              true, false, false, false, false, false, false, false,
         ];
 
-        assert_eq!(0., points.bounds.x.min);
-        assert_eq!(7., points.bounds.x.max);
-        assert_eq!(-3., points.bounds.y.min);
-        assert_eq!(4., points.bounds.y.max);
+        assert!((points.bounds.x.min - 0.).abs() < f64::EPSILON);
+        assert!((points.bounds.x.max - 7.).abs() < f64::EPSILON);
+        assert!((points.bounds.y.min - -3.).abs() < f64::EPSILON);
+        assert!((points.bounds.y.max - 4.).abs() < f64::EPSILON);
 
         let dots = grid.into_dots();
         assert_eq!(expected, dots);
