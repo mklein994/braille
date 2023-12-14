@@ -1,5 +1,5 @@
-use crate::{InputLine, InputLineSinglable, InputLines, LineResult};
 use crate::util;
+use crate::{InputLine, InputLineSinglable, InputLines, LineResult};
 use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
 use std::{fmt, str::FromStr};
 
