@@ -22,6 +22,13 @@ pub fn get_terminal_size() -> anyhow::Result<(u16, u16)> {
 /// Scale a value from one range into another
 #[must_use]
 pub fn scale(value: f64, i_min: f64, i_max: f64, f_min: f64, f_max: f64) -> f64 {
+    debug_assert!(i_min < i_max, "i_min < i_max failed: {i_min} < {i_max}");
+    debug_assert!(f_min < f_max, "f_min < f_max failed: {f_min} < {f_max}");
+    debug_assert!(
+        value >= i_min && value <= i_max,
+        "value out of bounds: {value} [{i_min}, {i_max}]"
+    );
+
     let slope = (f_max - f_min) / (i_max - i_min);
     f_min + (slope * (value - i_min))
 }
