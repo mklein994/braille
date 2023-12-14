@@ -1,8 +1,7 @@
-use std::{fmt, str::FromStr};
-
-use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
-
 use crate::{InputLine, InputLineSinglable, InputLines, LineResult};
+use crate::util;
+use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
+use std::{fmt, str::FromStr};
 
 #[derive(Debug, Copy, Clone, Default)]
 #[cfg_attr(test, derive(PartialEq))]
@@ -460,27 +459,6 @@ impl Configurable for Config {
     }
 }
 
-/// Determine the terminal size from the terminal itself if possible, with fallbacks
-pub fn get_terminal_size() -> anyhow::Result<(u16, u16)> {
-    use terminal_size::{Height, Width};
-
-    if let Some((Width(width), Height(height))) = terminal_size::terminal_size() {
-        Ok((width, height))
-    } else {
-        use std::env::VarError;
-
-        let parse_from_environment = |name, fallback| match std::env::var(name) {
-            Ok(value) => Ok(value.parse()?),
-            Err(VarError::NotPresent) => Ok(fallback),
-            Err(err) => Err(anyhow::Error::from(err)),
-        };
-
-        let width = parse_from_environment("COLUMNS", 80)?;
-        let height = parse_from_environment("LINES", 24)?;
-        Ok((width, height))
-    }
-}
-
 impl Opt {
     /// Parse options
     ///
@@ -523,7 +501,7 @@ impl Opt {
 
         // If the graph size isn't already set, try detecting it from the environment
         if opt.size.is_none() {
-            let (width, height) = get_terminal_size()?;
+            let (width, height) = util::get_terminal_size()?;
 
             let size = match opt.kind().orientation() {
                 Orientation::Horizontal => width,

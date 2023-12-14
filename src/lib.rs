@@ -2,6 +2,7 @@ pub mod graph;
 mod grid;
 mod input;
 mod opt;
+pub mod util;
 
 use std::io::prelude::*;
 use std::io::LineWriter;

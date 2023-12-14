@@ -1,3 +1,4 @@
+use crate::util;
 use braillefb::Framebuffer;
 use std::collections::HashMap;
 use std::io::{LineWriter, Write};
@@ -177,11 +178,6 @@ struct GridCoords {
     inner: HashMap<(usize, usize), bool>,
 }
 
-fn scale(value: f64, i_min: f64, i_max: f64, f_min: f64, f_max: f64) -> f64 {
-    let slope = (f_max - f_min) / (i_max - i_min);
-    f_min + (slope * (value - i_min))
-}
-
 impl GridCoords {
     pub fn new(width: usize, height: usize) -> Self {
         let mut inner = HashMap::with_capacity(width * height);
@@ -216,11 +212,11 @@ impl GridCoords {
         for (x, y) in points {
             #[rustfmt::skip]
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
-            let px = scale(*x, points.bounds.x.min, points.bounds.x.max, 0., (self.width - 1) as f64).round() as usize;
+            let px = util::scale(*x, points.bounds.x.min, points.bounds.x.max, 0., (self.width - 1) as f64).round() as usize;
 
             #[rustfmt::skip]
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
-            let py = scale(*y, points.bounds.y.min, points.bounds.y.max, 0., (self.height - 1) as f64).round() as usize;
+            let py = util::scale(*y, points.bounds.y.min, points.bounds.y.max, 0., (self.height - 1) as f64).round() as usize;
 
             // let point = Point::new(px, py);
             self.inner.entry((px, py)).and_modify(|e| *e = true);
@@ -274,7 +270,7 @@ impl GridCoords {
 pub fn print_graph<W: Write>(opt: crate::Opt, mut writer: LineWriter<W>) -> anyhow::Result<()> {
     let grid = opt.grid.unwrap();
     let (width, height) = if grid.is_empty() {
-        let (width, height) = crate::opt::get_terminal_size()
+        let (width, height) = crate::util::get_terminal_size()
             .map(|(w, h)| (usize::from(w) * 2, usize::from(h) * 4))?;
         let square = width.min(height);
         (square, square)
