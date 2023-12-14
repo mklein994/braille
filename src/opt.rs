@@ -273,9 +273,6 @@ pub struct Opt {
     #[arg(short, long, allow_hyphen_values = true)]
     pub y_bounds: Option<GraphRange>,
 
-    // /// Interpret values as bits in a grid
-    // #[command(subcommand)]
-    // pub commands: Option<GridCommands>,
     /// Interpret arguments from the very first line of the input
     ///
     /// If this is passed, then the first line from standard input should match the following:
@@ -382,26 +379,6 @@ pub struct Opt {
     #[arg(skip)]
     pub first_line: Option<FirstLine>,
 }
-
-// #[derive(Debug, Subcommand)]
-// pub enum GridCommands {
-//     Coord {
-//         #[arg(allow_hyphen_values = true)]
-//         xmin: f64,
-//
-//         #[arg(allow_hyphen_values = true)]
-//         xmax: f64,
-//
-//         #[arg(allow_hyphen_values = true)]
-//         ymin: f64,
-//
-//         #[arg(allow_hyphen_values = true)]
-//         ymax: f64,
-//
-//         width: Option<usize>,
-//         height: Option<usize>,
-//     },
-// }
 
 #[derive(Debug)]
 pub enum FirstLine {
