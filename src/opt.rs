@@ -251,6 +251,11 @@ pub struct Opt {
     #[arg(short, long, value_enum, default_value_t)]
     pub style: GraphStyle,
 
+    /// Determine the dimensions of the braille grid in dots (width and height)
+    ///
+    /// Passing no arguments means the smaller of either width or height will be used (to make it
+    /// square without cropping or stretching). Respects --use-full-default-height. If one value is
+    /// passed, it's interpreted as both width and height.
     #[arg(short, num_args(0..=2))]
     pub grid: Option<Vec<usize>>,
 
