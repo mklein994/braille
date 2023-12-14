@@ -55,7 +55,7 @@ impl CartesianBoundsBuilder {
     }
 
     // TODO: refactor this into structs and stuff
-    fn build_with_list(self, list: &[(f64, f64)]) -> CartesianBounds {
+    fn build_with_list(self, list: &[Point]) -> CartesianBounds {
         let mut x_min = self
             .x_min
             .map_or((f64::MAX, false, false), |n| (n, true, false));
@@ -79,7 +79,7 @@ impl CartesianBoundsBuilder {
             }
         };
 
-        for (x, y) in list {
+        for Point { x, y } in list {
             maybe_update(&mut x_min, *x);
             maybe_update(&mut x_max, *x);
             maybe_update(&mut y_min, *y);
@@ -98,7 +98,7 @@ impl CartesianBounds {
         CartesianBoundsBuilder::default()
     }
 
-    fn new(list: &[(f64, f64)]) -> Self {
+    fn new(list: &[Point]) -> Self {
         let CartesianBound {
             min: mut x_min,
             max: mut x_max,
@@ -107,7 +107,7 @@ impl CartesianBounds {
             min: mut y_min,
             max: mut y_max,
         } = CartesianBound::default();
-        for (x, y) in list {
+        for Point { x, y } in list {
             x_min = x_min.min(*x);
             x_max = x_max.max(*x);
             y_min = y_min.min(*y);
@@ -132,18 +132,18 @@ impl CartesianBounds {
 
 struct CartesianCoords {
     bounds: CartesianBounds,
-    inner: Vec<(f64, f64)>,
+    inner: Vec<Point>,
 }
 
 impl CartesianCoords {
-    fn new_with_bounds(list: Vec<(f64, f64)>, bounds: CartesianBounds) -> Self {
+    fn new_with_bounds(list: Vec<Point>, bounds: CartesianBounds) -> Self {
         Self {
             inner: list,
             bounds,
         }
     }
 
-    fn new(list: Vec<(f64, f64)>) -> Self {
+    fn new(list: Vec<Point>) -> Self {
         let bounds = CartesianBounds::new(&list);
         Self {
             inner: list,
@@ -152,8 +152,8 @@ impl CartesianCoords {
     }
 }
 
-impl FromIterator<(f64, f64)> for CartesianCoords {
-    fn from_iter<T: IntoIterator<Item = (f64, f64)>>(iter: T) -> Self {
+impl FromIterator<Point> for CartesianCoords {
+    fn from_iter<T: IntoIterator<Item = Point>>(iter: T) -> Self {
         let list = iter.into_iter().collect::<Vec<_>>();
         Self {
             bounds: CartesianBounds::new(&list),
@@ -163,9 +163,9 @@ impl FromIterator<(f64, f64)> for CartesianCoords {
 }
 
 impl<'a> IntoIterator for &'a CartesianCoords {
-    type Item = &'a (f64, f64);
+    type Item = &'a Point;
 
-    type IntoIter = std::slice::Iter<'a, (f64, f64)>;
+    type IntoIter = std::slice::Iter<'a, Point>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.iter()
@@ -175,7 +175,7 @@ impl<'a> IntoIterator for &'a CartesianCoords {
 struct GridCoords {
     width: usize,
     height: usize,
-    inner: HashMap<(usize, usize), bool>,
+    inner: HashMap<Pixel, bool>,
 }
 
 impl GridCoords {
@@ -183,8 +183,8 @@ impl GridCoords {
         let mut inner = HashMap::with_capacity(width * height);
         for y in 0..height {
             for x in 0..width {
-                // let point = Point::new(x, y);
-                inner.insert((x, y), false);
+                let pixel = Pixel::new(x, y);
+                inner.insert(pixel, false);
             }
         }
 
@@ -198,74 +198,60 @@ impl GridCoords {
     }
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
-struct Point(usize, usize);
+#[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
+struct Point {
+    x: f64,
+    y: f64,
+}
 
 impl Point {
+    fn new(x: f64, y: f64) -> Self {
+        Self { x, y }
+    }
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+struct Pixel {
+    x: usize,
+    y: usize,
+}
+
+impl Pixel {
     fn new(x: usize, y: usize) -> Self {
-        Self(x, y)
+        Self { x, y }
     }
 }
 
 impl GridCoords {
     fn set_points(&mut self, points: &CartesianCoords) {
-        for (x, y) in points {
+        for point in points {
             #[rustfmt::skip]
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
-            let px = util::scale(*x, points.bounds.x.min, points.bounds.x.max, 0., (self.width - 1) as f64).round() as usize;
+            let px = util::scale(point.x, points.bounds.x.min, points.bounds.x.max, 0., (self.width - 1) as f64).round() as usize;
 
             #[rustfmt::skip]
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
-            let py = util::scale(*y, points.bounds.y.min, points.bounds.y.max, 0., (self.height - 1) as f64).round() as usize;
+            let py = util::scale(point.y, points.bounds.y.min, points.bounds.y.max, 0., (self.height - 1) as f64).round() as usize;
 
-            // let point = Point::new(px, py);
-            self.inner.entry((px, py)).and_modify(|e| *e = true);
+            let point = Pixel::new(px, py);
+            self.inner.entry(point).and_modify(|e| *e = true);
         }
     }
 }
-
-// impl IntoIterator for GridCoords {
-//     type Item = bool;
-//
-//     type IntoIter = std::vec::IntoIter<Self::Item>;
-//
-//     fn into_iter(self) -> Self::IntoIter {
-//         let mut bits = Vec::with_capacity(self.width * self.height);
-//         for y in (0..self.height).rev() {
-//             for x in 0..self.width {
-//                 // let point = Point::new(x, y);
-//                 bits.push(self.inner.get(&(x, y)).copied().unwrap_or_default());
-//             }
-//         }
-//
-//         bits.into_iter()
-//     }
-// }
 
 impl GridCoords {
     pub fn into_dots(self) -> Vec<bool> {
         let mut dots = Vec::with_capacity(self.width * self.height);
         for y in (0..self.height).rev() {
             for x in 0..self.width {
-                // let point = Point::new(x, y);
-                dots.push(self.inner.get(&(x, y)).copied().unwrap_or_default());
+                let pixel = Pixel::new(x, y);
+                dots.push(self.inner.get(&pixel).copied().unwrap_or_default());
             }
         }
 
         dots
     }
 }
-
-// impl GridCoords {
-//     fn iter(&self) -> impl Iterator<Item = &bool> {
-//         (0..self.height).rev().flat_map(move |y| {
-//             (0..self.width).map(move |x| match self.inner.get(&Point::new(x, y)) {
-//                 Some(thing) => thing,
-//                 None => &false,
-//             })
-//         })
-//     }
-// }
 
 pub fn print_graph<W: Write>(opt: crate::Opt, mut writer: LineWriter<W>) -> anyhow::Result<()> {
     let grid = opt.grid.unwrap();
@@ -282,11 +268,11 @@ pub fn print_graph<W: Write>(opt: crate::Opt, mut writer: LineWriter<W>) -> anyh
 
     let (width, height) = (width, height);
 
-    let mut coords: Vec<(f64, f64)> = vec![];
+    let mut coords: Vec<Point> = vec![];
     for line in std::io::stdin().lines() {
         let line = line?;
         let (x, y) = line.split_once(|c: char| c.is_ascii_whitespace()).unwrap();
-        coords.push((x.parse()?, y.parse()?));
+        coords.push(Point::new(x.parse()?, y.parse()?));
     }
 
     let coords = if opt.grid_bounds.or(opt.x_bounds).or(opt.y_bounds).is_some() {
@@ -404,6 +390,7 @@ mod grid_tests {
             (7., 4.),
         ]
         .into_iter()
+        .map(|(x, y)| Point::new(x, y))
         .collect::<CartesianCoords>();
         grid.set_points(&coords);
 
@@ -446,13 +433,20 @@ mod grid_tests {
     #[test]
     fn check_multiple_waves() {
         let mut grid = GridCoords::new(26 * 2 - 1, 10 * 4);
-        let series_1 = get_values().into_iter().map(|x| (x, f64::cos(x / 5.)));
-        let series_2 = get_values().into_iter().map(|x| (x, f64::sin(x / 4.)));
-        let series_3 = get_values().into_iter().map(|x| (x, f64::sin(x / 2.)));
+        let series_1 = get_values()
+            .into_iter()
+            .map(|x| Point::new(x, f64::cos(x / 5.)));
+        let series_2 = get_values()
+            .into_iter()
+            .map(|x| Point::new(x, f64::sin(x / 4.)));
+        let series_3 = get_values()
+            .into_iter()
+            .map(|x| Point::new(x, f64::sin(x / 2.)));
         let mut series = series_1
             .chain(series_2)
             .chain(series_3)
-            .collect::<CartesianCoords>();
+            .collect::<Vec<_>>();
+        let coords = CartesianCoords::new_with_bounds(series, CartesianBounds::new())
         series.bounds.x.min = -8. * std::f64::consts::PI;
         series.bounds.x.max = 8. * std::f64::consts::PI;
         series.bounds.y.min = -1.;
