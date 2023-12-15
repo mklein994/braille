@@ -259,8 +259,6 @@ pub struct Opt {
     #[arg(short, num_args(0..=2))]
     pub grid: Option<Vec<usize>>,
 
-    // #[arg(short = 'G', long, num_args(0..=2), allow_hyphen_values = true)]
-    // pub grid_bounds: Option<Vec<GraphRange>>,
     /// Shorthand for setting -x and -y to the same value
     ///
     /// e.g. -G -1:1 is the same as -x -1:1 -y -1:1
