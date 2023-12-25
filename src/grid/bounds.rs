@@ -1,5 +1,6 @@
 use super::Point;
 
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct CartesianBound {
     pub min: f64,
     pub max: f64,
@@ -21,6 +22,7 @@ impl Default for CartesianBound {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct CartesianBounds {
     pub x: CartesianBound,
     pub y: CartesianBound,
@@ -144,5 +146,31 @@ impl CartesianBounds {
             x: CartesianBound::new(x_min, x_max),
             y: CartesianBound::new(y_min, y_max),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bound_builder() {
+        let points: Vec<Point> = [(-3., 1.), (-2., 2.), (-1., 3.), (0., 4.), (1., 5.)]
+            .into_iter()
+            .map(Point::from)
+            .collect();
+
+        let expected = CartesianBounds {
+            x: CartesianBound { min: -3., max: 1. },
+            y: CartesianBound { min: 1., max: 5. },
+        };
+
+        let actual = CartesianBounds::new(-3., 1., 1., 5.);
+        assert_eq!(expected, actual);
+
+        let builder = CartesianBounds::builder();
+        let dynamic_actual = builder.update_from_points(&points);
+
+        assert_eq!(expected, dynamic_actual);
     }
 }

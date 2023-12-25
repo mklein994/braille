@@ -121,6 +121,12 @@ impl Point {
     }
 }
 
+impl From<(f64, f64)> for Point {
+    fn from(value: (f64, f64)) -> Self {
+        Self::new(value.0, value.1)
+    }
+}
+
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
 struct Dot {
     x: usize,
