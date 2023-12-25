@@ -5,7 +5,7 @@ use braillefb::Framebuffer;
 use std::collections::HashMap;
 use std::io::{LineWriter, Write};
 
-use self::bounds::{CartesianBound, CartesianBounds};
+use bounds::{CartesianBound, CartesianBounds};
 
 struct CartesianPoints {
     bounds: CartesianBounds,
@@ -56,27 +56,6 @@ impl FromIterator<Point> for CartesianPoints {
     }
 }
 
-impl<'a> FromIterator<&'a Point> for CartesianBounds {
-    fn from_iter<T: IntoIterator<Item = &'a Point>>(iter: T) -> Self {
-        let CartesianBound {
-            min: mut x_min,
-            max: mut x_max,
-        } = CartesianBound::default();
-        let CartesianBound {
-            min: mut y_min,
-            max: mut y_max,
-        } = CartesianBound::default();
-        for point in iter {
-            x_min = x_min.min(point.x);
-            x_max = x_max.max(point.x);
-            y_min = y_min.min(point.y);
-            y_max = y_max.max(point.y);
-        }
-
-        Self::new(x_min, x_max, y_min, y_max)
-    }
-}
-
 impl<'a> IntoIterator for &'a CartesianPoints {
     type Item = &'a Point;
 
@@ -84,6 +63,16 @@ impl<'a> IntoIterator for &'a CartesianPoints {
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.iter()
+    }
+}
+
+impl IntoIterator for CartesianPoints {
+    type Item = Point;
+
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.into_iter()
     }
 }
 
@@ -109,7 +98,7 @@ impl GridDots {
     }
 }
 
-#[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
+#[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
 struct Point {
     x: f64,
     y: f64,

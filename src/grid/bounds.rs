@@ -149,6 +149,27 @@ impl CartesianBounds {
     }
 }
 
+impl<'a> FromIterator<&'a Point> for CartesianBounds {
+    fn from_iter<T: IntoIterator<Item = &'a Point>>(iter: T) -> Self {
+        let CartesianBound {
+            min: mut x_min,
+            max: mut x_max,
+        } = CartesianBound::default();
+        let CartesianBound {
+            min: mut y_min,
+            max: mut y_max,
+        } = CartesianBound::default();
+        for point in iter {
+            x_min = x_min.min(point.x);
+            x_max = x_max.max(point.x);
+            y_min = y_min.min(point.y);
+            y_max = y_max.max(point.y);
+        }
+
+        Self::new(x_min, x_max, y_min, y_max)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
