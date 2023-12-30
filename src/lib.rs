@@ -1,5 +1,5 @@
 pub mod graph;
-mod grid;
+pub mod grid;
 mod input;
 mod opt;
 pub mod util;
@@ -22,7 +22,7 @@ pub use opt::{GraphKind, GraphStyle, Opt};
 /// Main entry point for the program
 pub fn run<W: Write>(opt: Opt, writer: LineWriter<W>) -> anyhow::Result<()> {
     if opt.grid.is_some() {
-        grid::print_graph(opt, writer)
+        grid::print_graph(opt, std::io::stdin().lock(), writer)
     } else {
         match (opt.kind(), opt.per) {
             (GraphKind::Bars, 1) => build_graph::<Option<f64>, BlockBars, W>(opt, writer),

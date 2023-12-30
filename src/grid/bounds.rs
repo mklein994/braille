@@ -118,7 +118,7 @@ impl CartesianBoundsBuilder {
         self.y_max.value = max;
     }
 
-    pub fn update_from_points(self, points: &[Point]) -> CartesianBounds {
+    pub fn build_from_points(self, points: &[Point]) -> CartesianBounds {
         let Self {
             mut x_min,
             mut x_max,
@@ -190,7 +190,7 @@ mod tests {
         assert_eq!(expected, actual);
 
         let builder = CartesianBounds::builder();
-        let dynamic_actual = builder.update_from_points(&points);
+        let dynamic_actual = builder.build_from_points(&points);
 
         assert_eq!(expected, dynamic_actual);
     }

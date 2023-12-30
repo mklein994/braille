@@ -257,7 +257,7 @@ pub struct Opt {
     /// square without cropping or stretching). Respects --use-full-default-height. If one value is
     /// passed, it's interpreted as both width and height.
     #[arg(short, num_args(0..=2))]
-    pub grid: Option<Vec<usize>>,
+    pub grid: Option<Vec<u16>>,
 
     /// Shorthand for setting -x and -y to the same value
     ///
@@ -449,7 +449,19 @@ impl Opt {
         I: IntoIterator<Item = S>,
         S: Into<std::ffi::OsString> + Clone,
     {
+        Self::try_new_from_reader(&mut std::io::stdin().lock(), args)
+    }
+
+    pub fn try_new_from_reader<I, S>(
+        stdin: &mut impl std::io::BufRead,
+        args: I,
+    ) -> anyhow::Result<Self>
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<std::ffi::OsString> + Clone,
+    {
         let mut opt = Self::parse_from(args);
+        let use_full_default_height = opt.use_full_default_height;
 
         // Parse the modeline if requested
         if opt.modeline {
@@ -458,7 +470,7 @@ impl Opt {
             cmd.build();
 
             let mut first_line = String::new();
-            std::io::stdin().read_line(&mut first_line)?;
+            stdin.read_line(&mut first_line)?;
 
             if let Some(args) = Self::parse_modeline(&mut cmd, first_line.trim())? {
                 let matches = cmd.get_matches_from(args);
@@ -468,6 +480,8 @@ impl Opt {
             } else {
                 opt.first_line = Some(FirstLine::Value(first_line));
             }
+
+            opt.use_full_default_height = use_full_default_height;
         } else {
             opt.first_line = None;
         }

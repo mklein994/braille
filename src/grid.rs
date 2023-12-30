@@ -1,11 +1,14 @@
 mod bounds;
 
 use crate::util;
+use bounds::{CartesianBound, CartesianBounds};
 use braillefb::Framebuffer;
-use std::collections::HashMap;
+// use std::collections::HashMap;
+use std::collections::HashSet;
+// use std::collections::BTreeSet as HashSet;
 use std::io::{LineWriter, Write};
 
-use bounds::{CartesianBound, CartesianBounds};
+type DotUnit = u16;
 
 struct CartesianPoints {
     bounds: CartesianBounds,
@@ -77,24 +80,75 @@ impl IntoIterator for CartesianPoints {
 }
 
 struct GridDots {
-    width: usize,
-    height: usize,
-    inner: HashMap<Dot, bool>,
+    width: DotUnit,
+    height: DotUnit,
+    inner: HashSet<Dot>,
 }
 
 impl GridDots {
-    pub fn new(width: usize, height: usize) -> Self {
-        let inner = (0..height)
-            .flat_map(move |y| (0..width).map(move |x| (Dot::new(x, y), false)))
-            .collect::<HashMap<Dot, bool>>();
+    pub fn new(width: DotUnit, height: DotUnit, capacity: usize) -> Self {
+        // let inner = (0..height)
+        //     .flat_map(move |y| (0..width).map(move |x| (Dot::new(x, y), false)))
+        //     .collect::<HashMap<Dot, bool>>();
+        // let inner = HashSet::with_capacity(usize::from(width) * usize::from(height));
+        // let inner = HashSet::new();
+        let inner = HashSet::with_capacity(capacity);
 
-        debug_assert_eq!(width * height, inner.len());
+        // debug_assert_eq!(usize::try_from(width * height).unwrap(), inner.len());
 
         Self {
             width,
             height,
             inner,
         }
+    }
+
+    pub fn merge_points(&mut self, points: &CartesianPoints) {
+        for point in points {
+            #[allow(
+                clippy::cast_possible_truncation,
+                clippy::cast_sign_loss,
+                clippy::cast_precision_loss
+            )]
+            let x = util::scale(
+                point.x,
+                points.bounds.x.min,
+                points.bounds.x.max,
+                0.,
+                f64::from(self.width - 1),
+            )
+            .round() as DotUnit;
+
+            #[allow(
+                clippy::cast_possible_truncation,
+                clippy::cast_sign_loss,
+                clippy::cast_precision_loss
+            )]
+            let y = util::scale(
+                point.y,
+                points.bounds.y.min,
+                points.bounds.y.max,
+                0.,
+                f64::from(self.height - 1),
+            )
+            .round() as DotUnit;
+
+            let dot = Dot::new(x, y);
+            // self.inner.entry(dand_modify).or_insert(|e| *e = true);
+            self.inner.insert(dot);
+        }
+    }
+
+    pub fn into_dots(self) -> Vec<bool> {
+        let mut dots = Vec::with_capacity(usize::try_from(self.width * self.height).unwrap());
+        for y in (0..self.height).rev() {
+            for x in 0..self.width {
+                let dot = Dot::new(x, y);
+                dots.push(self.inner.contains(&dot));
+            }
+        }
+
+        dots
     }
 }
 
@@ -116,52 +170,31 @@ impl From<(f64, f64)> for Point {
     }
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 struct Dot {
-    x: usize,
-    y: usize,
+    x: DotUnit,
+    y: DotUnit,
 }
 
 impl Dot {
-    fn new(x: usize, y: usize) -> Self {
+    fn new(x: DotUnit, y: DotUnit) -> Self {
         Self { x, y }
     }
 }
 
-impl GridDots {
-    pub fn merge_points(&mut self, points: &CartesianPoints) {
-        for point in points {
-            #[rustfmt::skip]
-            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
-            let x = util::scale(point.x, points.bounds.x.min, points.bounds.x.max, 0., (self.width - 1) as f64).round() as usize;
-
-            #[rustfmt::skip]
-            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
-            let y = util::scale(point.y, points.bounds.y.min, points.bounds.y.max, 0., (self.height - 1) as f64).round() as usize;
-
-            let dot = Dot::new(x, y);
-            self.inner.entry(dot).and_modify(|e| *e = true);
-        }
-    }
-
-    pub fn into_dots(self) -> Vec<bool> {
-        let mut dots = Vec::with_capacity(self.width * self.height);
-        for y in (0..self.height).rev() {
-            for x in 0..self.width {
-                let dot = Dot::new(x, y);
-                dots.push(self.inner.get(&dot).copied().unwrap_or_default());
-            }
-        }
-
-        dots
-    }
-}
-
-pub fn print_graph<W: Write>(opt: crate::Opt, mut writer: LineWriter<W>) -> anyhow::Result<()> {
+pub fn print_graph<W: Write>(
+    opt: crate::Opt,
+    reader: impl std::io::BufRead,
+    mut writer: LineWriter<W>,
+) -> anyhow::Result<()> {
     let grid = opt.grid.unwrap();
     let (width, height) = if grid.is_empty() {
-        let (width, height) = crate::util::get_terminal_size()
-            .map(|(w, h)| (usize::from(w) * 2, usize::from(h) * 4))?;
+        let (width, height) = crate::util::get_terminal_size().map(|(w, h)| {
+            (
+                DotUnit::from(w) * 2,
+                DotUnit::from(h - DotUnit::from(!opt.use_full_default_height)) * 4,
+            )
+        })?;
         let square = width.min(height);
         (square, square)
     } else if grid.len() == 1 {
@@ -171,7 +204,7 @@ pub fn print_graph<W: Write>(opt: crate::Opt, mut writer: LineWriter<W>) -> anyh
     };
 
     let mut points: Vec<Point> = vec![];
-    for line in std::io::stdin().lines() {
+    for line in reader.lines() {
         let line = line?;
         let (x, y) = line.split_once(|c: char| c.is_ascii_whitespace()).unwrap();
         points.push(Point::new(x.parse()?, y.parse()?));
@@ -202,16 +235,16 @@ pub fn print_graph<W: Write>(opt: crate::Opt, mut writer: LineWriter<W>) -> anyh
             builder.y_max(y_max);
         }
 
-        let bounds = builder.update_from_points(&points);
+        let bounds = builder.build_from_points(&points);
         CartesianPoints::new_with_bounds(points, bounds)
     } else {
         CartesianPoints::new(points)
     };
-    let mut grid = GridDots::new(width, height);
+    let mut grid = GridDots::new(width, height, points.inner.len());
     grid.merge_points(&points);
 
     let dots = grid.into_dots();
-    let fb = Framebuffer::new(&dots, width, height);
+    let fb = Framebuffer::new(&dots, width.try_into().unwrap(), height.try_into().unwrap());
 
     write!(writer, "{fb}")?;
 
@@ -233,7 +266,7 @@ mod grid_tests {
         // -- *- -- --
         // -* -- -- --
         // *- -- -- --
-        let mut grid = GridDots::new(4 * 2, 2 * 4);
+        let mut grid = GridDots::new(4 * 2, 2 * 4, 8);
         let points = [
             Point::new(0., -3.),
             Point::new(1., -2.),
@@ -285,7 +318,6 @@ mod grid_tests {
 
     #[test]
     fn check_multiple_waves() {
-        let mut grid = GridDots::new(26 * 2 - 1, 10 * 4);
         let series_1 = get_values()
             .into_iter()
             .map(|x| Point::new(x, f64::cos(x / 5.)));
@@ -305,12 +337,13 @@ mod grid_tests {
                 1.,
             ),
         );
+        let mut grid = GridDots::new(26 * 2 - 1, 10 * 4, points.inner.len());
         grid.merge_points(&points);
 
         let width = grid.width;
         let height = grid.height;
         let grid_values = grid.into_dots();
-        let graph = Framebuffer::new(&grid_values, width, height);
+        let graph = Framebuffer::new(&grid_values, usize::from(width), usize::from(height));
 
         insta::assert_display_snapshot!(graph);
     }
