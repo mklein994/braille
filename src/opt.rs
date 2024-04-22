@@ -575,14 +575,16 @@ The first line should be the string "braille", followed by spaced separated opti
     {
         if self.range.min().and(self.range.max()).is_some() {
             match self.kind() {
-                GraphKind::Bars | GraphKind::BrailleBars | GraphKind::MiniBars => {
-                    Ok(ValueIter::Boundless(input_lines.into_iter()))
-                }
-                GraphKind::Columns | GraphKind::BrailleColumns | GraphKind::MiniColumns => {
-                    Ok(ValueIter::Bounded {
-                        lines: input_lines.into_iter().collect(),
-                    })
-                }
+                GraphKind::Bars
+                | GraphKind::BrailleBars
+                | GraphKind::MiniBars
+                | GraphKind::SextantBars => Ok(ValueIter::Boundless(input_lines.into_iter())),
+                GraphKind::Columns
+                | GraphKind::BrailleColumns
+                | GraphKind::MiniColumns
+                | GraphKind::SextantColumns => Ok(ValueIter::Bounded {
+                    lines: input_lines.into_iter().collect(),
+                }),
             }
         } else {
             let mut lines = vec![];
@@ -716,6 +718,12 @@ pub enum GraphKind {
     /// ```
     #[value(alias = "c")]
     BrailleColumns,
+
+    /// 🬺🬏 Bar graph using sextant (2x3) characters
+    SextantBars,
+
+    /// 🬵▌ Column graph using sextant (2x3) characters
+    SextantColumns,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -728,12 +736,14 @@ impl GraphKind {
     #[must_use]
     pub fn orientation(self) -> Orientation {
         match self {
-            GraphKind::Bars | GraphKind::MiniBars | GraphKind::BrailleBars => {
-                Orientation::Horizontal
-            }
-            GraphKind::Columns | GraphKind::MiniColumns | GraphKind::BrailleColumns => {
-                Orientation::Vertical
-            }
+            GraphKind::Bars
+            | GraphKind::MiniBars
+            | GraphKind::BrailleBars
+            | GraphKind::SextantBars => Orientation::Horizontal,
+            GraphKind::Columns
+            | GraphKind::MiniColumns
+            | GraphKind::BrailleColumns
+            | GraphKind::SextantColumns => Orientation::Vertical,
         }
     }
 }

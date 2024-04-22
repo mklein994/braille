@@ -11,6 +11,7 @@ pub use graph::{
     blocks::{Bars as BlockBars, Columns as BlockColumns},
     braille::{Columns as BrailleColumns, Lines as BrailleLines},
     mini_blocks::{Columns as MiniBlockColumns, Lines as MiniBlockLines},
+    sextants::{Columns as SextantColumns, Lines as SextantBars},
 };
 pub use graph::{BarGraphable, ColumnGraphable, Graphable};
 use input::{
@@ -50,6 +51,17 @@ pub fn run<W: Write>(opt: Opt, writer: LineWriter<W>) -> anyhow::Result<()> {
             }
             (GraphKind::BrailleColumns, _) => {
                 build_graph::<Vec<Option<f64>>, BrailleColumns, W>(opt, writer)
+            }
+
+            (GraphKind::SextantBars, 1) => build_graph::<Option<f64>, SextantBars, W>(opt, writer),
+            (GraphKind::SextantBars, 2) => {
+                build_graph::<[Option<f64>; 2], SextantBars, W>(opt, writer)
+            }
+            (GraphKind::SextantColumns, 1) => {
+                build_graph::<Option<f64>, SextantColumns, W>(opt, writer)
+            }
+            (GraphKind::SextantColumns, 2) => {
+                build_graph::<[Option<f64>; 2], SextantColumns, W>(opt, writer)
             }
             _ => todo!(),
         }

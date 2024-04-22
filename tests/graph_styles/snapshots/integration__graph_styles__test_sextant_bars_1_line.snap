@@ -1,0 +1,21 @@
+---
+source: tests/graph_styles/mod.rs
+expression: stdout
+---
+    🬞🬇🬀
+ 🬞🬇🬁
+🬖🬀  
+▌   
+🬁🬃🬏 
+  🬁🬇🬞
+     🬁🬇🬏
+        🬈🬏
+         ▐
+        🬖🬀
+     🬞🬇🬁
+   🬏🬅
+🬞🬇🬀 
+🬔   
+🬈🬏  
+ 🬁🬇🬏
+    🬀🬃🬏
