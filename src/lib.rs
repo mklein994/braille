@@ -11,6 +11,7 @@ pub use graph::{
     blocks::{Bars as BlockBars, Columns as BlockColumns},
     braille::{Columns as BrailleColumns, Lines as BrailleLines},
     mini_blocks::{Columns as MiniBlockColumns, Lines as MiniBlockLines},
+    octants::{Columns as OctantColumns, Lines as OctantBars},
     sextants::{Columns as SextantColumns, Lines as SextantBars},
 };
 pub use graph::{BarGraphable, ColumnGraphable, Graphable};
@@ -63,6 +64,18 @@ pub fn run<W: Write>(opt: Opt, writer: LineWriter<W>) -> anyhow::Result<()> {
             (GraphKind::SextantColumns, 2) => {
                 build_graph::<[Option<f64>; 2], SextantColumns, W>(opt, writer)
             }
+
+            (GraphKind::OctantBars, 1) => build_graph::<Option<f64>, OctantBars, W>(opt, writer),
+            (GraphKind::OctantBars, 2) => {
+                build_graph::<[Option<f64>; 2], OctantBars, W>(opt, writer)
+            }
+            (GraphKind::OctantColumns, 1) => {
+                build_graph::<Option<f64>, OctantColumns, W>(opt, writer)
+            }
+            (GraphKind::OctantColumns, 2) => {
+                build_graph::<[Option<f64>; 2], OctantColumns, W>(opt, writer)
+            }
+
             _ => todo!(),
         }
     }

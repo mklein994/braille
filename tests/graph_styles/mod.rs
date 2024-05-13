@@ -40,7 +40,9 @@ fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
                         | GraphKind::MiniBars
                         | GraphKind::MiniColumns
                         | GraphKind::SextantBars
-                        | GraphKind::SextantColumns,
+                        | GraphKind::SextantColumns
+                        | GraphKind::OctantBars
+                        | GraphKind::OctantColumns,
                     _,
                     1 | 2
                 )
@@ -57,6 +59,8 @@ fn get_input(kind: GraphKind, style: GraphStyle, per: u8) -> String {
         GraphKind::MiniColumns => "--kind mini-columns",
         GraphKind::SextantBars => "--kind sextant-bars",
         GraphKind::SextantColumns => "--kind sextant-columns",
+        GraphKind::OctantBars => "--kind octant-bars",
+        GraphKind::OctantColumns => "--kind octant-columns",
     };
 
     let style_flag = match style {
@@ -155,3 +159,5 @@ t!(test_braille_columns, GraphKind::BrailleColumns);
 t!(test_braille_bars, GraphKind::BrailleBars);
 t!(test_sextant_columns, GraphKind::SextantColumns);
 t!(test_sextant_bars, GraphKind::SextantBars);
+t!(test_octant_bars, GraphKind::OctantBars);
+t!(test_octant_columns, GraphKind::OctantColumns);

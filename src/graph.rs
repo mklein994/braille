@@ -2,6 +2,7 @@ pub mod blocks;
 pub mod braille;
 mod dot_plotter;
 pub mod mini_blocks;
+pub mod octants;
 pub mod sextants;
 
 use std::io::{LineWriter, Write};

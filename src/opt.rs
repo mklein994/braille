@@ -578,11 +578,13 @@ The first line should be the string "braille", followed by spaced separated opti
                 GraphKind::Bars
                 | GraphKind::BrailleBars
                 | GraphKind::MiniBars
-                | GraphKind::SextantBars => Ok(ValueIter::Boundless(input_lines.into_iter())),
+                | GraphKind::SextantBars
+                | GraphKind::OctantBars => Ok(ValueIter::Boundless(input_lines.into_iter())),
                 GraphKind::Columns
                 | GraphKind::BrailleColumns
                 | GraphKind::MiniColumns
-                | GraphKind::SextantColumns => Ok(ValueIter::Bounded {
+                | GraphKind::SextantColumns
+                | GraphKind::OctantColumns => Ok(ValueIter::Bounded {
                     lines: input_lines.into_iter().collect(),
                 }),
             }
@@ -724,6 +726,12 @@ pub enum GraphKind {
 
     /// 🬵▌ Column graph using sextant (2x3) characters
     SextantColumns,
+
+    /// Bar graph using octant (2x4) characters
+    OctantBars,
+
+    /// Column graph using octant (2x4) characters
+    OctantColumns,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -739,11 +747,13 @@ impl GraphKind {
             GraphKind::Bars
             | GraphKind::MiniBars
             | GraphKind::BrailleBars
-            | GraphKind::SextantBars => Orientation::Horizontal,
+            | GraphKind::SextantBars
+            | GraphKind::OctantBars => Orientation::Horizontal,
             GraphKind::Columns
             | GraphKind::MiniColumns
             | GraphKind::BrailleColumns
-            | GraphKind::SextantColumns => Orientation::Vertical,
+            | GraphKind::SextantColumns
+            | GraphKind::OctantColumns => Orientation::Vertical,
         }
     }
 }
