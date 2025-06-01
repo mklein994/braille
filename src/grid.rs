@@ -1,8 +1,9 @@
 mod bounds;
 
+use crate::opt::CharType;
 use crate::util;
 use bounds::{CartesianBound, CartesianBounds};
-use braillefb::Framebuffer;
+use braillefb::{Framebuffer, FramebufferStyle};
 // use std::collections::HashMap;
 use std::collections::HashSet;
 // use std::collections::BTreeSet as HashSet;
@@ -187,6 +188,12 @@ pub fn print_graph<W: Write>(
     reader: impl std::io::BufRead,
     mut writer: LineWriter<W>,
 ) -> anyhow::Result<()> {
+    let grid_style = match opt.kind().char_type() {
+        CharType::Octant => FramebufferStyle::Octants,
+        CharType::Braille => FramebufferStyle::Braille,
+        _ => FramebufferStyle::default(),
+    };
+
     let grid = opt.grid.unwrap();
     let (width, height) = if grid.is_empty() {
         let (width, height) = crate::util::get_terminal_size().map(|(w, h)| {
@@ -244,7 +251,7 @@ pub fn print_graph<W: Write>(
     grid.merge_points(&points);
 
     let dots = grid.into_dots();
-    let fb = Framebuffer::new(&dots, width.into(), height.into());
+    let fb = Framebuffer::new(&dots, width.into(), height.into()).with_style(grid_style);
 
     write!(writer, "{fb}")?;
 

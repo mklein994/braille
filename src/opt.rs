@@ -756,6 +756,28 @@ impl GraphKind {
             | GraphKind::OctantColumns => Orientation::Vertical,
         }
     }
+
+    #[must_use]
+    pub fn char_type(self) -> CharType {
+        match self {
+            Self::Bars => CharType::Block,
+            Self::Columns => CharType::Column,
+            Self::BrailleBars | Self::BrailleColumns => CharType::Braille,
+            Self::MiniBars | Self::MiniColumns => CharType::HalfBlock,
+            Self::OctantBars | Self::OctantColumns => CharType::Octant,
+            Self::SextantBars | Self::SextantColumns => CharType::Sextant,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CharType {
+    Block,
+    Column,
+    Braille,
+    HalfBlock,
+    Sextant,
+    Octant,
 }
 
 #[cfg(test)]
