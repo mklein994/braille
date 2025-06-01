@@ -1,5 +1,5 @@
 use std::collections::HashSet as Set;
-// use std::collections::BTreeSet as Set;
+use std::f64::consts::PI;
 
 use braillefb::Framebuffer;
 
@@ -99,7 +99,6 @@ fn rose(t: f64, k: f64, now: f64) -> Point {
 
 fn get_rose(width: f64, height: f64) -> Set<Dot> {
     let mut dots = Set::new();
-    use std::f64::consts::PI;
 
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
