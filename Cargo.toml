@@ -2,7 +2,7 @@
 name = "braille"
 description = "Print a graph to the terminal using block or braille characters"
 version = "0.22.0"
-edition = "2021"
+edition = "2024"
 repository = "https://github.com/mklein994/braille.git"
 license = "MIT"
 publish = false
