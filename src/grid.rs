@@ -352,7 +352,7 @@ mod grid_tests {
         let grid_values = grid.into_dots();
         let graph = Framebuffer::new(&grid_values, usize::from(width), usize::from(height));
 
-        insta::assert_display_snapshot!(graph);
+        insta::assert_snapshot!(graph);
     }
 
     #[test]

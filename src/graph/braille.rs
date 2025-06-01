@@ -451,6 +451,6 @@ mod tests {
 
         let chars = Chars { inner: char_list };
 
-        insta::assert_display_snapshot!(chars);
+        insta::assert_snapshot!(chars);
     }
 }
