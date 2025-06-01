@@ -2,10 +2,10 @@ use std::io::{LineWriter, Write};
 
 use super::Brailleish;
 use super::Char as BrailleChar;
-use crate::opt::ValueIter;
 use crate::Config;
 use crate::GraphStyle;
 use crate::InputLine;
+use crate::opt::ValueIter;
 use crate::{ColumnGraphable, Graphable};
 
 pub struct Columns {

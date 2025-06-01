@@ -1,6 +1,6 @@
 use crate::util;
 use crate::{InputLine, InputLineSinglable, InputLines, LineResult};
-use clap::{builder::BoolishValueParser, Command, Parser, ValueEnum};
+use clap::{Command, Parser, ValueEnum, builder::BoolishValueParser};
 use std::{fmt, str::FromStr};
 
 #[derive(Debug, Copy, Clone, Default)]

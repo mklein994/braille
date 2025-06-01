@@ -8,8 +8,8 @@ pub mod sextants;
 use std::io::{LineWriter, Write};
 use std::str::FromStr;
 
-use crate::opt::{Config, Configurable, GraphStyle, ValueIter};
 use crate::InputLine;
+use crate::opt::{Config, Configurable, GraphStyle, ValueIter};
 
 pub trait Graphable<T, Conf: Configurable = Config>
 where

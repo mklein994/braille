@@ -1,9 +1,9 @@
 use super::Char;
-use crate::graph::braille::Brailleish;
-use crate::opt::ValueIter;
 use crate::Config;
 use crate::GraphStyle;
 use crate::InputLine;
+use crate::graph::braille::Brailleish;
+use crate::opt::ValueIter;
 use crate::{ColumnGraphable, Graphable};
 use std::io::{LineWriter, Write};
 

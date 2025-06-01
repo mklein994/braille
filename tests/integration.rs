@@ -176,13 +176,7 @@ t!(
     4,
     4,
     ((-3)..=4)
-        .map(|x| {
-            if x == 2 {
-                None
-            } else {
-                Some(f64::from(x))
-            }
-        })
+        .map(|x| { if x == 2 { None } else { Some(f64::from(x)) } })
         .collect()
 );
 

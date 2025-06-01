@@ -4,9 +4,10 @@ mod input;
 mod opt;
 pub mod util;
 
-use std::io::prelude::*;
 use std::io::LineWriter;
+use std::io::prelude::*;
 
+pub use graph::{BarGraphable, ColumnGraphable, Graphable};
 pub use graph::{
     blocks::{Bars as BlockBars, Columns as BlockColumns},
     braille::{Columns as BrailleColumns, Lines as BrailleLines},
@@ -14,7 +15,6 @@ pub use graph::{
     octants::{Columns as OctantColumns, Lines as OctantBars},
     sextants::{Columns as SextantColumns, Lines as SextantBars},
 };
-pub use graph::{BarGraphable, ColumnGraphable, Graphable};
 use input::{
     Line as InputLine, LineResult, LineSinglable as InputLineSinglable, Lines as InputLines,
 };

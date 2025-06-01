@@ -1,12 +1,12 @@
 use std::io::{LineWriter, Write};
 
 use super::Char;
-use crate::graph::braille::Brailleish;
-use crate::graph::{BarGraphable, DotArrayable, Graphable, RowBuildable};
-use crate::opt::ValueIter;
 use crate::Config;
 use crate::InputLine;
 use crate::InputLineSinglable;
+use crate::graph::braille::Brailleish;
+use crate::graph::{BarGraphable, DotArrayable, Graphable, RowBuildable};
+use crate::opt::ValueIter;
 
 pub struct Lines {
     config: Config,

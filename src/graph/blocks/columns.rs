@@ -1,8 +1,8 @@
 use std::io::{LineWriter, Write};
 
+use crate::Config;
 use crate::graph::{ColumnGraphable, Graphable};
 use crate::opt::ValueIter;
-use crate::Config;
 
 pub struct Columns {
     config: Config,

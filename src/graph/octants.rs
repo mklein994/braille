@@ -12,6 +12,7 @@ struct Char {
 impl Char {
     pub fn new(dots: [[bool; 2]; 4]) -> Self {
         Self {
+            #[rustfmt::skip]
             inner: match dots {
                 [[false, false], [false, false], [false, false], [false, false]] => " ",
                 [[true, false], [false, false], [false, false], [false, false]] => "𜺨",

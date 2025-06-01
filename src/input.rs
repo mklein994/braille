@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{prelude::*, BufReader};
+use std::io::{BufReader, prelude::*};
 use std::path::Path;
 use std::str::FromStr;
 

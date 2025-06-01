@@ -119,7 +119,7 @@ mod tests {
         //32⠀⠀⠈⡀⠀⠀⠠⠀⠄⠀⠀⠂⠀⠀⠀⠀⠀⠀⠠⠀⠠⠀⡐⠠⠀⠀
         //36⠀⠀⠀⠐⢄⡠⠁⠀⠐⣀⠌⠀⠀⠀⠀⠀⠀⠀⠀⠡⣀⠶⡠⠂⠀⠀
 
-        use crate::graph::{braille::Char, RowBuildable};
+        use crate::graph::{RowBuildable, braille::Char};
 
         struct Foo;
         impl RowBuildable for Foo {}
