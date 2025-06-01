@@ -728,6 +728,7 @@ pub enum GraphKind {
     SextantColumns,
 
     /// Bar graph using octant (2x4) characters
+    #[value(alias = "o")]
     OctantBars,
 
     /// Column graph using octant (2x4) characters
