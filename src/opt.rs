@@ -701,7 +701,7 @@ pub enum GraphKind {
     ///        y →
     /// ```
     #[default]
-    #[value(name = "braille", alias = "b")]
+    #[value(name = "braille", aliases = ["b", "braille-bars"])]
     BrailleBars,
 
     /// ⡶⠚ Column graph with braille characters
