@@ -662,8 +662,8 @@ where
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            ValueIter::Boundless(lines) => Box::new(lines),
-            ValueIter::Bounded { lines } => Box::new(lines.into_iter()),
+            Self::Boundless(lines) => Box::new(lines),
+            Self::Bounded { lines } => Box::new(lines.into_iter()),
         }
     }
 }
@@ -744,16 +744,16 @@ impl GraphKind {
     #[must_use]
     pub fn orientation(self) -> Orientation {
         match self {
-            GraphKind::Bars
-            | GraphKind::MiniBars
-            | GraphKind::BrailleBars
-            | GraphKind::SextantBars
-            | GraphKind::OctantBars => Orientation::Horizontal,
-            GraphKind::Columns
-            | GraphKind::MiniColumns
-            | GraphKind::BrailleColumns
-            | GraphKind::SextantColumns
-            | GraphKind::OctantColumns => Orientation::Vertical,
+            Self::Bars
+            | Self::MiniBars
+            | Self::BrailleBars
+            | Self::SextantBars
+            | Self::OctantBars => Orientation::Horizontal,
+            Self::Columns
+            | Self::MiniColumns
+            | Self::BrailleColumns
+            | Self::SextantColumns
+            | Self::OctantColumns => Orientation::Vertical,
         }
     }
 
