@@ -50,7 +50,7 @@ macro_rules! t {
     (auto $name:ident, $width:literal, $gen:expr) => {
         #[test]
         fn $name() {
-            let input: Vec<_> = $gen.into_iter().map(|x| Some(x as f64)).collect();
+            let input: Vec<_> = $gen.into_iter().map(|x| Some(f64::from(x))).collect();
             let (stdout, stderr) = get_output_from_numbers(&input, [$width.to_string()]);
             insta::assert_snapshot!(stdout);
             assert!(stderr.is_empty());
@@ -60,7 +60,7 @@ macro_rules! t {
     ($name:ident, $min:expr, $max:expr, $width:expr) => {
         #[test]
         fn $name() {
-            let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
+            let input: Vec<_> = (($min)..=($max)).map(|x| Some(f64::from(x))).collect();
             let (stdout, stderr) = get_output_from_numbers(
                 &input,
                 [
@@ -77,7 +77,7 @@ macro_rules! t {
     ($name:ident, $min:expr, $max:expr, $width:expr) => {
         #[test]
         fn $name() {
-            let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
+            let input: Vec<_> = (($min)..=($max)).map(|x| Some(f64::from(x))).collect();
             let (stdout, stderr) = get_output_from_numbers(
                 &input,
                 [
@@ -111,7 +111,7 @@ macro_rules! t {
     ($kind:literal, $name:ident, $min:expr, $max:expr, $size:expr) => {
         #[test]
         fn $name() {
-            let input: Vec<_> = (($min)..=($max)).map(|x| Some(x as f64)).collect();
+            let input: Vec<_> = (($min)..=($max)).map(|x| Some(f64::from(x))).collect();
             let (stdout, stderr) = get_output_from_numbers(
                 &input,
                 [

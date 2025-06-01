@@ -491,7 +491,7 @@ impl Opt {
                 anyhow::bail!("Multiple values per line not supported for this graph kind");
             }
             _ => {}
-        };
+        }
 
         // If the graph size isn't already set, try detecting it from the environment
         if opt.size.is_none() {

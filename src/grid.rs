@@ -140,7 +140,7 @@ impl GridDots {
     }
 
     pub fn into_dots(self) -> Vec<bool> {
-        let mut dots = Vec::with_capacity(usize::try_from(self.width * self.height).unwrap());
+        let mut dots = Vec::with_capacity(usize::from(self.width * self.height));
         for y in (0..self.height).rev() {
             for x in 0..self.width {
                 let dot = Dot::new(x, y);
@@ -244,7 +244,7 @@ pub fn print_graph<W: Write>(
     grid.merge_points(&points);
 
     let dots = grid.into_dots();
-    let fb = Framebuffer::new(&dots, width.try_into().unwrap(), height.try_into().unwrap());
+    let fb = Framebuffer::new(&dots, width.into(), height.into());
 
     write!(writer, "{fb}")?;
 
