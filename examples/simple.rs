@@ -42,7 +42,7 @@ fn main() -> anyhow::Result<()> {
     // let mut dots = get_input(width, height)?;
     let mut dots = get_rose(width.into(), height.into());
 
-    let mut bits: Vec<bool> = Vec::with_capacity(usize::from(width * height));
+    let mut bits: Vec<bool> = Vec::with_capacity(usize::from(width) * usize::from(height));
     for y in (0..height).rev() {
         for x in 0..width {
             bits.push(dots.remove(&Dot::new(x, y)));
