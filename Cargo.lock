@@ -77,9 +77,8 @@ dependencies = [
 
 [[package]]
 name = "braillefb"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb47c52054f82cc71d9edb0a21b433847d06ff67c675302c706d374fd13e2471"
+version = "0.2.1"
+source = "git+https://github.com/mklein994/braillefb?tag=v0.2.1#3c3a8a936f90720e0f5fa4c5d5ddd1b1738d409f"
 
 [[package]]
 name = "clap"
