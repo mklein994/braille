@@ -671,15 +671,15 @@ where
 #[derive(Debug, Default, Clone, Copy, ValueEnum)]
 pub enum GraphKind {
     /// █▉▊▋▌▍▎▏ Bar graph with block characters
-    #[value(alias = "B")]
+    #[value(aliases = ["B", "8x1"])]
     Bars,
 
     /// ▁▂▃▄▅▆▇█ Column graph with block characters
-    #[value(alias = "C")]
+    #[value(aliases = ["C", "1x8"])]
     Columns,
 
     /// ▙ Bar graph using mini block characters
-    #[value(alias = "mb")]
+    #[value(aliases = ["mb", "2x2"])]
     MiniBars,
 
     /// ▟ Column graph using mini block characters
@@ -722,13 +722,14 @@ pub enum GraphKind {
     BrailleColumns,
 
     /// 🬺🬏 Bar graph using sextant (2x3) characters
+    #[value(alias = "2x3")]
     SextantBars,
 
     /// 🬵▌ Column graph using sextant (2x3) characters
     SextantColumns,
 
     /// Bar graph using octant (2x4) characters
-    #[value(alias = "o")]
+    #[value(aliases = ["o", "2x4"])]
     OctantBars,
 
     /// Column graph using octant (2x4) characters
