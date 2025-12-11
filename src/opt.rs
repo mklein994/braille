@@ -726,6 +726,7 @@ pub enum GraphKind {
     SextantBars,
 
     /// 🬵▌ Column graph using sextant (2x3) characters
+    #[value(alias = "3x2")]
     SextantColumns,
 
     /// Bar graph using octant (2x4) characters
@@ -733,6 +734,7 @@ pub enum GraphKind {
     OctantBars,
 
     /// Column graph using octant (2x4) characters
+    #[value(alias = "4x2")]
     OctantColumns,
 }
 
