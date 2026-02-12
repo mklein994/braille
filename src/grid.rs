@@ -141,7 +141,7 @@ impl GridDots {
     }
 
     pub fn into_dots(self) -> Vec<bool> {
-        let mut dots = Vec::with_capacity(usize::from(self.width * self.height));
+        let mut dots = Vec::with_capacity(usize::from(self.width) * usize::from(self.height));
         for y in (0..self.height).rev() {
             for x in 0..self.width {
                 let dot = Dot::new(x, y);
