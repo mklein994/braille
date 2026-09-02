@@ -67,7 +67,7 @@ where
                     .transpose()?
                     .and_then(InputLine::into_inner)
                     .map(scale)
-                    .map(|value| Self::into_dot_groups(value, zero, style))
+                    .map(|value| Self::into_dot_groups_from_value(value, zero, style))
                 {
                     *buffer_line = new_line;
                 }

@@ -91,7 +91,7 @@ impl Graphable<Option<f64>> for Lines {
                     .transpose()?
                     .and_then(InputLine::into_inner)
                     .map(scale)
-                    .map(|value| Self::into_dot_groups(value, zero, style))
+                    .map(|value| Self::into_dot_groups_from_value(value, zero, style))
                 {
                     *buffer_line = new_line;
                 }
@@ -185,7 +185,7 @@ mod tests {
     fn test_into_dot_pairs() {
         assert_eq!(
             vec![[false, false], [false, false], [true, false]],
-            Lines::into_dot_groups(5, 5, GraphStyle::default())
+            Lines::into_dot_groups_from_value(5, 5, GraphStyle::default())
         );
     }
 

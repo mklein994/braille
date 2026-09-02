@@ -349,7 +349,7 @@ pub trait Brailleish<const DOTS_PER_VALUE: usize> {
     /// //      └─  0 (dot 4)
     /// assert_eq!(
     ///     vec![[false, true], [true, true]],
-    ///     <BrailleLines as Brailleish<2>>::into_dot_groups(2, 4, GraphStyle::default())
+    ///     <BrailleLines as Brailleish<2>>::into_dot_groups_from_value(2, 4, GraphStyle::default())
     /// );
     /// ```
     ///
@@ -364,7 +364,7 @@ pub trait Brailleish<const DOTS_PER_VALUE: usize> {
     /// //     └─────── 0 (dot 4)
     /// assert_eq!(
     ///     vec![[false, false], [false, true], [true, true], [true, false]],
-    ///     <BrailleLines as Brailleish<2>>::into_dot_groups(7, 4, GraphStyle::default())
+    ///     <BrailleLines as Brailleish<2>>::into_dot_groups_from_value(7, 4, GraphStyle::default())
     /// );
     /// ```
     ///
@@ -381,7 +381,11 @@ pub trait Brailleish<const DOTS_PER_VALUE: usize> {
     ///         └─┴┴──── stem
     /// ```
     #[must_use]
-    fn into_dot_groups(value: u16, zero: u16, style: GraphStyle) -> Vec<[bool; DOTS_PER_VALUE]> {
+    fn into_dot_groups_from_value(
+        value: u16,
+        zero: u16,
+        style: GraphStyle,
+    ) -> Vec<[bool; DOTS_PER_VALUE]> {
         let prefix_length = usize::from(value.min(zero) - 1);
         let mut iter = vec![false; prefix_length];
 
@@ -400,15 +404,7 @@ pub trait Brailleish<const DOTS_PER_VALUE: usize> {
             }
         }
 
-        let (chunks, remainder) = iter.as_chunks::<DOTS_PER_VALUE>();
-        let mut tip = remainder.to_vec();
-        let mut groups: Vec<[bool; DOTS_PER_VALUE]> = chunks.to_vec();
-        if !tip.is_empty() {
-            tip.resize(DOTS_PER_VALUE, false);
-            groups.push(<[_; DOTS_PER_VALUE]>::try_from(tip).unwrap());
-        }
-
-        groups
+        crate::graph::into_dot_groups::<DOTS_PER_VALUE>(&iter)
     }
 
     #[must_use]

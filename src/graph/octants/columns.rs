@@ -62,7 +62,7 @@ impl Graphable<Option<f64>> for Columns {
             let mut column = [vec![], vec![]];
             for (i, side) in [left, right].into_iter().enumerate() {
                 if let Some(value) = side.transpose()?.and_then(InputLine::into_inner).map(scale) {
-                    column[i] = Self::into_dot_groups(value, zero, style);
+                    column[i] = Self::into_dot_groups_from_value(value, zero, style);
                 }
             }
 
@@ -194,14 +194,6 @@ impl Columns {
             }
         }
 
-        let (chunks, remainder) = iter.as_chunks::<4>();
-        let mut tip = remainder.to_vec();
-        let mut column: Vec<[bool; 4]> = chunks.to_vec();
-        if !tip.is_empty() {
-            tip.resize(4, false);
-            column.push(tip.try_into().unwrap());
-        }
-
-        column
+        crate::graph::into_dot_groups::<4>(&iter)
     }
 }

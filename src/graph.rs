@@ -120,14 +120,7 @@ pub trait DotArrayable {
             }
         }
 
-        let (chunks, remainder) = iter.as_chunks::<M>();
-        let mut tip = remainder.to_vec();
-        let mut row: Vec<[bool; M]> = chunks.to_vec();
-        if !tip.is_empty() {
-            tip.resize(M, false);
-            row.push(tip.try_into().unwrap());
-        }
-        row
+        into_dot_groups::<M>(&iter)
     }
 
     #[must_use]
@@ -167,15 +160,21 @@ pub trait DotArrayable {
             }
         }
 
-        let (chunks, remainder) = iter.as_chunks::<M>();
-        let mut tip = remainder.to_vec();
-        let mut row: Vec<[bool; M]> = chunks.to_vec();
-        if !tip.is_empty() {
-            tip.resize(M, false);
-            row.push(tip.try_into().unwrap());
-        }
-        row
+        into_dot_groups::<M>(&iter)
     }
+}
+
+/// Split `values` into fixed-size groups of `N`, padding the final group with zeros if the length
+/// doesn't divide evenly
+fn into_dot_groups<const N: usize>(values: &[bool]) -> Vec<[bool; N]> {
+    let (chunks, remainder) = values.as_chunks::<N>();
+    let mut groups: Vec<[bool; N]> = chunks.to_vec();
+    if !remainder.is_empty() {
+        let mut tip = [false; N];
+        tip[..remainder.len()].copy_from_slice(remainder);
+        groups.push(tip);
+    }
+    groups
 }
 
 #[cfg(test)]
