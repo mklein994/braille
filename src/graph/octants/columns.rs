@@ -194,12 +194,9 @@ impl Columns {
             }
         }
 
-        let chunks = iter.chunks_exact(4);
-        let mut tip = chunks.remainder().to_vec();
-        let mut column: Vec<[bool; 4]> = chunks
-            .into_iter()
-            .map(|chunk| chunk.try_into().unwrap())
-            .collect();
+        let (chunks, remainder) = iter.as_chunks::<4>();
+        let mut tip = remainder.to_vec();
+        let mut column: Vec<[bool; 4]> = chunks.to_vec();
         if !tip.is_empty() {
             tip.resize(4, false);
             column.push(tip.try_into().unwrap());

@@ -263,12 +263,9 @@ impl Columns {
             }
         }
 
-        let chunks = iter.chunks_exact(4);
-        let mut tip = chunks.remainder().to_vec();
-        let mut column: Vec<[bool; 4]> = chunks
-            .into_iter()
-            .map(|chunk| chunk.try_into().unwrap())
-            .collect();
+        let (chunks, remainder) = iter.as_chunks::<4>();
+        let mut tip = remainder.to_vec();
+        let mut column: Vec<[bool; 4]> = chunks.to_vec();
         if !tip.is_empty() {
             tip.resize(4, false);
             column.push(tip.try_into().unwrap());
@@ -289,8 +286,7 @@ impl Columns {
         let line_set = line_set.to_vec();
         let end = *line_set.iter().max().unwrap();
 
-        let line_chunks = line_set.chunks_exact(2);
-        let remainder = line_chunks.remainder().to_vec();
+        let (line_chunks, remainder) = line_set.as_chunks::<2>();
 
         let mut iter = vec![false; end.into()];
 
@@ -320,7 +316,7 @@ impl Columns {
             }
         }
 
-        for value in remainder {
+        for &value in remainder {
             iter[usize::from(value) - 1] = true;
 
             for i in zero..value {
@@ -328,12 +324,9 @@ impl Columns {
             }
         }
 
-        let chunks = iter.chunks_exact(4);
-        let mut tip = chunks.remainder().to_vec();
-        let mut column: Vec<[bool; 4]> = chunks
-            .into_iter()
-            .map(|chunk| chunk.try_into().unwrap())
-            .collect();
+        let (chunks, remainder) = iter.as_chunks::<4>();
+        let mut tip = remainder.to_vec();
+        let mut column: Vec<[bool; 4]> = chunks.to_vec();
         if !tip.is_empty() {
             tip.resize(4, false);
             column.push(tip.try_into().unwrap());

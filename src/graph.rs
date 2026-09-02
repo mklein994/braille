@@ -120,12 +120,9 @@ pub trait DotArrayable {
             }
         }
 
-        let chunks = iter.chunks_exact(M);
-        let mut tip = chunks.remainder().to_vec();
-        let mut row: Vec<[bool; M]> = chunks
-            .into_iter()
-            .map(|chunk| chunk.try_into().unwrap())
-            .collect();
+        let (chunks, remainder) = iter.as_chunks::<M>();
+        let mut tip = remainder.to_vec();
+        let mut row: Vec<[bool; M]> = chunks.to_vec();
         if !tip.is_empty() {
             tip.resize(M, false);
             row.push(tip.try_into().unwrap());
@@ -170,12 +167,9 @@ pub trait DotArrayable {
             }
         }
 
-        let chunks = iter.chunks_exact(M);
-        let mut tip = chunks.remainder().to_vec();
-        let mut row: Vec<[bool; M]> = chunks
-            .into_iter()
-            .map(|chunk| chunk.try_into().unwrap())
-            .collect();
+        let (chunks, remainder) = iter.as_chunks::<M>();
+        let mut tip = remainder.to_vec();
+        let mut row: Vec<[bool; M]> = chunks.to_vec();
         if !tip.is_empty() {
             tip.resize(M, false);
             row.push(tip.try_into().unwrap());

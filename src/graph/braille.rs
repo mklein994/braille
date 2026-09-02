@@ -400,12 +400,9 @@ pub trait Brailleish<const DOTS_PER_VALUE: usize> {
             }
         }
 
-        let chunks = iter.chunks_exact(DOTS_PER_VALUE);
-        let mut tip = chunks.remainder().to_vec();
-        let mut groups: Vec<[bool; DOTS_PER_VALUE]> = chunks
-            .into_iter()
-            .map(|chunk| chunk.try_into().unwrap())
-            .collect();
+        let (chunks, remainder) = iter.as_chunks::<DOTS_PER_VALUE>();
+        let mut tip = remainder.to_vec();
+        let mut groups: Vec<[bool; DOTS_PER_VALUE]> = chunks.to_vec();
         if !tip.is_empty() {
             tip.resize(DOTS_PER_VALUE, false);
             groups.push(<[_; DOTS_PER_VALUE]>::try_from(tip).unwrap());
